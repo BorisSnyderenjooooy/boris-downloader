@@ -9,6 +9,9 @@
         const params = new URLSearchParams(window.location.search);
         const appId = params.get('id');
 
+        // Verhindert langes Drücken/Rechtsklick am iPad (Abschreckung für Hans)
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
         if (appId) {
             const meta = document.createElement('meta');
             meta.name = "apple-itunes-app";
@@ -37,6 +40,11 @@
                                 style="padding:18px 40px; border-radius:30px; border:none; background:#007aff; color:white; font-weight:bold; font-size:17px; cursor:pointer; box-shadow: 0 10px 20px rgba(0,122,255,0.3); transition: transform 0.2s;">
                             Zurück zur Suche
                         </button>
+
+                        <footer style="margin-top: auto; padding: 40px 20px 20px 20px; font-size: 12px; color: #86868b; line-height: 1.5;">
+                            &copy; 2026 Boris Store. Alle Rechte vorbehalten.<br>
+                            Das Kopieren von Design oder Code dieses Stores ist untersagt.
+                        </footer>
                     </div>
                 `;
                 setTimeout(() => { window.scrollTo(0, 1); }, 200);
@@ -49,6 +57,10 @@
             --primary: #007aff;
             --bg-gradient: linear-gradient(135deg, #e0f7f4 0%, #f7e8f3 100%);
         }
+
+        /* Verhindert Textmarkierung */
+        * { -webkit-user-select: none; user-select: none; }
+        input { -webkit-user-select: text; user-select: text; }
 
         body {
             margin: 0;
@@ -75,6 +87,7 @@
             box-shadow: 0 20px 50px rgba(0,0,0,0.08);
             border: 1px solid rgba(255,255,255,0.4);
             text-align: center;
+            position: relative;
         }
 
         h1 {
@@ -87,93 +100,31 @@
             letter-spacing: -0.5px;
         }
 
-        .tagline {
-            color: #86868b;
-            font-size: 14px;
-            margin-bottom: 30px;
-            font-weight: 500;
-        }
-
-        .input-wrapper {
-            position: relative;
-            margin-bottom: 30px;
-        }
+        .tagline { color: #86868b; font-size: 14px; margin-bottom: 30px; font-weight: 500; }
 
         input {
-            width: 100%;
-            padding: 20px 25px;
-            border-radius: 22px;
-            border: 1px solid rgba(0,0,0,0.05);
-            background: rgba(255, 255, 255, 0.9);
-            font-size: 18px;
-            outline: none;
-            box-sizing: border-box;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-            transition: all 0.3s ease;
+            width: 100%; padding: 20px 25px; border-radius: 22px; border: 1px solid rgba(0,0,0,0.05);
+            background: rgba(255, 255, 255, 0.9); font-size: 18px; outline: none; box-sizing: border-box;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03); transition: all 0.3s ease;
         }
 
-        input:focus {
-            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15);
-            border-color: var(--primary);
-        }
-
-        #liste {
-            text-align: left;
-            margin-top: 10px;
-            max-height: 450px;
-            overflow-y: auto;
-            padding-right: 5px;
-        }
+        input:focus { box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15); border-color: var(--primary); }
 
         .app-item {
-            display: flex;
-            align-items: center;
-            padding: 16px;
-            background: rgba(255, 255, 255, 0.6);
-            margin-bottom: 12px;
-            border-radius: 22px;
-            transition: all 0.2s ease;
-            border: 1px solid rgba(255,255,255,0.5);
-            cursor: pointer;
+            display: flex; align-items: center; padding: 16px; background: rgba(255, 255, 255, 0.6);
+            margin-bottom: 12px; border-radius: 22px; transition: all 0.2s ease;
+            border: 1px solid rgba(255,255,255,0.5); cursor: pointer;
         }
 
-        .app-item:active {
-            transform: scale(0.97);
-            background: rgba(255, 255, 255, 1);
-        }
+        .app-item:active { transform: scale(0.97); background: rgba(255, 255, 255, 1); }
 
-        .app-item img {
-            width: 58px;
-            height: 58px;
-            border-radius: 14px;
-            margin-right: 18px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-        }
+        .app-item img { width: 58px; height: 58px; border-radius: 14px; margin-right: 18px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
 
-        .app-info {
-            flex-grow: 1;
-        }
+        .btn-laden { background: #f1f3f6; color: var(--primary); border: none; padding: 8px 18px; border-radius: 20px; font-weight: 700; font-size: 14px; }
 
-        .app-info strong {
-            display: block;
-            font-size: 16px;
-            font-weight: 600;
-            color: #1d1d1f;
-            margin-bottom: 2px;
+        footer {
+            margin-top: 40px; font-size: 12px; color: #86868b; text-align: center; line-height: 1.5;
         }
-
-        .btn-laden {
-            background: #f1f3f6;
-            color: var(--primary);
-            border: none;
-            padding: 8px 18px;
-            border-radius: 20px;
-            font-weight: 700;
-            font-size: 14px;
-        }
-
-        #liste::-webkit-scrollbar { width: 4px; }
-        #liste::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -182,7 +133,7 @@
         <h1>Boris Store</h1>
         <div class="tagline">Finde und lade deine Apps direkt</div>
         
-        <div class="input-wrapper">
+        <div style="margin-bottom: 30px;">
             <input type="text" id="suche" placeholder="Apps suchen..." oninput="sucheApps()">
         </div>
 
@@ -190,6 +141,11 @@
             <p style="color: #86868b; font-size: 14px; text-align: center;">Gib einen Namen ein, um den Boris Store zu durchsuchen.</p>
         </div>
     </div>
+
+    <footer>
+        &copy; 2026 Boris Store. Alle Rechte vorbehalten.<br>
+        Das Kopieren von Design oder Code dieses Stores ist untersagt.
+    </footer>
 
     <script>
         async function sucheApps() {
@@ -205,25 +161,16 @@
                 const data = await response.json();
                 liste.innerHTML = "";
                 
-                if (data.results.length === 0) {
-                    liste.innerHTML = '<p style="text-align:center; color:#86868b;">Keine Apps gefunden.</p>';
-                    return;
-                }
-
                 data.results.forEach(app => {
                     liste.innerHTML += `
                         <div class="app-item" onclick="ladeApp('${app.trackId}')">
                             <img src="${app.artworkUrl100}">
-                            <div class="app-info">
-                                <strong>${app.trackName}</strong>
-                            </div>
+                            <div style="flex-grow:1;"><strong>${app.trackName}</strong></div>
                             <button class="btn-laden">Laden</button>
                         </div>
                     `;
                 });
-            } catch (e) { 
-                console.log("Fehler");
-            }
+            } catch (e) { }
         }
 
         function ladeApp(id) {
