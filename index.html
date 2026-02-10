@@ -16,7 +16,6 @@
             meta.content = `app-id=${appId}`;
             document.head.appendChild(meta);
             
-            // Interface verstecken während des Ladevorgangs
             document.documentElement.style.visibility = 'hidden'; 
             
             window.onload = () => {
@@ -28,9 +27,10 @@
                         
                         <div style="background: #fff3cd; border: 1px solid #ffeeba; border-radius: 20px; padding: 20px; margin: 0 auto 40px auto; max-width: 380px; text-align: left; font-size: 14px; color: #856404; line-height: 1.6;">
                             <strong style="font-size:16px;">⚠️ WICHTIG:</strong><br>
-                            1. <b>Nicht wegklicken:</b> Wenn du den Banner oben schließt oder wegwischst, wird er für 24 Stunden gesperrt!<br>
-                            2. <b>Aktivieren:</b> Falls kein Banner kommt, scrolle diese Seite kurz hoch und runter.<br>
-                            3. <b>Geduld:</b> Apple braucht manchmal 5-10 Sekunden für den Check.
+                            1. <b>Nicht wegklicken:</b> Wenn du den Banner oben schließt, wird er für 24h gesperrt!<br>
+                            2. <b>Nicht spammen:</b> Suche nicht zu viele Apps kurz hintereinander, sonst blockiert Apple den Zugriff für einige Minuten.<br>
+                            3. <b>Aktivieren:</b> Falls kein Banner kommt, scrolle diese Seite kurz hoch und runter.<br>
+                            4. <b>Geduld:</b> Der Check dauert manchmal bis zu 10 Sekunden.
                         </div>
 
                         <button onclick="window.location.href=window.location.pathname" 
@@ -39,7 +39,6 @@
                         </button>
                     </div>
                 `;
-                // Automatischer "Schubs" für Safari
                 setTimeout(() => { window.scrollTo(0, 1); }, 200);
             };
         }
@@ -95,7 +94,7 @@
                         </div>
                     `;
                 });
-            } catch (e) { console.log("API Fehler"); }
+            } catch (e) { console.log("Fehler"); }
         }
 
         function ladeApp(id) {
