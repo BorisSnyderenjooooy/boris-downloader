@@ -6,18 +6,18 @@
     <title>Boris Store</title>
     
     <script>
-        // 1. DOMAIN-LOCK: Schützt vor Kopien auf anderen Webseiten
-        const authorizedDomain = "boris-store.xyz";
-        if (window.location.hostname !== authorizedDomain && 
-            window.location.hostname !== "localhost" && 
-            !window.location.hostname.includes("vercel.app")) {
-            window.location.href = "https://" + authorizedDomain + "/?error=unauthorized_copy";
+        // DOMAIN-LOCK: Erlaubt jetzt www und ohne www
+        const host = window.location.hostname;
+        if (host !== "boris-store.xyz" && 
+            host !== "www.boris-store.xyz" && 
+            host !== "localhost" && 
+            !host.includes("vercel.app")) {
+            window.location.href = "https://boris-store.xyz/?error=unauthorized_copy";
         }
 
         const params = new URLSearchParams(window.location.search);
         const appId = params.get('id');
 
-        // Rechtsklick-Sperre
         document.addEventListener('contextmenu', e => e.preventDefault());
 
         if (appId) {
