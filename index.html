@@ -13,7 +13,7 @@
     <link rel="icon" type="image/png" href="icon.png">
 
     <script>
-        // 1. BANNER-LOGIK (SOFORT)
+        // 1. BANNER-LOGIK
         const params = new URLSearchParams(window.location.search);
         const appId = params.get('id');
         if (appId && /^\d+$/.test(appId)) {
@@ -35,7 +35,7 @@
             document.documentElement.setAttribute('data-theme', 'dark');
         }
 
-        // 4. DOWNLOAD-LOGIK (Wiederherstellung des Original-Backgrounds)
+        // 4. DOWNLOAD-LOGIK
         if (appId) {
             document.documentElement.style.visibility = 'hidden'; 
             window.onload = () => {
@@ -45,7 +45,6 @@
                 
                 document.body.style.background = `linear-gradient(135deg, ${auraFarbe}66 0%, ${isDark ? '#000000' : '#ffffff'} 100%)`;
                 document.body.style.backgroundAttachment = 'fixed';
-                document.body.style.backgroundSize = 'cover';
 
                 document.body.innerHTML = `
                     <div style="text-align:center; padding: 80px 20px; font-family:-apple-system, sans-serif; display:flex; flex-direction:column; align-items:center; min-height:100vh;">
@@ -128,6 +127,8 @@
 
         .btn-laden { background: #f1f3f6; color: var(--primary); border: none; padding: 8px 18px; border-radius: 20px; font-weight: 700; cursor: pointer; }
         [data-theme="dark"] .btn-laden { background: var(--primary); color: white; }
+        
+        .btn-share { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--primary); margin-left: 10px; padding: 5px; }
 
         footer { margin-top: 40px; font-size: 12px; color: var(--text-main); text-align: center; font-weight: 600; opacity: 0.8; }
     </style>
@@ -228,6 +229,15 @@
 
         const catColors = { 'Entertainment': '#ff9500', 'Games': '#ff3b30', 'Social Networking': '#007aff', 'Music': '#ff2d55', 'Productivity': '#5856d6', 'Finance': '#34c759', 'Photo & Video': '#af52de' };
 
+        window.shareApp = (name, id) => {
+            const url = `https://boris-store.xyz/?id=${id}`;
+            if (navigator.share) {
+                navigator.share({ title: name, text: `Check mal diese App im Boris Store aus: ${name}`, url: url });
+            } else {
+                alert(`Link kopiert: ${url}`);
+            }
+        };
+
         window.handleAppClick = async (btn, trackId, name, icon, cat) => {
             btn.innerText = "Moment...";
             const farbe = catColors[cat] || '#007aff';
@@ -247,7 +257,10 @@
             updateAura('reset');
             onValue(ref(db, 'charts'), (snapshot) => {
                 const data = snapshot.val();
-                if(!data) return;
+                if(!data) {
+                    document.getElementById('liste').innerHTML = "<div style='padding:20px; color:var(--text-secondary);'>Noch keine Charts vorhanden.</div>";
+                    return;
+                }
                 const sorted = Object.values(data).sort((a,b) => b.count - a.count);
                 renderHtml(sorted, true);
             });
@@ -256,6 +269,12 @@
         function renderHtml(results, isChart = false) {
             const liste = document.getElementById('liste');
             liste.innerHTML = "";
+            
+            if (!results || results.length === 0) {
+                liste.innerHTML = "<div style='padding:20px; color:var(--text-secondary);'>Keine Ergebnisse gefunden.</div>";
+                return;
+            }
+
             results.forEach((app) => {
                 const id = app.trackId;
                 const name = (app.trackName || app.name).replace(/'/g, "");
@@ -266,12 +285,13 @@
                 const item = document.createElement('div');
                 item.className = 'app-item';
                 item.innerHTML = `
-                    <img src="${icon}" style="width:55px; height:55px; border-radius:12px; margin-right:15px; cursor:pointer;" onclick="this.parentElement.querySelector('.btn-laden').click()">
-                    <div style="flex-grow:1; overflow:hidden; cursor:pointer;" onclick="this.parentElement.querySelector('.btn-laden').click()">
+                    <img src="${icon}" style="width:55px; height:55px; border-radius:12px; margin-right:15px; cursor:pointer;" onclick="window.handleAppClick(this.parentElement.querySelector('.btn-laden'), '${id}', '${name}', '${icon}', '${cat}')">
+                    <div style="flex-grow:1; overflow:hidden;">
                         <div style="font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${name} ${countText}</div>
                         <div style="font-size:11px; color:var(--text-secondary);">${cat}</div>
                     </div>
                     <button class="btn-laden" onclick="handleAppClick(this, '${id}', '${name}', '${icon}', '${cat}')">Laden</button>
+                    <button class="btn-share" onclick="shareApp('${name}', '${id}')">􀈂</button>
                 `;
                 liste.appendChild(item);
             });
@@ -284,6 +304,8 @@
                 .then(r => r.json()).then(data => {
                     if(data.results[0]) updateAura(catColors[data.results[0].primaryGenreName] || '#007aff');
                     renderHtml(data.results);
+                }).catch(() => {
+                    document.getElementById('liste').innerHTML = "<div style='padding:20px; color:var(--text-secondary);'>Suche fehlgeschlagen.</div>";
                 });
         };
 
