@@ -23,7 +23,6 @@
         const appId = params.get('id');
         document.addEventListener('contextmenu', e => e.preventDefault());
 
-        // DOWNLOAD SCREEN LOGIK
         if (appId) {
             const auraFarbe = sessionStorage.getItem('lastColor') || '#007aff';
             document.documentElement.style.visibility = 'hidden'; 
@@ -32,7 +31,6 @@
                 const isDark = localStorage.getItem('theme') === 'dark';
                 if (isDark) document.documentElement.setAttribute('data-theme', 'dark');
                 
-                // Hintergrund-Stimmung übernehmen
                 if(sessionStorage.getItem('isCharts') === 'true') {
                     document.body.classList.add('charts-active');
                 } else {
@@ -85,7 +83,8 @@
             --skeleton: #3a3a3c;
         }
 
-        * { transition: background 0.8s ease, color 0.3s ease; -webkit-user-select: none; user-select: none; box-sizing: border-box; }
+        /* SCHNELLERER FARBWECHSEL (0.3s statt 0.8s) */
+        * { transition: background 0.3s ease, color 0.3s ease; -webkit-user-select: none; user-select: none; box-sizing: border-box; }
         input { -webkit-user-select: text; user-select: text; }
 
         body {
@@ -95,7 +94,7 @@
             display: flex; flex-direction: column; align-items: center; padding: 40px 20px; color: var(--text-main);
         }
 
-        /* CHARTS MESH GRADIENT */
+        /* SCHNELLERER MESH GRADIENT (6s statt 12s) */
         @keyframes meshGradient {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
@@ -105,7 +104,7 @@
         .charts-active {
             background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab) !important;
             background-size: 400% 400% !important;
-            animation: meshGradient 12s ease infinite !important;
+            animation: meshGradient 6s ease infinite !important;
         }
 
         .main-card {
@@ -133,8 +132,6 @@
             display: flex; overflow-x: auto; gap: 10px; margin: 20px -10px 10px -10px;
             padding: 5px 10px; scrollbar-width: none;
         }
-        .cat-container::-webkit-scrollbar { display: none; }
-        
         .cat-pill {
             background: var(--item-bg); padding: 8px 16px; border-radius: 15px;
             white-space: nowrap; font-size: 13px; font-weight: 600; cursor: pointer;
@@ -208,7 +205,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // AURA FUNKTION
         window.updateAura = (color) => {
             const root = document.documentElement;
             const body = document.body;
@@ -316,7 +312,7 @@
                 const data = await res.json();
                 if(data.results[0]) updateAura(catColors[data.results[0].primaryGenreName] || '#007aff');
                 renderHtml(data.results);
-            }, 300);
+            }, 200); // Suche ebenfalls etwas beschleunigt
         };
 
         window.setCategory = (el, cat) => {
