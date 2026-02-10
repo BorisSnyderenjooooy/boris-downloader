@@ -135,6 +135,8 @@
         }
 
         .cat-container { display: flex; overflow-x: auto; gap: 10px; margin: 20px -10px 10px -10px; padding: 5px 10px; scrollbar-width: none; }
+        .cat-container::-webkit-scrollbar { display: none; }
+
         .cat-pill {
             background: var(--item-bg); padding: 8px 16px; border-radius: 15px;
             white-space: nowrap; font-size: 13px; font-weight: 600; cursor: pointer;
@@ -149,11 +151,10 @@
         }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .btn-laden { background: #f1f3f6; color: var(--primary); border: none; padding: 8px 18px; border-radius: 20px; font-weight: 700; }
+        .btn-laden { background: #f1f3f6; color: var(--primary); border: none; padding: 8px 18px; border-radius: 20px; font-weight: 700; cursor: pointer; }
         [data-theme="dark"] .btn-laden { background: var(--primary); color: white; }
 
-        footer { margin-top: 40px; font-size: 12px; color: #1d1d1f; text-align: center; font-weight: 600; z-index: 10; }
-        [data-theme="dark"] footer { color: #ffffff; }
+        footer { margin-top: 40px; font-size: 12px; color: var(--text-main); text-align: center; font-weight: 600; z-index: 10; opacity: 0.8; }
     </style>
 </head>
 <body>
@@ -243,7 +244,6 @@
             }
         };
 
-        // THEME TOGGLE MIT SPEICHERUNG
         window.toggleTheme = () => {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
             const newTheme = isDark ? 'light' : 'dark';
@@ -253,21 +253,26 @@
             updateAura(sessionStorage.getItem('isCharts') === 'true' ? 'reset' : sessionStorage.getItem('lastColor'));
         };
 
-        // Button Icon beim Start setzen
         if(localStorage.getItem('theme') === 'dark') {
             document.getElementById('themeBtn').innerText = '☀️';
         }
 
         const catColors = { 'Entertainment': '#ff9500', 'Games': '#ff3b30', 'Social Networking': '#007aff', 'Music': '#ff2d55', 'Productivity': '#5856d6', 'Finance': '#34c759', 'Photo & Video': '#af52de' };
 
-        window.handleAppClick = async (trackId, name, icon, cat) => {
+        window.handleAppClick = async (btn, trackId, name, icon, cat) => {
+            btn.innerText = "Moment...";
+            btn.style.opacity = "0.7";
             const farbe = catColors[cat] || '#007aff';
             sessionStorage.setItem('lastColor', farbe);
             sessionStorage.setItem('isCharts', 'false');
-            const appRef = ref(db, 'charts/' + trackId);
-            const snapshot = await get(appRef);
-            let count = snapshot.exists() ? snapshot.val().count : 0;
-            await set(appRef, { trackId, name, icon, cat, count: count + 1 });
+            
+            try {
+                const appRef = ref(db, 'charts/' + trackId);
+                const snapshot = await get(appRef);
+                let count = snapshot.exists() ? snapshot.val().count : 0;
+                await set(appRef, { trackId, name, icon, cat, count: count + 1 });
+            } catch(e) { console.error("Firebase Update fehlgeschlagen"); }
+            
             window.location.href = window.location.pathname + "?id=" + trackId;
         };
 
@@ -275,7 +280,10 @@
             updateAura('reset');
             onValue(ref(db, 'charts'), (snapshot) => {
                 const data = snapshot.val();
-                if(!data) return;
+                if(!data) {
+                    document.getElementById('liste').innerHTML = "<div style='color:var(--text-secondary); padding:20px;'>Noch keine Charts verfügbar.</div>";
+                    return;
+                }
                 const sorted = Object.values(data).sort((a,b) => b.count - a.count);
                 renderHtml(sorted, true);
             });
@@ -284,6 +292,12 @@
         function renderHtml(results, isChart = false) {
             const liste = document.getElementById('liste');
             liste.innerHTML = "";
+            
+            if (results.length === 0) {
+                liste.innerHTML = "<div style='color:var(--text-secondary); padding:20px;'>Keine Apps gefunden.</div>";
+                return;
+            }
+
             results.forEach((app, index) => {
                 const id = app.trackId;
                 const name = (app.trackName || app.name).replace(/'/g, "");
@@ -294,12 +308,12 @@
                 const item = document.createElement('div');
                 item.className = 'app-item';
                 item.innerHTML = `
-                    <img src="${icon}" onclick="handleAppClick('${id}', '${name}', '${icon}', '${cat}')" style="width:55px; height:55px; border-radius:12px; margin-right:15px; cursor:pointer;">
-                    <div style="flex-grow:1; overflow:hidden;" onclick="handleAppClick('${id}', '${name}', '${icon}', '${cat}')">
-                        <div style="font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;">${name} ${countText}</div>
+                    <img src="${icon}" style="width:55px; height:55px; border-radius:12px; margin-right:15px; cursor:pointer;" onclick="this.parentElement.querySelector('.btn-laden').click()">
+                    <div style="flex-grow:1; overflow:hidden; cursor:pointer;" onclick="this.parentElement.querySelector('.btn-laden').click()">
+                        <div style="font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${name} ${countText}</div>
                         <div style="font-size:11px; color:var(--text-secondary);">${cat}</div>
                     </div>
-                    <button class="btn-laden" onclick="handleAppClick('${id}', '${name}', '${icon}', '${cat}')">Laden</button>
+                    <button class="btn-laden" onclick="handleAppClick(this, '${id}', '${name}', '${icon}', '${cat}')">Laden</button>
                 `;
                 liste.appendChild(item);
             });
@@ -307,11 +321,17 @@
 
         window.sucheApps = () => {
             const q = document.getElementById('suche').value;
-            if(q.length < 2) { updateAura('reset'); return; }
+            if(q.length < 2) { 
+                if(document.querySelector('.cat-pill.active').innerText === 'Boris Charts') loadBorisCharts();
+                else updateAura('reset'); 
+                return; 
+            }
             fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&country=de&entity=software&limit=15`)
                 .then(r => r.json()).then(data => {
                     if(data.results[0]) updateAura(catColors[data.results[0].primaryGenreName] || '#007aff');
                     renderHtml(data.results);
+                }).catch(() => {
+                    document.getElementById('liste').innerHTML = "<div style='color:var(--text-secondary); padding:20px;'>Fehler beim Laden der Suche.</div>";
                 });
         };
 
@@ -319,9 +339,14 @@
             document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
             el.classList.add('active');
             document.getElementById('suche').value = "";
-            updateAura(catColors[cat] || (cat === 'Boris Charts' ? 'reset' : '#007aff'));
-            if(cat === 'Boris Charts') loadBorisCharts();
-            else { fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(cat)}&country=de&entity=software&limit=15`).then(r => r.json()).then(d => renderHtml(d.results)); }
+            
+            if(cat === 'Boris Charts') {
+                loadBorisCharts();
+            } else { 
+                updateAura(catColors[cat] || '#007aff');
+                fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(cat)}&country=de&entity=software&limit=15`)
+                    .then(r => r.json()).then(d => renderHtml(d.results)); 
+            }
         };
 
         window.zeigeImpressum = () => alert("Impressum\n\nBetreiber: Moritz Schmalle\nAnschrift: Auf Anfrage per E-Mail\nE-Mail: info@boris-store.xyz");
