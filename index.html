@@ -23,13 +23,19 @@
         const appId = params.get('id');
         document.addEventListener('contextmenu', e => e.preventDefault());
 
-        // INITIALES THEME LADEN (Verhindert Flackern)
+        // INITIALES THEME LADEN
         const savedTheme = localStorage.getItem('theme') || 'light';
         if (savedTheme === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
         }
 
+        // BANNER-FIX: Sofort injizieren, damit Safari es beim ersten Scan sieht
         if (appId) {
+            const meta = document.createElement('meta');
+            meta.name = "apple-itunes-app";
+            meta.content = `app-id=${appId}`;
+            document.head.appendChild(meta);
+
             sessionStorage.setItem('isCharts', 'false');
             const auraFarbe = sessionStorage.getItem('lastColor') || '#007aff';
             
@@ -43,11 +49,6 @@
                 document.body.style.background = `linear-gradient(135deg, ${auraFarbe}66 0%, ${isDark ? '#000000' : '#ffffff'} 100%)`;
                 document.body.style.backgroundAttachment = 'fixed';
 
-                const meta = document.createElement('meta');
-                meta.name = "apple-itunes-app";
-                meta.content = `app-id=${appId}`;
-                document.head.appendChild(meta);
-
                 document.body.innerHTML = `
                     <div style="text-align:center; padding: 60px 20px; font-family:-apple-system, sans-serif; display:flex; flex-direction:column; align-items:center; min-height:100vh;">
                         <div style="font-size:80px; margin-bottom:20px; filter: drop-shadow(0 0 20px ${auraFarbe});">📲</div>
@@ -57,7 +58,7 @@
                         <div style="background: rgba(255, 193, 7, 0.15); backdrop-filter: blur(10px); border-radius: 25px; padding: 25px; margin-bottom: 40px; max-width: 400px; text-align: left; font-size: 14px; color: #856404; border: 1px solid #ffeeba;">
                             <strong>⚠️ WICHTIG:</strong><br>
                             • Den Banner oben <b>niemals schließen</b>.<br>
-                            • Falls er nicht kommt: Seite kurz neu laden.
+                            • Falls er nicht kommt: Seite kurz neu laden oder im <b>echten Safari</b> öffnen.
                         </div>
 
                         <button onclick="window.location.href=window.location.pathname" style="padding:18px 40px; border-radius:30px; border:none; background:${auraFarbe}; color:white; font-weight:bold; font-size:17px; cursor:pointer; box-shadow: 0 10px 20px ${auraFarbe}44;">Zurück</button>
@@ -298,7 +299,7 @@
                 return;
             }
 
-            results.forEach((app, index) => {
+            results.forEach((app) => {
                 const id = app.trackId;
                 const name = (app.trackName || app.name).replace(/'/g, "");
                 const icon = app.artworkUrl100 || app.icon;
@@ -331,7 +332,7 @@
                     if(data.results[0]) updateAura(catColors[data.results[0].primaryGenreName] || '#007aff');
                     renderHtml(data.results);
                 }).catch(() => {
-                    document.getElementById('liste').innerHTML = "<div style='color:var(--text-secondary); padding:20px;'>Fehler beim Laden der Suche.</div>";
+                    document.getElementById('liste').innerHTML = "<div style='color:var(--text-secondary); padding:20px;'>Suche fehlgeschlagen.</div>";
                 });
         };
 
