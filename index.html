@@ -17,7 +17,7 @@
         const params = new URLSearchParams(window.location.search);
         const appId = params.get('id');
 
-        // NUR wenn eine ID da ist und diese nicht 0 ist, wird der Banner-Tag erstellt
+        // Banner nur injizieren, wenn eine gültige ID vorhanden ist
         if (appId && /^\d+$/.test(appId) && appId !== "0") {
             const meta = document.createElement('meta');
             meta.name = "apple-itunes-app";
@@ -62,7 +62,8 @@
                         <div style="background: rgba(255, 193, 7, 0.15); backdrop-filter: blur(10px); border-radius: 25px; padding: 25px; margin-bottom: 40px; max-width: 400px; text-align: left; font-size: 14px; color: #856404; border: 1px solid #ffeeba;">
                             <strong>⚠️ WICHTIG:</strong><br>
                             • Den Banner oben <b>niemals schließen</b>.<br>
-                            • Klappt nur im <b>Safari</b> (kein Instagram-Browser).
+                            • Klappt nur im <b>Safari Browser</b>.<br>
+                            • Falls er nicht kommt: Seite kurz neu laden.
                         </div>
 
                         <button onclick="window.location.href=window.location.pathname" style="padding:18px 40px; border-radius:30px; border:none; background:${auraFarbe}; color:white; font-weight:bold; font-size:17px; cursor:pointer; box-shadow: 0 10px 20px ${auraFarbe}44;">Zurück</button>
