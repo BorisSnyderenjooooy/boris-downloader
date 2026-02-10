@@ -23,8 +23,13 @@
         const appId = params.get('id');
         document.addEventListener('contextmenu', e => e.preventDefault());
 
+        // INITIALES THEME LADEN (Verhindert Flackern)
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+
         if (appId) {
-            // Beim Laden der Download-Seite: Charts-Modus erzwingend deaktivieren
             sessionStorage.setItem('isCharts', 'false');
             const auraFarbe = sessionStorage.getItem('lastColor') || '#007aff';
             
@@ -34,7 +39,6 @@
                 const isDark = localStorage.getItem('theme') === 'dark';
                 if (isDark) document.documentElement.setAttribute('data-theme', 'dark');
                 
-                // Hintergrund auf die App-Farbe setzen (KEIN CHARTS-HINTERGRUND)
                 document.body.classList.remove('charts-active');
                 document.body.style.background = `linear-gradient(135deg, ${auraFarbe}66 0%, ${isDark ? '#000000' : '#ffffff'} 100%)`;
                 document.body.style.backgroundAttachment = 'fixed';
@@ -239,20 +243,27 @@
             }
         };
 
+        // THEME TOGGLE MIT SPEICHERUNG
         window.toggleTheme = () => {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+            const newTheme = isDark ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
             document.getElementById('themeBtn').innerText = isDark ? '🌙' : '☀️';
-            localStorage.setItem('theme', isDark ? 'light' : 'dark');
+            localStorage.setItem('theme', newTheme);
             updateAura(sessionStorage.getItem('isCharts') === 'true' ? 'reset' : sessionStorage.getItem('lastColor'));
         };
+
+        // Button Icon beim Start setzen
+        if(localStorage.getItem('theme') === 'dark') {
+            document.getElementById('themeBtn').innerText = '☀️';
+        }
 
         const catColors = { 'Entertainment': '#ff9500', 'Games': '#ff3b30', 'Social Networking': '#007aff', 'Music': '#ff2d55', 'Productivity': '#5856d6', 'Finance': '#34c759', 'Photo & Video': '#af52de' };
 
         window.handleAppClick = async (trackId, name, icon, cat) => {
             const farbe = catColors[cat] || '#007aff';
             sessionStorage.setItem('lastColor', farbe);
-            sessionStorage.setItem('isCharts', 'false'); // Sicherstellen, dass Charts beim Redirect aus sind
+            sessionStorage.setItem('isCharts', 'false');
             const appRef = ref(db, 'charts/' + trackId);
             const snapshot = await get(appRef);
             let count = snapshot.exists() ? snapshot.val().count : 0;
