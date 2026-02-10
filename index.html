@@ -8,10 +8,12 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Boris Store">
+    
     <link rel="apple-touch-icon" href="icon.png">
+    <link rel="icon" type="image/png" href="icon.png">
 
     <script>
-        // DOMAIN-LOCK & DOWNLOAD-LOGIK (Unverändert)
+        // DOMAIN-LOCK
         const host = window.location.hostname;
         if (host !== "boris-store.xyz" && host !== "www.boris-store.xyz" && host !== "localhost" && !host.includes("vercel.app")) {
             window.location.href = "https://boris-store.xyz/?error=unauthorized_copy";
@@ -125,7 +127,6 @@
         .btn-laden { background: #f1f3f6; color: var(--primary); border: none; padding: 8px 18px; border-radius: 20px; font-weight: 700; }
         [data-theme="dark"] .btn-laden { background: var(--primary); color: white; }
 
-        /* SKELETON ANIMATION */
         .skeleton {
             background: var(--skeleton);
             background: linear-gradient(90deg, var(--skeleton) 25%, var(--item-bg) 50%, var(--skeleton) 75%);
@@ -185,11 +186,9 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Rechts-Funktionen
         window.zeigeImpressum = () => alert("Impressum\n\nBetreiber: Moritz Schmalle\nAnschrift: Auf Anfrage per E-Mail\nE-Mail: info@boris-store.xyz");
         window.zeigeDatenschutz = () => alert("Datenschutz\n\nWir zählen anonyme App-Klicks via Firebase, um Charts zu erstellen. Keine IP-Speicherung.");
 
-        // Theme
         if (localStorage.getItem('theme') === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
             document.getElementById('themeBtn').innerText = '☀️';
@@ -201,7 +200,6 @@
             localStorage.setItem('theme', isDark ? 'light' : 'dark');
         };
 
-        // TEILEN FUNKTION
         window.shareApp = (id, name) => {
             const shareData = {
                 title: 'Boris Store',
@@ -212,7 +210,6 @@
             else alert("Link kopiert: " + shareData.url);
         };
 
-        // SKELETON ANZEIGEN
         function showSkeleton() {
             const liste = document.getElementById('liste');
             liste.innerHTML = "";
