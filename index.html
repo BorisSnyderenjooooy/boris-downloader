@@ -23,9 +23,11 @@
             document.head.appendChild(meta);
         }
 
-        // 2. DOMAIN-LOCK
-        const host = window.location.hostname;
-        if (host !== "boris-store.xyz" && host !== "www.boris-store.xyz" && host !== "localhost" && !host.includes("vercel.app")) {
+        // 2. DOMAIN-LOCK (Erlaubt jetzt alle deine neuen Domains)
+        const host = window.location.hostname.toLowerCase();
+        const isAllowed = host.includes("boris-store") || host === "localhost" || host.includes("vercel.app");
+        
+        if (!isAllowed) {
             window.location.href = "https://boris-store.xyz/?error=unauthorized_copy";
         }
 
@@ -231,7 +233,8 @@
         const catColors = { 'Entertainment': '#ff9500', 'Games': '#ff3b30', 'Social Networking': '#007aff', 'Music': '#ff2d55', 'Productivity': '#5856d6', 'Finance': '#34c759', 'Photo & Video': '#af52de' };
 
         window.shareApp = (name, id) => {
-            const url = `https://boris-store.xyz/?id=${id}`;
+            // Erkennt automatisch die aktuelle Domain für den Share-Link
+            const url = `${window.location.origin}/?id=${id}`;
             if (navigator.share) {
                 navigator.share({ title: name, text: `Check mal diese App im Boris Store aus: ${name}`, url: url });
             } else {
