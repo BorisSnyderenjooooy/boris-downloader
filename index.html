@@ -13,12 +13,10 @@
     <link rel="icon" type="image/png" href="icon.png">
 
     <script>
-        // 1. URL-PARAMETER & BANNER-LOGIK (PRIORISIERT)
+        // 1. BANNER-LOGIK (SOFORT)
         const params = new URLSearchParams(window.location.search);
         const appId = params.get('id');
-
         if (appId && /^\d+$/.test(appId)) {
-            // Apple Smart App Banner injizieren
             const meta = document.createElement('meta');
             meta.name = "apple-itunes-app";
             meta.content = `app-id=${appId}`;
@@ -37,16 +35,20 @@
             document.documentElement.setAttribute('data-theme', 'dark');
         }
 
-        // 4. DOWNLOAD-ANSICHT ÜBERSCHREIBT BODY
+        // 4. DOWNLOAD-LOGIK (Wiederherstellung des Original-Backgrounds)
         if (appId) {
             document.documentElement.style.visibility = 'hidden'; 
             window.onload = () => {
                 const auraFarbe = sessionStorage.getItem('lastColor') || '#007aff';
                 const isDark = localStorage.getItem('theme') === 'dark';
-                
                 document.documentElement.style.visibility = 'visible';
+                
+                document.body.style.background = `linear-gradient(135deg, ${auraFarbe}66 0%, ${isDark ? '#000000' : '#ffffff'} 100%)`;
+                document.body.style.backgroundAttachment = 'fixed';
+                document.body.style.backgroundSize = 'cover';
+
                 document.body.innerHTML = `
-                    <div style="text-align:center; padding: 80px 20px; font-family:-apple-system, sans-serif; display:flex; flex-direction:column; align-items:center; min-height:100vh; background: linear-gradient(135deg, ${auraFarbe}44 0%, ${isDark ? '#000000' : '#ffffff'} 100%);">
+                    <div style="text-align:center; padding: 80px 20px; font-family:-apple-system, sans-serif; display:flex; flex-direction:column; align-items:center; min-height:100vh;">
                         <div style="margin-top: 40px;">
                             <h2 style="color:var(--text-main); font-size:26px; font-weight:700; margin-bottom:10px;">Download bereit</h2>
                             <p style="color:var(--text-secondary); font-size:16px; margin-bottom:40px;">Schau jetzt ganz oben am Bildschirmrand.</p>
@@ -88,22 +90,20 @@
             --item-bg: rgba(44, 44, 46, 0.6);
         }
 
-        * { transition: background 0.3s ease, color 0.3s ease; -webkit-user-select: none; user-select: none; box-sizing: border-box; }
+        * { transition: background 0.4s ease, color 0.4s ease; -webkit-user-select: none; user-select: none; box-sizing: border-box; }
         input { -webkit-user-select: text; user-select: text; }
+        
         body {
             margin: 0; font-family: -apple-system, sans-serif;
             background: linear-gradient(135deg, var(--aura-color1) 0%, var(--aura-color2) 100%);
-            background-attachment: fixed; min-height: 100vh; 
+            background-attachment: fixed; background-size: cover; min-height: 100vh; 
             display: flex; flex-direction: column; align-items: center; padding: 40px 20px; color: var(--text-main);
+            overflow-x: hidden;
         }
 
-        .charts-active { background: linear-gradient(160deg, #6a11cb 0%, #2575fc 100%) !important; }
+        .charts-active { background: linear-gradient(160deg, #6a11cb 0%, #2575fc 100%) !important; background-attachment: fixed !important; }
 
-        .emoji-rain {
-            position: fixed; top: -50px; font-size: 26px; z-index: -1; 
-            opacity: 0.6; animation: fall linear forwards; pointer-events: none;
-        }
-
+        .emoji-rain { position: fixed; top: -50px; font-size: 26px; z-index: -1; opacity: 0.6; animation: fall linear forwards; pointer-events: none; }
         @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
 
         .main-card {
@@ -113,14 +113,8 @@
             border: 1px solid rgba(255,255,255,0.25); z-index: 10;
         }
 
-        .theme-toggle {
-            position: absolute; top: 25px; right: 25px;
-            background: rgba(120, 120, 128, 0.16); border: none; width: 36px; height: 36px;
-            border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-        }
-
+        .theme-toggle { position: absolute; top: 25px; right: 25px; background: rgba(120, 120, 128, 0.16); border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         h1 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 38px; font-weight: 800; margin: 0; }
-        
         input { width: 100%; padding: 18px; border-radius: 20px; border: 1px solid rgba(0,0,0,0.05); background: var(--input-bg); color: var(--text-main); font-size: 17px; outline: none; }
 
         .cat-container { display: flex; overflow-x: auto; gap: 10px; margin: 20px -10px 10px -10px; padding: 5px 10px; scrollbar-width: none; }
@@ -219,6 +213,7 @@
                 root.style.setProperty('--aura-color2', isDark ? '#000000' : '#ffffff');
                 sessionStorage.setItem('lastColor', color);
                 body.style.background = `linear-gradient(135deg, var(--aura-color1) 0%, var(--aura-color2) 100%)`;
+                body.style.backgroundAttachment = 'fixed';
             }
         };
 
@@ -271,8 +266,8 @@
                 const item = document.createElement('div');
                 item.className = 'app-item';
                 item.innerHTML = `
-                    <img src="${icon}" style="width:55px; height:55px; border-radius:12px; margin-right:15px;">
-                    <div style="flex-grow:1; overflow:hidden;">
+                    <img src="${icon}" style="width:55px; height:55px; border-radius:12px; margin-right:15px; cursor:pointer;" onclick="this.parentElement.querySelector('.btn-laden').click()">
+                    <div style="flex-grow:1; overflow:hidden; cursor:pointer;" onclick="this.parentElement.querySelector('.btn-laden').click()">
                         <div style="font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${name} ${countText}</div>
                         <div style="font-size:11px; color:var(--text-secondary);">${cat}</div>
                     </div>
