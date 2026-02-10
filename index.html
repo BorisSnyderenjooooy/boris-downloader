@@ -24,20 +24,21 @@
         document.addEventListener('contextmenu', e => e.preventDefault());
 
         if (appId) {
+            // Beim Laden der Download-Seite: Charts-Modus erzwingend deaktivieren
+            sessionStorage.setItem('isCharts', 'false');
             const auraFarbe = sessionStorage.getItem('lastColor') || '#007aff';
+            
             document.documentElement.style.visibility = 'hidden'; 
             window.onload = () => {
                 document.documentElement.style.visibility = 'visible';
                 const isDark = localStorage.getItem('theme') === 'dark';
                 if (isDark) document.documentElement.setAttribute('data-theme', 'dark');
                 
-                if(sessionStorage.getItem('isCharts') === 'true') {
-                    document.body.classList.add('charts-active');
-                } else {
-                    document.body.style.background = `linear-gradient(135deg, ${auraFarbe}66 0%, ${isDark ? '#000000' : '#ffffff'} 100%)`;
-                }
+                // Hintergrund auf die App-Farbe setzen (KEIN CHARTS-HINTERGRUND)
+                document.body.classList.remove('charts-active');
+                document.body.style.background = `linear-gradient(135deg, ${auraFarbe}66 0%, ${isDark ? '#000000' : '#ffffff'} 100%)`;
+                document.body.style.backgroundAttachment = 'fixed';
 
-                // Apple Banner Meta-Tag hinzufügen
                 const meta = document.createElement('meta');
                 meta.name = "apple-itunes-app";
                 meta.content = `app-id=${appId}`;
@@ -52,7 +53,7 @@
                         <div style="background: rgba(255, 193, 7, 0.15); backdrop-filter: blur(10px); border-radius: 25px; padding: 25px; margin-bottom: 40px; max-width: 400px; text-align: left; font-size: 14px; color: #856404; border: 1px solid #ffeeba;">
                             <strong>⚠️ WICHTIG:</strong><br>
                             • Den Banner oben <b>niemals schließen</b>.<br>
-                            • Falls er nicht kommt: Seite kurz neu laden oder nach oben/unten scrollen.
+                            • Falls er nicht kommt: Seite kurz neu laden.
                         </div>
 
                         <button onclick="window.location.href=window.location.pathname" style="padding:18px 40px; border-radius:30px; border:none; background:${auraFarbe}; color:white; font-weight:bold; font-size:17px; cursor:pointer; box-shadow: 0 10px 20px ${auraFarbe}44;">Zurück</button>
@@ -72,7 +73,6 @@
             --text-secondary: #333333;
             --input-bg: #ffffff;
             --item-bg: rgba(255, 255, 255, 0.5);
-            --skeleton: #e1e1e1;
         }
 
         [data-theme="dark"] {
@@ -83,7 +83,6 @@
             --text-secondary: #cccccc; 
             --input-bg: #2c2c2e;
             --item-bg: rgba(44, 44, 46, 0.6);
-            --skeleton: #3a3a3c;
         }
 
         * { transition: background 0.3s ease, color 0.3s ease; -webkit-user-select: none; user-select: none; box-sizing: border-box; }
@@ -149,9 +148,7 @@
         .btn-laden { background: #f1f3f6; color: var(--primary); border: none; padding: 8px 18px; border-radius: 20px; font-weight: 700; }
         [data-theme="dark"] .btn-laden { background: var(--primary); color: white; }
 
-        footer { 
-            margin-top: 40px; font-size: 12px; color: #1d1d1f; text-align: center; font-weight: 600; z-index: 10;
-        }
+        footer { margin-top: 40px; font-size: 12px; color: #1d1d1f; text-align: center; font-weight: 600; z-index: 10; }
         [data-theme="dark"] footer { color: #ffffff; }
     </style>
 </head>
@@ -242,13 +239,6 @@
             }
         };
 
-        window.zeigeImpressum = () => alert("Impressum\n\nBetreiber: Moritz Schmalle\nAnschrift: Auf Anfrage per E-Mail\nE-Mail: info@boris-store.xyz");
-        window.zeigeDatenschutz = () => alert("Datenschutz\n\nKlicks werden anonym gezählt.");
-
-        if (localStorage.getItem('theme') === 'dark') {
-            document.documentElement.setAttribute('data-theme', 'dark');
-            document.getElementById('themeBtn').innerText = '☀️';
-        }
         window.toggleTheme = () => {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
             document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
@@ -260,14 +250,14 @@
         const catColors = { 'Entertainment': '#ff9500', 'Games': '#ff3b30', 'Social Networking': '#007aff', 'Music': '#ff2d55', 'Productivity': '#5856d6', 'Finance': '#34c759', 'Photo & Video': '#af52de' };
 
         window.handleAppClick = async (trackId, name, icon, cat) => {
-            if (window.navigator.vibrate) window.navigator.vibrate(12);
             const farbe = catColors[cat] || '#007aff';
             sessionStorage.setItem('lastColor', farbe);
+            sessionStorage.setItem('isCharts', 'false'); // Sicherstellen, dass Charts beim Redirect aus sind
             const appRef = ref(db, 'charts/' + trackId);
             const snapshot = await get(appRef);
             let count = snapshot.exists() ? snapshot.val().count : 0;
             await set(appRef, { trackId, name, icon, cat, count: count + 1 });
-            window.location.href = window.location.pathname + "?id=" + trackId + "&c=" + Math.floor(Math.random()*999);
+            window.location.href = window.location.pathname + "?id=" + trackId;
         };
 
         window.loadBorisCharts = () => {
@@ -292,7 +282,6 @@
 
                 const item = document.createElement('div');
                 item.className = 'app-item';
-                item.style.animationDelay = (index * 0.04) + 's';
                 item.innerHTML = `
                     <img src="${icon}" onclick="handleAppClick('${id}', '${name}', '${icon}', '${cat}')" style="width:55px; height:55px; border-radius:12px; margin-right:15px; cursor:pointer;">
                     <div style="flex-grow:1; overflow:hidden;" onclick="handleAppClick('${id}', '${name}', '${icon}', '${cat}')">
@@ -305,17 +294,14 @@
             });
         }
 
-        let debounce;
         window.sucheApps = () => {
             const q = document.getElementById('suche').value;
             if(q.length < 2) { updateAura('reset'); return; }
-            clearTimeout(debounce);
-            debounce = setTimeout(async () => {
-                const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&country=de&entity=software&limit=15`);
-                const data = await res.json();
-                if(data.results[0]) updateAura(catColors[data.results[0].primaryGenreName] || '#007aff');
-                renderHtml(data.results);
-            }, 200);
+            fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&country=de&entity=software&limit=15`)
+                .then(r => r.json()).then(data => {
+                    if(data.results[0]) updateAura(catColors[data.results[0].primaryGenreName] || '#007aff');
+                    renderHtml(data.results);
+                });
         };
 
         window.setCategory = (el, cat) => {
@@ -326,6 +312,9 @@
             if(cat === 'Boris Charts') loadBorisCharts();
             else { fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(cat)}&country=de&entity=software&limit=15`).then(r => r.json()).then(d => renderHtml(d.results)); }
         };
+
+        window.zeigeImpressum = () => alert("Impressum\n\nBetreiber: Moritz Schmalle\nAnschrift: Auf Anfrage per E-Mail\nE-Mail: info@boris-store.xyz");
+        window.zeigeDatenschutz = () => alert("Datenschutz\n\nKlicks werden anonym gezählt.");
 
         loadBorisCharts();
     </script>
