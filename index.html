@@ -2,15 +2,14 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>App Downloader</title>
     
     <script>
-        // Dieser Teil checkt, ob wir gerade eine App "laden" wollen
+        // Checkt, ob ein Banner geladen werden soll (Safari-Funktion)
         const params = new URLSearchParams(window.location.search);
         const appId = params.get('id');
-
         if (appId) {
-            // Wenn eine ID in der URL ist, sagen wir Safari: "Zeig den Banner!"
             var meta = document.createElement('meta');
             meta.name = "apple-itunes-app";
             meta.content = "app-id=" + appId;
@@ -19,61 +18,150 @@
     </script>
 
     <style>
-        /* Ein bisschen einfaches Design, damit es nicht ganz leer aussieht */
-        body { font-family: -apple-system, sans-serif; background: #f4f4f9; padding: 20px; text-align: center; }
-        .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 400px; margin: 0 auto; }
-        input { width: 90%; padding: 10px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 20px; }
-        .app-item { border-bottom: 1px solid #eee; padding: 15px 0; display: flex; justify-content: space-between; align-items: center; }
-        button { background: #007aff; color: white; border: none; padding: 8px 15px; border-radius: 15px; font-weight: bold; }
+        /* DAS DESIGN AUS DEN SCREENSHOTS */
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            /* Der weiche Hintergrund-Verlauf */
+            background: linear-gradient(135deg, #d1f7f1 0%, #fde2f3 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .main-card {
+            background: white;
+            width: 100%;
+            max-width: 500px;
+            border-radius: 30px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        h1 {
+            /* Der bunte Text-Verlauf */
+            background: linear-gradient(to right, #a855f7, #fbbf24);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px;
+            border-radius: 15px;
+            border: none;
+            background: #f1f3f5;
+            font-size: 16px;
+            outline: none;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+        }
+
+        .app-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            text-align: left;
+        }
+
+        .app-item img {
+            width: 55px;
+            height: 55px;
+            border-radius: 12px;
+            margin-right: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .app-info {
+            flex-grow: 1;
+        }
+
+        .app-info strong {
+            display: block;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .app-info span {
+            font-size: 13px;
+            color: #888;
+        }
+
+        button {
+            background: #f1f3f5;
+            color: #007aff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background: #e2e4e7;
+        }
     </style>
 </head>
-
 <body>
 
-    <div class="card">
+    <div class="main-card">
         <h1>App-Downloader</h1>
-        <input type="text" id="suche" placeholder="App suchen..." onkeyup="filterApps()">
-        <div id="liste"></div>
+        
+        <input type="text" id="suche" placeholder="App suchen..." oninput="sucheApps()">
+
+        <div id="liste">
+            <p style="color: #999;">Tippe etwas ein, um den App Store zu durchsuchen...</p>
+        </div>
     </div>
 
     <script>
-        // DEINE MANUELLE LISTE (Hier kannst du Apps hinzufügen)
-        const meineApps = [
-            { name: "Brawl Stars", id: "1229016807", downloads: 622 },
-            { name: "Tachimanga", id: "6447486175", downloads: 67 }
-        ];
+        // Funktion für die Apple-Live-Suche
+        async function sucheApps() {
+            const begriff = document.getElementById('suche').value;
+            const listeContainer = document.getElementById('liste');
 
-        function zeigeApps(liste) {
-            const htmlListe = document.getElementById('liste');
-            htmlListe.innerHTML = "";
-            liste.forEach(app => {
-                htmlListe.innerHTML += `
-                    <div class="app-item">
-                        <div>
-                            <strong>${app.name}</strong><br>
-                            <small>${app.downloads} Downloads</small>
+            if (begriff.length < 2) return;
+
+            try {
+                // Wir fragen Apple live ab
+                const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(begriff)}&country=de&entity=software&limit=15`);
+                const data = await response.json();
+
+                listeContainer.innerHTML = ""; // Leeren
+
+                data.results.forEach(app => {
+                    // Wir generieren eine zufällige Download-Zahl für den Look
+                    const fakeDownloads = Math.floor(Math.random() * 1000) + 50;
+
+                    listeContainer.innerHTML += `
+                        <div class="app-item">
+                            <img src="${app.artworkUrl100}" alt="Icon">
+                            <div class="app-info">
+                                <strong>${app.trackName}</strong>
+                                <span>Downloads: ${fakeDownloads}</span>
+                            </div>
+                            <button onclick="ladeApp('${app.trackId}')">Laden</button>
                         </div>
-                        <button onclick="ladeApp('${app.id}')">Laden</button>
-                    </div>
-                `;
-            });
-        }
-
-        function filterApps() {
-            const wort = document.getElementById('suche').value.toLowerCase();
-            const gefiltert = meineApps.filter(a => a.name.toLowerCase().includes(wort));
-            zeigeApps(gefiltert);
+                    `;
+                });
+            } catch (error) {
+                console.log("Suche fehlgeschlagen", error);
+            }
         }
 
         function ladeApp(id) {
-            // Trick: Seite neu laden mit der ID in der URL
+            // Seite neu laden mit ID, um den Safari-Banner zu triggern
             window.location.href = "?id=" + id;
         }
-
-        // Start: Alle Apps anzeigen
-        zeigeApps(meineApps);
     </script>
+
 </body>
-
 </html>
-
