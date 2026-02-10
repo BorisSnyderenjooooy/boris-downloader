@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Boris Store</title>
 
+    <meta id="dynamic-apple-banner" name="apple-itunes-app" content="app-id=0">
+
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Boris Store">
@@ -13,33 +15,40 @@
     <link rel="icon" type="image/png" href="icon.png">
 
     <script>
-        // DOMAIN-LOCK
+        // 1. URL-Parameter & Banner-Injektion (SOFORT)
+        const params = new URLSearchParams(window.location.search);
+        const appId = params.get('id');
+
+        if (appId && /^\d+$/.test(appId)) {
+            // Platzhalter füllen
+            const metaPlaceholder = document.getElementById('dynamic-apple-banner');
+            if (metaPlaceholder) metaPlaceholder.setAttribute('content', `app-id=${appId}`);
+            
+            // Backup: Zusätzliches Tag injizieren
+            const fastMeta = document.createElement('meta');
+            fastMeta.name = "apple-itunes-app";
+            fastMeta.content = `app-id=${appId}`;
+            document.head.appendChild(fastMeta);
+        }
+
+        // 2. DOMAIN-LOCK
         const host = window.location.hostname;
         if (host !== "boris-store.xyz" && host !== "www.boris-store.xyz" && host !== "localhost" && !host.includes("vercel.app")) {
             window.location.href = "https://boris-store.xyz/?error=unauthorized_copy";
         }
 
-        const params = new URLSearchParams(window.location.search);
-        const appId = params.get('id');
-        document.addEventListener('contextmenu', e => e.preventDefault());
-
-        // INITIALES THEME LADEN
+        // 3. INITIALES THEME LADEN
         const savedTheme = localStorage.getItem('theme') || 'light';
         if (savedTheme === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
         }
 
-        // BANNER-FIX: Sofort injizieren, damit Safari es beim ersten Scan sieht
+        // 4. DOWNLOAD-ANSICHT LOGIK
         if (appId) {
-            const meta = document.createElement('meta');
-            meta.name = "apple-itunes-app";
-            meta.content = `app-id=${appId}`;
-            document.head.appendChild(meta);
-
             sessionStorage.setItem('isCharts', 'false');
             const auraFarbe = sessionStorage.getItem('lastColor') || '#007aff';
-            
             document.documentElement.style.visibility = 'hidden'; 
+
             window.onload = () => {
                 document.documentElement.style.visibility = 'visible';
                 const isDark = localStorage.getItem('theme') === 'dark';
@@ -53,12 +62,13 @@
                     <div style="text-align:center; padding: 60px 20px; font-family:-apple-system, sans-serif; display:flex; flex-direction:column; align-items:center; min-height:100vh;">
                         <div style="font-size:80px; margin-bottom:20px; filter: drop-shadow(0 0 20px ${auraFarbe});">📲</div>
                         <h2 style="color:var(--text-main); font-size:28px; font-weight:700;">Boris Store: Download</h2>
-                        <p style="color:var(--text-secondary); margin-bottom:30px;">Der offizielle Apple-Banner erscheint gleich oben.</p>
+                        <p style="color:var(--text-secondary); margin-bottom:5px;">Der offizielle Apple-Banner erscheint gleich oben.</p>
+                        <p style="color:var(--text-secondary); font-size:12px; margin-bottom:30px;">(Falls nicht: Seite 1x neu laden)</p>
                         
                         <div style="background: rgba(255, 193, 7, 0.15); backdrop-filter: blur(10px); border-radius: 25px; padding: 25px; margin-bottom: 40px; max-width: 400px; text-align: left; font-size: 14px; color: #856404; border: 1px solid #ffeeba;">
                             <strong>⚠️ WICHTIG:</strong><br>
                             • Den Banner oben <b>niemals schließen</b>.<br>
-                            • Falls er nicht kommt: Seite kurz neu laden oder im <b>echten Safari</b> öffnen.
+                            • Klappt nur im <b>Safari</b> (kein Instagram-Browser).
                         </div>
 
                         <button onclick="window.location.href=window.location.pathname" style="padding:18px 40px; border-radius:30px; border:none; background:${auraFarbe}; color:white; font-weight:bold; font-size:17px; cursor:pointer; box-shadow: 0 10px 20px ${auraFarbe}44;">Zurück</button>
@@ -272,7 +282,7 @@
                 const snapshot = await get(appRef);
                 let count = snapshot.exists() ? snapshot.val().count : 0;
                 await set(appRef, { trackId, name, icon, cat, count: count + 1 });
-            } catch(e) { console.error("Firebase Update fehlgeschlagen"); }
+            } catch(e) { console.error("Firebase Fehler"); }
             
             window.location.href = window.location.pathname + "?id=" + trackId;
         };
@@ -282,7 +292,7 @@
             onValue(ref(db, 'charts'), (snapshot) => {
                 const data = snapshot.val();
                 if(!data) {
-                    document.getElementById('liste').innerHTML = "<div style='color:var(--text-secondary); padding:20px;'>Noch keine Charts verfügbar.</div>";
+                    document.getElementById('liste').innerHTML = "<div style='padding:20px; color:var(--text-secondary);'>Noch keine Charts vorhanden.</div>";
                     return;
                 }
                 const sorted = Object.values(data).sort((a,b) => b.count - a.count);
@@ -295,7 +305,7 @@
             liste.innerHTML = "";
             
             if (results.length === 0) {
-                liste.innerHTML = "<div style='color:var(--text-secondary); padding:20px;'>Keine Apps gefunden.</div>";
+                liste.innerHTML = "<div style='padding:20px; color:var(--text-secondary);'>Keine Ergebnisse gefunden.</div>";
                 return;
             }
 
@@ -332,7 +342,7 @@
                     if(data.results[0]) updateAura(catColors[data.results[0].primaryGenreName] || '#007aff');
                     renderHtml(data.results);
                 }).catch(() => {
-                    document.getElementById('liste').innerHTML = "<div style='color:var(--text-secondary); padding:20px;'>Suche fehlgeschlagen.</div>";
+                    document.getElementById('liste').innerHTML = "<div style='padding:20px; color:var(--text-secondary);'>Fehler bei der Suche.</div>";
                 });
         };
 
