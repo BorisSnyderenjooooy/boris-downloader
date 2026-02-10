@@ -6,7 +6,7 @@
     <title>Boris Store</title>
     
     <script>
-        // DOMAIN-LOCK
+        // DOMAIN-LOCK: Schützt vor Kopien auf anderen Webseiten
         const host = window.location.hostname;
         if (host !== "boris-store.xyz" && 
             host !== "www.boris-store.xyz" && 
@@ -55,6 +55,7 @@
             };
         }
 
+        // Impressum-Funktion mit deinen Daten
         function zeigeImpressum() {
             alert("Impressum\n\nAngaben gemäß § 5 TMG:\nMoritz Schmalle\nHammerstraße 242\n48153 Münster\n\nKontakt:\nTelefon: +49 15750637096\nE-Mail: info@boris-store.xyz");
         }
@@ -62,11 +63,11 @@
 
     <style>
         :root { --primary: #007aff; }
-        * { -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+        * { -webkit-user-select: none; user-select: none; }
         input { -webkit-user-select: text; user-select: text; }
 
         body {
-            margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0; font-family: -apple-system, sans-serif;
             background: linear-gradient(135deg, #e0f7f4 0%, #f7e8f3 100%);
             background-attachment: fixed; min-height: 100vh;
             display: flex; flex-direction: column; align-items: center; padding: 40px 20px;
@@ -75,35 +76,28 @@
         .main-card {
             background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px);
             width: 100%; max-width: 480px; border-radius: 38px; padding: 40px 30px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.08); text-align: center; box-sizing: border-box;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.08); text-align: center;
         }
 
         h1 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 38px; font-weight: 800; margin: 0; }
         .tagline { color: #86868b; font-size: 14px; margin-bottom: 30px; }
 
-        .search-container { position: relative; width: 100%; }
         input {
-            width: 100%; padding: 18px 20px; border-radius: 20px; border: 1px solid rgba(0,0,0,0.08);
-            background: white; font-size: 17px; outline: none; box-sizing: border-box;
-            transition: all 0.3s ease;
+            width: 100%; padding: 20px; border-radius: 22px; border: 1px solid rgba(0,0,0,0.05);
+            background: white; font-size: 18px; outline: none; box-sizing: border-box;
         }
-        input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(0,122,255,0.1); }
 
         .app-item {
-            display: flex; align-items: center; padding: 12px; background: rgba(255, 255, 255, 0.5);
-            margin-bottom: 12px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.5); 
-            cursor: pointer; transition: transform 0.2s ease;
+            display: flex; align-items: center; padding: 16px; background: rgba(255, 255, 255, 0.6);
+            margin-bottom: 12px; border-radius: 22px; border: 1px solid rgba(255,255,255,0.5); cursor: pointer;
         }
-        .app-item:active { transform: scale(0.97); }
 
-        .btn-laden { background: #f1f3f6; color: var(--primary); border: none; padding: 8px 16px; border-radius: 15px; font-weight: 700; font-size: 14px; }
+        .btn-laden { background: #f1f3f6; color: var(--primary); border: none; padding: 8px 18px; border-radius: 20px; font-weight: 700; }
 
-        .legal-links { margin-top: 25px; font-size: 11px; }
+        .legal-links { margin-top: 20px; font-size: 11px; }
         .legal-links a { color: #86868b; text-decoration: none; margin: 0 10px; cursor: pointer; }
         
-        footer { margin-top: auto; padding: 20px; font-size: 11px; color: #86868b; text-align: center; }
-
-        .loading-spinner { color: #86868b; font-size: 14px; margin-top: 20px; }
+        footer { margin-top: 40px; font-size: 11px; color: #86868b; text-align: center; }
     </style>
 </head>
 <body>
@@ -112,9 +106,7 @@
         <h1>Boris Store</h1>
         <div class="tagline">Offizieller App-Vermittler</div>
         
-        <div class="search-container">
-            <input type="text" id="suche" placeholder="Apps suchen..." oninput="debounceSuche()">
-        </div>
+        <input type="text" id="suche" placeholder="Apps suchen..." oninput="sucheApps()">
 
         <div id="liste" style="margin-top:20px; text-align:left;">
             <p style="text-align:center; color:#86868b; font-size:14px;">Durchsuche den Boris Store nach Apps.</p>
@@ -132,59 +124,48 @@
     </footer>
 
     <script>
-        let timer;
-        
-        // Debounce-Funktion: Wartet 300ms nach dem Tippen, bevor die API gefragt wird
-        function debounceSuche() {
-            clearTimeout(timer);
-            const begriff = document.getElementById('suche').value.trim();
-            const liste = document.getElementById('liste');
+        let debounceTimer;
 
+        async function sucheApps() {
+            const begriff = document.getElementById('suche').value;
+            const liste = document.getElementById('liste');
+            
+            // Wenn das Feld leer ist, zeige wieder den Standardtext
             if (begriff.length < 2) {
                 liste.innerHTML = '<p style="text-align:center; color:#86868b; font-size:14px;">Durchsuche den Boris Store nach Apps.</p>';
                 return;
             }
 
-            timer = setTimeout(() => {
-                sucheApps(begriff);
+            // Debouncing: Warte kurz, bevor die API angefragt wird
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(async () => {
+                try {
+                    const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(begriff)}&country=de&entity=software&limit=15`);
+                    const data = await response.json();
+                    
+                    liste.innerHTML = "";
+                    if (data.results.length === 0) {
+                        liste.innerHTML = '<p style="text-align:center; color:#86868b; font-size:14px;">Keine Apps gefunden.</p>';
+                        return;
+                    }
+
+                    data.results.forEach(app => {
+                        liste.innerHTML += `
+                            <div class="app-item" onclick="ladeApp('${app.trackId}')">
+                                <img src="${app.artworkUrl100}" style="width:55px; height:55px; border-radius:12px; margin-right:15px;">
+                                <div style="flex-grow:1;"><strong>${app.trackName}</strong></div>
+                                <button class="btn-laden">Laden</button>
+                            </div>
+                        `;
+                    });
+                } catch (e) {
+                    liste.innerHTML = '<p style="text-align:center; color:#86868b; font-size:14px;">Fehler bei der Suche.</p>';
+                }
             }, 300);
         }
 
-        async function sucheApps(begriff) {
-            const liste = document.getElementById('liste');
-            liste.innerHTML = '<p class="loading-spinner" style="text-align:center;">Lade Ergebnisse...</p>';
-
-            try {
-                const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(begriff)}&country=de&entity=software&limit=15`);
-                const data = await response.json();
-                
-                if (data.results.length === 0) {
-                    liste.innerHTML = '<p style="text-align:center; color:#86868b; font-size:14px;">Keine Apps gefunden.</p>';
-                    return;
-                }
-
-                liste.innerHTML = "";
-                data.results.forEach(app => {
-                    const div = document.createElement('div');
-                    div.className = 'app-item';
-                    div.onclick = () => ladeApp(app.trackId);
-                    div.innerHTML = `
-                        <img src="${app.artworkUrl100}" style="width:50px; height:50px; border-radius:10px; margin-right:12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-                        <div style="flex-grow:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; padding-right:10px;">
-                            <strong style="font-size:15px; color:#1d1d1f;">${app.trackName}</strong><br>
-                            <span style="font-size:12px; color:#86868b;">${app.artistName}</span>
-                        </div>
-                        <button class="btn-laden">Laden</button>
-                    `;
-                    liste.appendChild(div);
-                });
-            } catch (e) {
-                liste.innerHTML = '<p style="text-align:center; color:red; font-size:14px;">Fehler bei der Verbindung.</p>';
-            }
-        }
-
         function ladeApp(id) {
-            const cacheKiller = Date.now();
+            const cacheKiller = Math.floor(Math.random() * 999999);
             window.location.href = window.location.pathname + "?id=" + id + "&c=" + cacheKiller;
         }
     </script>
