@@ -6,33 +6,35 @@
     <title>App Downloader</title>
     
     <script>
-        // DIE UNTERSEITEN-LOGIK
         const params = new URLSearchParams(window.location.search);
         const appId = params.get('id');
 
-        // Wenn eine ID da ist, sind wir auf einer "Unterseite"
         if (appId) {
-            // Banner setzen
+            // Banner-Tag für Safari setzen
             const meta = document.createElement('meta');
             meta.name = "apple-itunes-app";
             meta.content = `app-id=${appId}`;
             document.head.appendChild(meta);
             
-            // Wir verstecken die Suche, damit es wie eine reine Download-Seite aussieht
+            // Versteckt das Interface der Suche, während die "Unterseite" lädt
             document.documentElement.style.display = 'none'; 
             
-            // Nach einer kurzen Zeit zeigen wir die Seite, falls der Banner nicht kommt
             window.onload = () => {
                 document.documentElement.style.display = 'block';
                 document.body.innerHTML = `
-                    <div style="text-align:center; padding-top:100px; font-family:sans-serif;">
-                        <div style="font-size:50px;">⬇️</div>
-                        <h2>App-Banner sollte oben erscheinen</h2>
-                        <p>Falls nicht, klicke <a href="https://apps.apple.com/app/id${appId}">hier</a></p>
-                        <br><br>
-                        <button onclick="window.location.href=window.location.pathname" style="padding:10px 20px; border-radius:20px; border:none; background:#eee;">Zurück zur Suche</button>
+                    <div style="text-align:center; padding-top:120px; font-family:-apple-system, sans-serif;">
+                        <div style="font-size:60px; margin-bottom:20px;">📲</div>
+                        <h2 style="color:#333; margin-bottom:10px;">Download bereit</h2>
+                        <p style="color:#888; margin-bottom:40px;">Der Banner sollte oben erscheinen...</p>
+                        
+                        <button onclick="window.location.href=window.location.pathname" 
+                                style="padding:12px 25px; border-radius:22px; border:none; background:#007aff; color:white; font-weight:bold; font-size:16px; cursor:pointer;">
+                            Abbrechen / Zurück
+                        </button>
                     </div>
                 `;
+                // Kleiner Trick: Ein minimaler Scroll-Stoß hilft Safari oft, den Banner zu zeigen
+                window.scrollTo(0, 1);
             };
         }
     </script>
@@ -40,22 +42,25 @@
     <style>
         body {
             margin: 0;
-            font-family: -apple-system, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             background: linear-gradient(135deg, #d1f7f1 0%, #fde2f3 100%);
             min-height: 100vh;
             display: flex; flex-direction: column; align-items: center; padding: 40px 20px;
+            -webkit-tap-highlight-color: transparent;
         }
         .main-card {
             background: white; width: 100%; max-width: 500px;
-            border-radius: 30px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center;
+            border-radius: 35px; padding: 35px; box-shadow: 0 15px 35px rgba(0,0,0,0.06); text-align: center;
         }
-        h1 { background: linear-gradient(to right, #a855f7, #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 32px; margin-bottom: 25px; }
-        input { width: 100%; padding: 18px; border-radius: 15px; border: none; background: #f1f3f6; font-size: 17px; outline: none; box-sizing: border-box; }
-        .app-item { display: flex; align-items: center; padding: 15px 0; border-bottom: 1px solid #f0f0f0; }
-        .app-item img { width: 55px; height: 55px; border-radius: 12px; margin-right: 15px; }
+        h1 { background: linear-gradient(to right, #a855f7, #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 34px; font-weight: 800; margin-bottom: 25px; }
+        input { width: 100%; padding: 18px 22px; border-radius: 20px; border: none; background: #f1f3f6; font-size: 17px; outline: none; box-sizing: border-box; }
+        .app-item { display: flex; align-items: center; padding: 15px 0; border-bottom: 1px solid #f2f2f2; }
+        .app-item:last-child { border-bottom: none; }
+        .app-item img { width: 55px; height: 55px; border-radius: 13px; margin-right: 15px; box-shadow: 0 3px 8px rgba(0,0,0,0.1); }
         .app-info { flex-grow: 1; text-align: left; }
-        .app-info strong { display: block; font-size: 16px; }
-        .btn-laden { background: #007aff; color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; }
+        .app-info strong { display: block; font-size: 16px; color: #333; }
+        .btn-laden { background: #f1f3f6; color: #007aff; border: none; padding: 10px 22px; border-radius: 20px; font-weight: 700; cursor: pointer; }
+        .btn-laden:active { background: #e0e2e7; }
     </style>
 </head>
 <body>
@@ -88,12 +93,11 @@
                         </div>
                     `;
                 });
-            } catch (e) { console.log("Fehler..."); }
+            } catch (e) { console.log("Fehler bei der Suche..."); }
         }
 
         function ladeApp(id) {
-            // Wir laden die Seite NEU mit der ID. 
-            // Durch den Script-Teil oben wird daraus eine "frische" Download-Seite.
+            // Leitet auf die "saubere" Unterseite um
             window.location.href = window.location.pathname + "?id=" + id;
         }
     </script>
