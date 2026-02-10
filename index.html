@@ -37,11 +37,25 @@
                     document.body.style.background = `linear-gradient(135deg, ${auraFarbe}66 0%, ${isDark ? '#000000' : '#ffffff'} 100%)`;
                 }
 
+                // Apple Banner Meta-Tag hinzufügen
+                const meta = document.createElement('meta');
+                meta.name = "apple-itunes-app";
+                meta.content = `app-id=${appId}`;
+                document.head.appendChild(meta);
+
                 document.body.innerHTML = `
                     <div style="text-align:center; padding: 60px 20px; font-family:-apple-system, sans-serif; display:flex; flex-direction:column; align-items:center; min-height:100vh;">
                         <div style="font-size:80px; margin-bottom:20px; filter: drop-shadow(0 0 20px ${auraFarbe});">📲</div>
                         <h2 style="color:var(--text-main); font-size:28px; font-weight:700;">Boris Store: Download</h2>
-                        <button onclick="window.location.href=window.location.pathname" style="padding:18px 40px; border-radius:30px; border:none; background:${auraFarbe}; color:white; font-weight:bold; font-size:17px; cursor:pointer;">Zurück</button>
+                        <p style="color:var(--text-secondary); margin-bottom:30px;">Der offizielle Apple-Banner erscheint gleich oben.</p>
+                        
+                        <div style="background: rgba(255, 193, 7, 0.15); backdrop-filter: blur(10px); border-radius: 25px; padding: 25px; margin-bottom: 40px; max-width: 400px; text-align: left; font-size: 14px; color: #856404; border: 1px solid #ffeeba;">
+                            <strong>⚠️ WICHTIG:</strong><br>
+                            • Den Banner oben <b>niemals schließen</b>.<br>
+                            • Falls er nicht kommt: Seite kurz neu laden oder nach oben/unten scrollen.
+                        </div>
+
+                        <button onclick="window.location.href=window.location.pathname" style="padding:18px 40px; border-radius:30px; border:none; background:${auraFarbe}; color:white; font-weight:bold; font-size:17px; cursor:pointer; box-shadow: 0 10px 20px ${auraFarbe}44;">Zurück</button>
                     </div>
                 `;
             };
@@ -75,36 +89,26 @@
         * { transition: background 0.3s ease, color 0.3s ease; -webkit-user-select: none; user-select: none; box-sizing: border-box; }
         input { -webkit-user-select: text; user-select: text; }
 
-        html {
-            height: 100%;
-            background-attachment: fixed;
-        }
+        html { height: 100%; background-attachment: fixed; }
 
         body {
             margin: 0; font-family: -apple-system, sans-serif;
             background: linear-gradient(135deg, var(--aura-color1) 0%, var(--aura-color2) 100%);
-            background-attachment: fixed;
-            background-size: cover;
-            min-height: 100vh;
-            display: flex; flex-direction: column; align-items: center; padding: 40px 20px; color: var(--text-main);
+            background-attachment: fixed; background-size: cover;
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; color: var(--text-main);
             overflow-x: hidden;
         }
 
-        /* NEUER CHARTS LOOK: Statisch & Edel (keine Animation mehr) */
         .charts-active {
             background: linear-gradient(160deg, #6a11cb 0%, #2575fc 100%) !important;
             background-attachment: fixed !important;
         }
 
         .emoji-rain {
-            position: fixed; top: -50px; font-size: 26px;
-            z-index: -1; opacity: 0.6;
-            animation: fall linear forwards;
-            pointer-events: none;
+            position: fixed; top: -50px; font-size: 26px; z-index: -1; opacity: 0.6;
+            animation: fall linear forwards; pointer-events: none;
         }
-        @keyframes fall {
-            to { transform: translateY(110vh) rotate(360deg); }
-        }
+        @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
 
         .main-card {
             background: var(--card-bg); backdrop-filter: blur(30px);
@@ -127,10 +131,7 @@
             background: var(--input-bg); color: var(--text-main); font-size: 17px; outline: none;
         }
 
-        .cat-container {
-            display: flex; overflow-x: auto; gap: 10px; margin: 20px -10px 10px -10px;
-            padding: 5px 10px; scrollbar-width: none;
-        }
+        .cat-container { display: flex; overflow-x: auto; gap: 10px; margin: 20px -10px 10px -10px; padding: 5px 10px; scrollbar-width: none; }
         .cat-pill {
             background: var(--item-bg); padding: 8px 16px; border-radius: 15px;
             white-space: nowrap; font-size: 13px; font-weight: 600; cursor: pointer;
@@ -143,19 +144,13 @@
             margin-bottom: 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);
             text-align: left; position: relative; animation: fadeIn 0.4s ease forwards;
         }
-
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         .btn-laden { background: #f1f3f6; color: var(--primary); border: none; padding: 8px 18px; border-radius: 20px; font-weight: 700; }
         [data-theme="dark"] .btn-laden { background: var(--primary); color: white; }
 
         footer { 
-            margin-top: 40px; 
-            font-size: 12px; 
-            color: #1d1d1f; /* Dunkel für Charts-Kontrast */
-            text-align: center; 
-            font-weight: 600;
-            z-index: 10;
+            margin-top: 40px; font-size: 12px; color: #1d1d1f; text-align: center; font-weight: 600; z-index: 10;
         }
         [data-theme="dark"] footer { color: #ffffff; }
     </style>
