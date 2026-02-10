@@ -6,20 +6,17 @@
     <title>App Downloader</title>
     
     <script>
-        // Liest die ID aus der URL und setzt sofort den Banner
+        // SOFORT-CHECK beim Laden der Seite
         const urlParams = new URLSearchParams(window.location.search);
         const appId = urlParams.get('id');
         
         if (appId) {
-            const meta = document.createElement('meta');
-            meta.name = "apple-itunes-app";
-            meta.content = `app-id=${appId}`;
-            document.head.appendChild(meta);
+            // Wir erstellen den Meta-Tag hart im HTML, bevor der Rest lädt
+            document.write('<meta name="apple-itunes-app" content="app-id=' + appId + '">');
         }
     </script>
 
     <style>
-        /* Schickes iPad Design */
         body {
             margin: 0;
             font-family: -apple-system, sans-serif;
@@ -29,7 +26,7 @@
             flex-direction: column;
             align-items: center;
             padding: 40px 20px;
-            -webkit-tap-highlight-color: transparent; /* Verhindert graues Flackern beim Tippen */
+            -webkit-tap-highlight-color: transparent;
         }
         .main-card {
             background: white;
@@ -71,7 +68,6 @@
         }
         .app-info { flex-grow: 1; text-align: left; }
         .app-info strong { display: block; font-size: 16px; color: #333; }
-        .app-info span { font-size: 12px; color: #999; }
         .btn-laden {
             background: #007aff;
             color: white;
@@ -107,35 +103,31 @@
                             <img src="${app.artworkUrl100}">
                             <div class="app-info">
                                 <strong>${app.trackName}</strong>
-                                <span>ID: ${app.trackId}</span>
                             </div>
                             <button class="btn-laden" 
-                                    ontouchstart="preloadBanner('${app.trackId}')" 
                                     onclick="ladeApp('${app.trackId}')">
                                 Laden
                             </button>
                         </div>
                     `;
                 });
-            } catch (e) { console.log("Suche klemmt..."); }
-        }
-
-        function preloadBanner(id) {
-            // Wir erstellen heimlich schon mal den Meta-Tag für Safari
-            let meta = document.querySelector('meta[name="apple-itunes-app"]');
-            if (!meta) {
-                meta = document.createElement('meta');
-                meta.name = "apple-itunes-app";
-                document.head.appendChild(meta);
-            }
-            meta.content = `app-id=${id}`;
-            console.log("Preloading für iPad: " + id);
+            } catch (e) { console.log("Fehler..."); }
         }
 
         function ladeApp(id) {
-            // Seite neu laden mit Zeitstempel gegen Safari-Hänger
-            const t = new Date().getTime();
-            window.location.href = window.location.pathname + "?id=" + id + "&cache=" + t;
+            // FORCE RELOAD TRICK:
+            // Wir leiten erst auf eine "leere" Version der Seite um, 
+            // um den alten Banner im Safari-Speicher zu löschen, 
+            // und laden dann sofort die neue ID.
+            
+            const cleanUrl = window.location.pathname;
+            const newUrl = cleanUrl + "?id=" + id + "&r=" + Math.random();
+            
+            // Erst URL ändern ohne Reload
+            window.history.replaceState(null, null, newUrl);
+            
+            // Dann harter Reload erzwingen
+            window.location.reload();
         }
     </script>
 </body>
