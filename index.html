@@ -56,7 +56,7 @@
             --aura-color2: #f7e8f3;
             --card-bg: rgba(255, 255, 255, 0.75);
             --text-main: #1d1d1f;
-            --text-secondary: #555; /* Dunkleres Grau */
+            --text-secondary: #333333; /* Deutlich dunkler für besseren Kontrast */
             --input-bg: #ffffff;
             --item-bg: rgba(255, 255, 255, 0.5);
             --skeleton: #e1e1e1;
@@ -67,7 +67,7 @@
             --aura-color2: #000000;
             --card-bg: rgba(28, 28, 30, 0.85);
             --text-main: #f5f5f7;
-            --text-secondary: #bbb; /* Helleres Grau für dunklen Hintergrund */
+            --text-secondary: #cccccc; 
             --input-bg: #2c2c2e;
             --item-bg: rgba(44, 44, 46, 0.6);
             --skeleton: #3a3a3c;
@@ -77,15 +77,17 @@
         input { -webkit-user-select: text; user-select: text; }
 
         html {
-            /* Fix für das Scroll-Farben-Problem */
+            /* Fix: Hintergrund an das Fenster binden, nicht an den Content */
+            height: 100%;
             background-attachment: fixed;
-            min-height: 100vh;
+            background-size: cover;
         }
 
         body {
             margin: 0; font-family: -apple-system, sans-serif;
             background: linear-gradient(135deg, var(--aura-color1) 0%, var(--aura-color2) 100%);
-            background-attachment: fixed; 
+            background-attachment: fixed;
+            background-size: cover;
             min-height: 100vh;
             display: flex; flex-direction: column; align-items: center; padding: 40px 20px; color: var(--text-main);
             overflow-x: hidden;
@@ -106,7 +108,7 @@
 
         .emoji-rain {
             position: fixed; top: -50px; font-size: 26px;
-            z-index: -1; opacity: 0.5; /* Leicht verstärkte Sichtbarkeit */
+            z-index: -1; opacity: 0.6;
             animation: fall linear forwards;
             pointer-events: none;
         }
@@ -154,11 +156,19 @@
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .btn-share { background: none; border: none; font-size: 18px; color: var(--primary); padding: 10px; cursor: pointer; margin-right: 5px; }
         .btn-laden { background: #f1f3f6; color: var(--primary); border: none; padding: 8px 18px; border-radius: 20px; font-weight: 700; }
         [data-theme="dark"] .btn-laden { background: var(--primary); color: white; }
 
-        footer { margin-top: 40px; font-size: 12px; color: var(--text-secondary); text-align: center; font-weight: 500; }
+        /* Copyright spezifisch dunkler */
+        footer { 
+            margin-top: 40px; 
+            font-size: 12px; 
+            color: #1d1d1f; /* Fast Schwarz für maximale Lesbarkeit */
+            text-align: center; 
+            font-weight: 600;
+            z-index: 10;
+        }
+        [data-theme="dark"] footer { color: #ffffff; }
     </style>
 </head>
 <body>
@@ -205,20 +215,19 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // VERSTÄRKTER REGEN
         let rainInterval;
         function startEmojiRain() {
             stopEmojiRain();
             rainInterval = setInterval(() => {
-                const emojis = ['🏆', '🏆', '⭐', '✨', '👑']; // Mehr Pokale
+                const emojis = ['🏆', '🏆', '⭐', '✨', '👑'];
                 const e = document.createElement('div');
                 e.className = 'emoji-rain';
                 e.innerText = emojis[Math.floor(Math.random() * emojis.length)];
                 e.style.left = Math.random() * 100 + 'vw';
-                e.style.animationDuration = (Math.random() * 2 + 3) + 's'; // Etwas schneller
+                e.style.animationDuration = (Math.random() * 2 + 3) + 's';
                 document.body.appendChild(e);
                 setTimeout(() => e.remove(), 5000);
-            }, 400); // Intervall verkürzt von 600 auf 400
+            }, 350); 
         }
         function stopEmojiRain() {
             clearInterval(rainInterval);
@@ -226,8 +235,8 @@
         }
 
         window.updateAura = (color) => {
-            const root = document.documentElement;
             const body = document.body;
+            const root = document.documentElement;
             const isDark = root.getAttribute('data-theme') === 'dark';
 
             body.classList.remove('charts-active');
@@ -239,13 +248,14 @@
                 sessionStorage.setItem('isCharts', 'true');
                 sessionStorage.setItem('lastColor', '#e73c7e');
                 startEmojiRain();
-                return;
+            } else {
+                root.style.setProperty('--aura-color1', color + '44');
+                root.style.setProperty('--aura-color2', isDark ? '#000000' : '#ffffff');
+                sessionStorage.setItem('lastColor', color);
+                body.style.background = `linear-gradient(135deg, var(--aura-color1) 0%, var(--aura-color2) 100%)`;
+                body.style.backgroundAttachment = 'fixed';
+                body.style.backgroundSize = 'cover';
             }
-            root.style.setProperty('--aura-color1', color + '44');
-            root.style.setProperty('--aura-color2', isDark ? '#000000' : '#ffffff');
-            sessionStorage.setItem('lastColor', color);
-            body.style.background = `linear-gradient(135deg, var(--aura-color1) 0%, var(--aura-color2) 100%)`;
-            body.style.backgroundAttachment = 'fixed';
         };
 
         window.zeigeImpressum = () => alert("Impressum\n\nBetreiber: Moritz Schmalle\nAnschrift: Auf Anfrage per E-Mail\nE-Mail: info@boris-store.xyz");
@@ -276,16 +286,11 @@
             window.location.href = window.location.pathname + "?id=" + trackId + "&c=" + Math.floor(Math.random()*999);
         };
 
-        window.shareApp = (id, name) => {
-            const shareData = { title: 'Boris Store', text: `Schau dir ${name} an!`, url: `https://boris-store.xyz/?id=${id}` };
-            if (navigator.share) navigator.share(shareData); else alert("Link kopiert!");
-        };
-
         window.loadBorisCharts = () => {
             updateAura('reset');
             onValue(ref(db, 'charts'), (snapshot) => {
                 const data = snapshot.val();
-                if(!data) { document.getElementById('liste').innerHTML = "<p>Noch keine Apps.</p>"; return; }
+                if(!data) return;
                 const sorted = Object.values(data).sort((a,b) => b.count - a.count);
                 renderHtml(sorted, true);
             });
@@ -310,7 +315,6 @@
                         <div style="font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;">${name} ${countText}</div>
                         <div style="font-size:11px; color:var(--text-secondary);">${cat}</div>
                     </div>
-                    <button class="btn-share" onclick="shareApp('${id}', '${name}')">📤</button>
                     <button class="btn-laden" onclick="handleAppClick('${id}', '${name}', '${icon}', '${cat}')">Laden</button>
                 `;
                 liste.appendChild(item);
