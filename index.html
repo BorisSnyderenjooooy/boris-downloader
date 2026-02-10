@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>App Downloader</title>
+    <title>App Downloader Pro</title>
     
     <script>
         const params = new URLSearchParams(window.location.search);
         const appId = params.get('id');
 
         if (appId) {
-            // Banner setzen
             const meta = document.createElement('meta');
             meta.name = "apple-itunes-app";
             meta.content = `app-id=${appId}`;
@@ -21,20 +20,21 @@
             window.onload = () => {
                 document.documentElement.style.visibility = 'visible';
                 document.body.innerHTML = `
-                    <div style="text-align:center; padding: 40px 20px; font-family:-apple-system, sans-serif;">
-                        <div style="font-size:60px; margin-bottom:10px;">📲</div>
-                        <h2 style="color:#333; margin-bottom:30px;">Download bereit</h2>
+                    <div style="text-align:center; padding: 60px 20px; font-family:-apple-system, sans-serif; display:flex; flex-direction:column; align-items:center; min-height:100vh;">
+                        <div style="font-size:80px; margin-bottom:20px; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1));">📲</div>
+                        <h2 style="color:#1d1d1f; font-size:28px; font-weight:700; margin-bottom:10px;">Download bereit</h2>
+                        <p style="color:#86868b; margin-bottom:30px; font-size:16px;">Der offizielle Apple-Banner erscheint oben.</p>
                         
-                        <div style="background: #fff3cd; border: 1px solid #ffeeba; border-radius: 20px; padding: 20px; margin: 0 auto 40px auto; max-width: 380px; text-align: left; font-size: 14px; color: #856404; line-height: 1.6;">
-                            <strong style="font-size:16px;">⚠️ WICHTIG:</strong><br>
-                            1. <b>Nicht wegklicken:</b> Wenn du den Banner oben schließt, wird er für 24h gesperrt!<br>
-                            2. <b>Nicht spammen:</b> Suche nicht zu viele Apps kurz hintereinander, sonst blockiert Apple den Zugriff für einige Minuten.<br>
-                            3. <b>Aktivieren:</b> Falls kein Banner kommt, scrolle diese Seite kurz hoch und runter.<br>
-                            4. <b>Geduld:</b> Der Check dauert manchmal bis zu 10 Sekunden.
+                        <div style="background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 238, 186, 0.5); border-radius: 25px; padding: 25px; margin: 0 auto 40px auto; max-width: 400px; text-align: left; font-size: 15px; color: #856404; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+                            <strong style="font-size:17px; display:block; margin-bottom:10px;">⚠️ Wichtige Hinweise:</strong>
+                            <div style="margin-bottom:8px;"><b>1. Nicht wegklicken:</b> Banner oben niemals schließen (sonst 24h Sperre).</div>
+                            <div style="margin-bottom:8px;"><b>2. Nicht spammen:</b> Zu viele Apps kurz hintereinander blockieren den Zugriff.</div>
+                            <div style="margin-bottom:8px;"><b>3. Aktivieren:</b> Falls nichts kommt, Seite kurz hoch/runter scrollen.</div>
+                            <div><b>4. Geduld:</b> Der System-Check dauert manchmal einen Moment.</div>
                         </div>
 
                         <button onclick="window.location.href=window.location.pathname" 
-                                style="padding:16px 32px; border-radius:25px; border:none; background:#007aff; color:white; font-weight:bold; font-size:18px; cursor:pointer; box-shadow: 0 4px 12px rgba(0,122,255,0.3);">
+                                style="padding:18px 40px; border-radius:30px; border:none; background:#007aff; color:white; font-weight:bold; font-size:17px; cursor:pointer; box-shadow: 0 10px 20px rgba(0,122,255,0.3); transition: transform 0.2s;">
                             Zurück zur Suche
                         </button>
                     </div>
@@ -45,56 +45,181 @@
     </script>
 
     <style>
+        :root {
+            --primary: #007aff;
+            --bg-gradient: linear-gradient(135deg, #e0f7f4 0%, #f7e8f3 100%);
+        }
+
         body {
-            margin: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #d1f7f1 0%, #fde2f3 100%);
-            min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px;
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
             -webkit-tap-highlight-color: transparent;
+            color: #1d1d1f;
         }
+
         .main-card {
-            background: white; width: 100%; max-width: 500px;
-            border-radius: 35px; padding: 35px; box-shadow: 0 15px 35px rgba(0,0,0,0.06); text-align: center;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            width: 100%;
+            max-width: 480px;
+            border-radius: 38px;
+            padding: 40px 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.08);
+            border: 1px solid rgba(255,255,255,0.4);
+            text-align: center;
         }
-        h1 { background: linear-gradient(to right, #a855f7, #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 34px; font-weight: 800; margin-bottom: 25px; }
-        input { width: 100%; padding: 18px 22px; border-radius: 20px; border: none; background: #f1f3f6; font-size: 17px; outline: none; box-sizing: border-box; }
-        .app-item { display: flex; align-items: center; padding: 15px 0; border-bottom: 1px solid #f2f2f2; }
-        .app-item img { width: 55px; height: 55px; border-radius: 13px; margin-right: 15px; }
-        .app-info { flex-grow: 1; text-align: left; }
-        .app-info strong { display: block; font-size: 16px; color: #333; }
-        .btn-laden { background: #f1f3f6; color: #007aff; border: none; padding: 10px 22px; border-radius: 20px; font-weight: 700; cursor: pointer; }
+
+        h1 {
+            background: linear-gradient(135deg, #6e45e2 0%, #88d3ce 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 38px;
+            font-weight: 800;
+            margin: 0 0 30px 0;
+            letter-spacing: -0.5px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        input {
+            width: 100%;
+            padding: 20px 25px;
+            border-radius: 22px;
+            border: 1px solid rgba(0,0,0,0.05);
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 18px;
+            outline: none;
+            box-sizing: border-box;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15);
+            border-color: var(--primary);
+        }
+
+        #liste {
+            text-align: left;
+            margin-top: 10px;
+        }
+
+        .app-item {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.5);
+            margin-bottom: 12px;
+            border-radius: 20px;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .app-item:active {
+            transform: scale(0.98);
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .app-item img {
+            width: 58px;
+            height: 58px;
+            border-radius: 14px;
+            margin-right: 18px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+
+        .app-info {
+            flex-grow: 1;
+        }
+
+        .app-info strong {
+            display: block;
+            font-size: 17px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 3px;
+        }
+
+        .btn-laden {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,122,255,0.25);
+        }
+
+        /* Schöne Scrollbars für die Liste */
+        #liste {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        #liste::-webkit-scrollbar { width: 5px; }
+        #liste::-webkit-scrollbar-thumb { background: #ddd; border-radius: 10px; }
     </style>
 </head>
 <body>
 
-    <div class="main-card" id="search-interface">
-        <h1>App-Downloader</h1>
-        <input type="text" id="suche" placeholder="App suchen..." oninput="sucheApps()">
-        <div id="liste"></div>
+    <div class="main-card">
+        <h1>App Store</h1>
+        
+        <div class="input-wrapper">
+            <input type="text" id="suche" placeholder="Suchen..." oninput="sucheApps()">
+        </div>
+
+        <div id="liste">
+            <p style="color: #86868b; font-size: 15px;">Finde deine Lieblings-Apps zum direkten Download.</p>
+        </div>
     </div>
 
     <script>
         async function sucheApps() {
             const begriff = document.getElementById('suche').value;
             const liste = document.getElementById('liste');
-            if (begriff.length < 2) { liste.innerHTML = ""; return; }
+            if (begriff.length < 2) { 
+                liste.innerHTML = '<p style="color: #86868b; font-size: 15px;">Finde deine Lieblings-Apps zum direkten Download.</p>'; 
+                return; 
+            }
 
             try {
                 const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(begriff)}&country=de&entity=software&limit=12`);
                 const data = await response.json();
                 liste.innerHTML = "";
                 
+                if (data.results.length === 0) {
+                    liste.innerHTML = '<p style="color: #86868b;">Keine Ergebnisse gefunden.</p>';
+                    return;
+                }
+
                 data.results.forEach(app => {
                     liste.innerHTML += `
-                        <div class="app-item">
+                        <div class="app-item" onclick="ladeApp('${app.trackId}')">
                             <img src="${app.artworkUrl100}">
                             <div class="app-info">
                                 <strong>${app.trackName}</strong>
                             </div>
-                            <button class="btn-laden" onclick="ladeApp('${app.trackId}')">Laden</button>
+                            <button class="btn-laden">Laden</button>
                         </div>
                     `;
                 });
-            } catch (e) { console.log("Fehler"); }
+            } catch (e) { 
+                liste.innerHTML = '<p style="color: #ff3b30;">Fehler bei der Verbindung.</p>';
+            }
         }
 
         function ladeApp(id) {
