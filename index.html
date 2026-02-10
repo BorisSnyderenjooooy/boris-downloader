@@ -41,7 +41,6 @@
                     <div style="text-align:center; padding: 60px 20px; font-family:-apple-system, sans-serif; display:flex; flex-direction:column; align-items:center; min-height:100vh;">
                         <div style="font-size:80px; margin-bottom:20px; filter: drop-shadow(0 0 20px ${auraFarbe});">📲</div>
                         <h2 style="color:var(--text-main); font-size:28px; font-weight:700;">Boris Store: Download</h2>
-                        <p style="color:var(--text-secondary); margin-bottom:30px;">Der offizielle Apple-Banner erscheint gleich oben.</p>
                         <button onclick="window.location.href=window.location.pathname" style="padding:18px 40px; border-radius:30px; border:none; background:${auraFarbe}; color:white; font-weight:bold; font-size:17px; cursor:pointer;">Zurück</button>
                     </div>
                 `;
@@ -56,7 +55,7 @@
             --aura-color2: #f7e8f3;
             --card-bg: rgba(255, 255, 255, 0.75);
             --text-main: #1d1d1f;
-            --text-secondary: #333333; /* Deutlich dunkler für besseren Kontrast */
+            --text-secondary: #333333;
             --input-bg: #ffffff;
             --item-bg: rgba(255, 255, 255, 0.5);
             --skeleton: #e1e1e1;
@@ -77,10 +76,8 @@
         input { -webkit-user-select: text; user-select: text; }
 
         html {
-            /* Fix: Hintergrund an das Fenster binden, nicht an den Content */
             height: 100%;
             background-attachment: fixed;
-            background-size: cover;
         }
 
         body {
@@ -93,16 +90,9 @@
             overflow-x: hidden;
         }
 
-        @keyframes meshGradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
+        /* NEUER CHARTS LOOK: Statisch & Edel (keine Animation mehr) */
         .charts-active {
-            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab) !important;
-            background-size: 400% 400% !important;
-            animation: meshGradient 6s ease infinite !important;
+            background: linear-gradient(160deg, #6a11cb 0%, #2575fc 100%) !important;
             background-attachment: fixed !important;
         }
 
@@ -119,8 +109,8 @@
         .main-card {
             background: var(--card-bg); backdrop-filter: blur(30px);
             width: 100%; max-width: 480px; border-radius: 38px; padding: 40px 30px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; position: relative;
-            border: 1px solid rgba(255,255,255,0.2); z-index: 10;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15); text-align: center; position: relative;
+            border: 1px solid rgba(255,255,255,0.25); z-index: 10;
         }
 
         .theme-toggle {
@@ -159,11 +149,10 @@
         .btn-laden { background: #f1f3f6; color: var(--primary); border: none; padding: 8px 18px; border-radius: 20px; font-weight: 700; }
         [data-theme="dark"] .btn-laden { background: var(--primary); color: white; }
 
-        /* Copyright spezifisch dunkler */
         footer { 
             margin-top: 40px; 
             font-size: 12px; 
-            color: #1d1d1f; /* Fast Schwarz für maximale Lesbarkeit */
+            color: #1d1d1f; /* Dunkel für Charts-Kontrast */
             text-align: center; 
             font-weight: 600;
             z-index: 10;
@@ -246,7 +235,7 @@
             if(color === 'reset') {
                 body.classList.add('charts-active');
                 sessionStorage.setItem('isCharts', 'true');
-                sessionStorage.setItem('lastColor', '#e73c7e');
+                sessionStorage.setItem('lastColor', '#2575fc');
                 startEmojiRain();
             } else {
                 root.style.setProperty('--aura-color1', color + '44');
