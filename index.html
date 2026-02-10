@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>App Downloader</title>
+    
+    <script>
+        // Dieser Teil checkt, ob wir gerade eine App "laden" wollen
+        const params = new URLSearchParams(window.location.search);
+        const appId = params.get('id');
+
+        if (appId) {
+            // Wenn eine ID in der URL ist, sagen wir Safari: "Zeig den Banner!"
+            var meta = document.createElement('meta');
+            meta.name = "apple-itunes-app";
+            meta.content = "app-id=" + appId;
+            document.getElementsByTagName('head')[0].appendChild(meta);
+        }
+    </script>
+
+    <style>
+        /* Ein bisschen einfaches Design, damit es nicht ganz leer aussieht */
+        body { font-family: -apple-system, sans-serif; background: #f4f4f9; padding: 20px; text-align: center; }
+        .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 400px; margin: 0 auto; }
+        input { width: 90%; padding: 10px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 20px; }
+        .app-item { border-bottom: 1px solid #eee; padding: 15px 0; display: flex; justify-content: space-between; align-items: center; }
+        button { background: #007aff; color: white; border: none; padding: 8px 15px; border-radius: 15px; font-weight: bold; }
+    </style>
+</head>
+
+<body>
+
+    <div class="card">
+        <h1>App-Downloader</h1>
+        <input type="text" id="suche" placeholder="App suchen..." onkeyup="filterApps()">
+        <div id="liste"></div>
+    </div>
+
+    <script>
+        // DEINE MANUELLE LISTE (Hier kannst du Apps hinzufügen)
+        const meineApps = [
+            { name: "Brawl Stars", id: "1229016807", downloads: 622 },
+            { name: "Netflix", id: "363590051", downloads: 105 },
+            { name: "Tachimanga", id: "6447486175", downloads: 67 }
+        ];
+
+        function zeigeApps(liste) {
+            const htmlListe = document.getElementById('liste');
+            htmlListe.innerHTML = "";
+            liste.forEach(app => {
+                htmlListe.innerHTML += `
+                    <div class="app-item">
+                        <div>
+                            <strong>${app.name}</strong><br>
+                            <small>${app.downloads} Downloads</small>
+                        </div>
+                        <button onclick="ladeApp('${app.id}')">Laden</button>
+                    </div>
+                `;
+            });
+        }
+
+        function filterApps() {
+            const wort = document.getElementById('suche').value.toLowerCase();
+            const gefiltert = meineApps.filter(a => a.name.toLowerCase().includes(wort));
+            zeigeApps(gefiltert);
+        }
+
+        function ladeApp(id) {
+            // Trick: Seite neu laden mit der ID in der URL
+            window.location.href = "?id=" + id;
+        }
+
+        // Start: Alle Apps anzeigen
+        zeigeApps(meineApps);
+    </script>
+</body>
+</html>
