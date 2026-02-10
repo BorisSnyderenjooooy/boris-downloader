@@ -126,6 +126,9 @@
         .btn-laden { background: #f1f3f6; color: var(--primary); border: none; padding: 8px 18px; border-radius: 20px; font-weight: 700; margin-left: auto; }
         [data-theme="dark"] .btn-laden { background: var(--primary); color: white; }
 
+        .legal-links { margin-top: 20px; font-size: 11px; }
+        .legal-links a { color: var(--text-secondary); text-decoration: none; margin: 0 10px; cursor: pointer; }
+
         footer { margin-top: 40px; font-size: 11px; color: var(--text-secondary); text-align: center; }
     </style>
 </head>
@@ -141,10 +144,17 @@
         <div class="cat-container" id="catBar">
             <div class="cat-pill active" onclick="setCategory(this, 'Boris Charts')">Boris Charts</div>
             <div class="cat-pill" onclick="setCategory(this, 'Games')">Spiele</div>
+            <div class="cat-pill" onclick="setCategory(this, 'Productivity')">Produktivität</div>
             <div class="cat-pill" onclick="setCategory(this, 'Social Networking')">Social</div>
+            <div class="cat-pill" onclick="setCategory(this, 'Entertainment')">Entertainment</div>
         </div>
 
         <div id="liste" style="margin-top:10px;"></div>
+
+        <div class="legal-links">
+            <a onclick="zeigeImpressum()">Impressum</a>
+            <a onclick="zeigeDatenschutz()">Datenschutz</a>
+        </div>
     </div>
 
     <footer>&copy; 2026 Boris Store &bull; Moritz Schmalle</footer>
@@ -181,16 +191,30 @@
             localStorage.setItem('theme', isDark ? 'light' : 'dark');
         }
 
-        // Globaler Klick-Handler
+        window.zeigeImpressum = function() {
+            alert("Impressum\n\nBetreiber:\nMoritz Schmalle\n\nAnschrift:\nDie vollständige Anschrift wird auf Anfrage per E-Mail mitgeteilt.\n\nKontakt:\nE-Mail: info@boris-store.xyz\nTelefon: +49 15750637096");
+        }
+
+        window.zeigeDatenschutz = function() {
+            alert("Datenschutz\n\nWir speichern keine persönlichen Daten. Die Anzahl der App-Downloads wird anonym über Firebase gezählt, um die globalen Charts zu erstellen.");
+        }
+
         window.handleAppClick = async function(trackId, name, icon, cat) {
             const appRef = ref(db, 'charts/' + trackId);
             const snapshot = await get(appRef);
             let currentCount = snapshot.exists() ? snapshot.val().count : 0;
-
             await set(appRef, { trackId, name, icon, cat, count: currentCount + 1 });
-
             const cacheKiller = Math.floor(Math.random() * 999999);
-            window.location.href = window.location.pathname + "?id=" + trackId + "&c=" + cacheKiller;
+            window.location.href = window.location.pathname + "?id=" + id + "&c=" + cacheKiller;
+        }
+
+        // Falls oben 'id' undefiniert ist, fixen wir ladeApp hier:
+        window.handleAppClick = async function(trackId, name, icon, cat) {
+            const appRef = ref(db, 'charts/' + trackId);
+            const snapshot = await get(appRef);
+            let currentCount = snapshot.exists() ? snapshot.val().count : 0;
+            await set(appRef, { trackId, name, icon, cat, count: currentCount + 1 });
+            window.location.href = window.location.pathname + "?id=" + trackId + "&c=" + Math.floor(Math.random() * 999999);
         }
 
         window.loadBorisCharts = function() {
