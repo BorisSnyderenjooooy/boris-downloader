@@ -23,18 +23,26 @@
         const appId = params.get('id');
         document.addEventListener('contextmenu', e => e.preventDefault());
 
+        // DOWNLOAD SCREEN LOGIK
         if (appId) {
-            const meta = document.createElement('meta');
-            meta.name = "apple-itunes-app";
-            meta.content = `app-id=${appId}`;
-            document.head.appendChild(meta);
+            const auraFarbe = sessionStorage.getItem('lastColor') || '#007aff';
             document.documentElement.style.visibility = 'hidden'; 
             window.onload = () => {
                 document.documentElement.style.visibility = 'visible';
-                if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+                const isDark = localStorage.getItem('theme') === 'dark';
+                if (isDark) document.documentElement.setAttribute('data-theme', 'dark');
+                
+                // Hintergrund an die App-Farbe anpassen
+                document.body.style.background = `linear-gradient(135deg, ${auraFarbe}66 0%, ${isDark ? '#000000' : '#ffffff'} 100%)`;
+
+                const meta = document.createElement('meta');
+                meta.name = "apple-itunes-app";
+                meta.content = `app-id=${appId}`;
+                document.head.appendChild(meta);
+
                 document.body.innerHTML = `
                     <div style="text-align:center; padding: 60px 20px; font-family:-apple-system, sans-serif; display:flex; flex-direction:column; align-items:center; min-height:100vh;">
-                        <div style="font-size:80px; margin-bottom:20px;">📲</div>
+                        <div style="font-size:80px; margin-bottom:20px; filter: drop-shadow(0 0 20px ${auraFarbe});">📲</div>
                         <h2 style="color:var(--text-main); font-size:28px; font-weight:700;">Boris Store: Download</h2>
                         <p style="color:var(--text-secondary); margin-bottom:30px;">Der offizielle Apple-Banner erscheint gleich oben.</p>
                         <div style="background: rgba(255, 193, 7, 0.1); backdrop-filter: blur(10px); border-radius: 25px; padding: 25px; margin-bottom: 40px; max-width: 400px; text-align: left; font-size: 14px; color: #856404; border: 1px solid #ffeeba;">
@@ -42,7 +50,7 @@
                             • Den Banner oben <b>niemals schließen</b>.<br>
                             • Bei Problemen kurz hoch/runter scrollen.
                         </div>
-                        <button onclick="window.location.href=window.location.pathname" style="padding:18px 40px; border-radius:30px; border:none; background:#007aff; color:white; font-weight:bold; font-size:17px; cursor:pointer;">Zurück</button>
+                        <button onclick="window.location.href=window.location.pathname" style="padding:18px 40px; border-radius:30px; border:none; background:${auraFarbe}; color:white; font-weight:bold; font-size:17px; cursor:pointer; box-shadow: 0 10px 20px ${auraFarbe}44;">Zurück</button>
                     </div>
                 `;
             };
@@ -52,38 +60,42 @@
     <style>
         :root { 
             --primary: #007aff; 
-            --bg-gradient: linear-gradient(135deg, #e0f7f4 0%, #f7e8f3 100%);
-            --card-bg: rgba(255, 255, 255, 0.85);
+            --aura-color1: #e0f7f4;
+            --aura-color2: #f7e8f3;
+            --card-bg: rgba(255, 255, 255, 0.75);
             --text-main: #1d1d1f;
             --text-secondary: #86868b;
             --input-bg: #ffffff;
-            --item-bg: rgba(255, 255, 255, 0.6);
+            --item-bg: rgba(255, 255, 255, 0.5);
             --skeleton: #e1e1e1;
         }
 
         [data-theme="dark"] {
-            --bg-gradient: linear-gradient(135deg, #1c1c1e 0%, #000000 100%);
-            --card-bg: rgba(28, 28, 30, 0.9);
+            --aura-color1: #1c1c1e;
+            --aura-color2: #000000;
+            --card-bg: rgba(28, 28, 30, 0.85);
             --text-main: #f5f5f7;
             --text-secondary: #a1a1a6;
             --input-bg: #2c2c2e;
-            --item-bg: rgba(44, 44, 46, 0.7);
+            --item-bg: rgba(44, 44, 46, 0.6);
             --skeleton: #3a3a3c;
         }
 
-        * { transition: background 0.3s ease, color 0.3s ease; -webkit-user-select: none; user-select: none; box-sizing: border-box; }
+        * { transition: background 0.8s ease, color 0.3s ease; -webkit-user-select: none; user-select: none; box-sizing: border-box; }
         input { -webkit-user-select: text; user-select: text; }
 
         body {
             margin: 0; font-family: -apple-system, sans-serif;
-            background: var(--bg-gradient); background-attachment: fixed; min-height: 100vh;
+            background: linear-gradient(135deg, var(--aura-color1) 0%, var(--aura-color2) 100%);
+            background-attachment: fixed; min-height: 100vh;
             display: flex; flex-direction: column; align-items: center; padding: 40px 20px; color: var(--text-main);
         }
 
         .main-card {
-            background: var(--card-bg); backdrop-filter: blur(20px);
+            background: var(--card-bg); backdrop-filter: blur(30px);
             width: 100%; max-width: 480px; border-radius: 38px; padding: 40px 30px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; position: relative;
+            border: 1px solid rgba(255,255,255,0.2);
         }
 
         .theme-toggle {
@@ -116,28 +128,21 @@
         .app-item {
             display: flex; align-items: center; padding: 14px; background: var(--item-bg);
             margin-bottom: 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);
-            text-align: left; position: relative;
+            text-align: left; position: relative; animation: fadeIn 0.4s ease forwards;
         }
 
-        .btn-share {
-            background: none; border: none; font-size: 18px; color: var(--primary);
-            padding: 10px; cursor: pointer; margin-right: 5px;
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+        .btn-share { background: none; border: none; font-size: 18px; color: var(--primary); padding: 10px; cursor: pointer; margin-right: 5px; }
         .btn-laden { background: #f1f3f6; color: var(--primary); border: none; padding: 8px 18px; border-radius: 20px; font-weight: 700; }
         [data-theme="dark"] .btn-laden { background: var(--primary); color: white; }
 
         .skeleton {
             background: var(--skeleton);
             background: linear-gradient(90deg, var(--skeleton) 25%, var(--item-bg) 50%, var(--skeleton) 75%);
-            background-size: 200% 100%;
-            animation: loading 1.5s infinite;
-            border-radius: 10px;
+            background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 10px;
         }
-        @keyframes loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
+        @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
         footer { margin-top: 40px; font-size: 11px; color: var(--text-secondary); text-align: center; }
     </style>
@@ -186,8 +191,22 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
+        // AURA FUNKTION
+        window.updateAura = (color) => {
+            const root = document.documentElement;
+            const isDark = root.getAttribute('data-theme') === 'dark';
+            if(color === 'reset') {
+                root.style.setProperty('--aura-color1', isDark ? '#1c1c1e' : '#e0f7f4');
+                root.style.setProperty('--aura-color2', isDark ? '#000000' : '#f7e8f3');
+                return;
+            }
+            root.style.setProperty('--aura-color1', color + '44');
+            root.style.setProperty('--aura-color2', isDark ? '#000000' : '#ffffff');
+            sessionStorage.setItem('lastColor', color);
+        };
+
         window.zeigeImpressum = () => alert("Impressum\n\nBetreiber: Moritz Schmalle\nAnschrift: Auf Anfrage per E-Mail\nE-Mail: info@boris-store.xyz");
-        window.zeigeDatenschutz = () => alert("Datenschutz\n\nWir zählen anonyme App-Klicks via Firebase, um Charts zu erstellen. Keine IP-Speicherung.");
+        window.zeigeDatenschutz = () => alert("Datenschutz\n\nAnonyme Analyse der Klicks zur Chart-Erstellung.");
 
         if (localStorage.getItem('theme') === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
@@ -198,34 +217,27 @@
             document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
             document.getElementById('themeBtn').innerText = isDark ? '🌙' : '☀️';
             localStorage.setItem('theme', isDark ? 'light' : 'dark');
+            updateAura('reset');
         };
 
-        window.shareApp = (id, name) => {
-            const shareData = {
-                title: 'Boris Store',
-                text: `Schau dir ${name} im Boris Store an!`,
-                url: `https://boris-store.xyz/?id=${id}`
-            };
-            if (navigator.share) navigator.share(shareData);
-            else alert("Link kopiert: " + shareData.url);
+        // KATEGORIE-FARBEN MAP
+        const catColors = {
+            'Entertainment': '#ff9500', 
+            'Games': '#ff3b30',        
+            'Social Networking': '#007aff', 
+            'Music': '#ff2d55',        
+            'Productivity': '#5856d6', 
+            'Finance': '#34c759',      
+            'Photo & Video': '#af52de',
+            'Education': '#5ac8fa'
         };
-
-        function showSkeleton() {
-            const liste = document.getElementById('liste');
-            liste.innerHTML = "";
-            for(let i=0; i<5; i++) {
-                liste.innerHTML += `
-                    <div class="app-item">
-                        <div class="skeleton" style="width:55px; height:55px; border-radius:12px; margin-right:15px;"></div>
-                        <div style="flex-grow:1;">
-                            <div class="skeleton" style="width:70%; height:15px; margin-bottom:8px;"></div>
-                            <div class="skeleton" style="width:40%; height:10px;"></div>
-                        </div>
-                    </div>`;
-            }
-        }
 
         window.handleAppClick = async (trackId, name, icon, cat) => {
+            if (window.navigator.vibrate) window.navigator.vibrate(12);
+            
+            const farbe = catColors[cat] || '#007aff';
+            sessionStorage.setItem('lastColor', farbe);
+
             const appRef = ref(db, 'charts/' + trackId);
             const snapshot = await get(appRef);
             let count = snapshot.exists() ? snapshot.val().count : 0;
@@ -233,7 +245,22 @@
             window.location.href = window.location.pathname + "?id=" + trackId + "&c=" + Math.floor(Math.random()*999);
         };
 
+        window.shareApp = (id, name) => {
+            const shareData = { title: 'Boris Store', text: `Schau dir ${name} an!`, url: `https://boris-store.xyz/?id=${id}` };
+            if (navigator.share) navigator.share(shareData);
+            else alert("Link kopiert!");
+        };
+
+        function showSkeleton() {
+            const liste = document.getElementById('liste');
+            liste.innerHTML = "";
+            for(let i=0; i<5; i++) {
+                liste.innerHTML += `<div class="app-item"><div class="skeleton" style="width:55px; height:55px; border-radius:12px; margin-right:15px;"></div><div style="flex-grow:1;"><div class="skeleton" style="width:70%; height:15px; margin-bottom:8px;"></div><div class="skeleton" style="width:40%; height:10px;"></div></div></div>`;
+            }
+        }
+
         window.loadBorisCharts = () => {
+            updateAura('reset');
             showSkeleton();
             onValue(ref(db, 'charts'), (snapshot) => {
                 const data = snapshot.val();
@@ -246,36 +273,42 @@
         function renderHtml(results, isChart = false) {
             const liste = document.getElementById('liste');
             liste.innerHTML = "";
-            results.forEach(app => {
+            results.forEach((app, index) => {
                 const id = app.trackId;
                 const name = (app.trackName || app.name).replace(/'/g, "");
                 const icon = app.artworkUrl100 || app.icon;
                 const cat = app.primaryGenreName || app.cat;
                 const countText = isChart ? `<span style="font-size:10px; background:#34c759; color:white; padding:2px 6px; border-radius:8px; margin-left:5px;">${app.count}x</span>` : "";
 
-                liste.innerHTML += `
-                    <div class="app-item">
-                        <img src="${icon}" onclick="handleAppClick('${id}', '${name}', '${icon}', '${cat}')" style="width:55px; height:55px; border-radius:12px; margin-right:15px; cursor:pointer;">
-                        <div style="flex-grow:1; overflow:hidden;" onclick="handleAppClick('${id}', '${name}', '${icon}', '${cat}')">
-                            <div style="font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;">${name} ${countText}</div>
-                            <div style="font-size:11px; color:var(--text-secondary);">${cat}</div>
-                        </div>
-                        <button class="btn-share" onclick="shareApp('${id}', '${name}')">📤</button>
-                        <button class="btn-laden" onclick="handleAppClick('${id}', '${name}', '${icon}', '${cat}')">Laden</button>
-                    </div>`;
+                const item = document.createElement('div');
+                item.className = 'app-item';
+                item.style.animationDelay = (index * 0.04) + 's';
+                item.innerHTML = `
+                    <img src="${icon}" onclick="handleAppClick('${id}', '${name}', '${icon}', '${cat}')" style="width:55px; height:55px; border-radius:12px; margin-right:15px; cursor:pointer;">
+                    <div style="flex-grow:1; overflow:hidden;" onclick="handleAppClick('${id}', '${name}', '${icon}', '${cat}')">
+                        <div style="font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;">${name} ${countText}</div>
+                        <div style="font-size:11px; color:var(--text-secondary);">${cat}</div>
+                    </div>
+                    <button class="btn-share" onclick="shareApp('${id}', '${name}')">📤</button>
+                    <button class="btn-laden" onclick="handleAppClick('${id}', '${name}', '${icon}', '${cat}')">Laden</button>
+                `;
+                liste.appendChild(item);
             });
         }
 
         let debounce;
         window.sucheApps = () => {
             const q = document.getElementById('suche').value;
-            if(q.length < 2) return;
-            document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+            if(q.length < 2) { updateAura('reset'); return; }
             clearTimeout(debounce);
             debounce = setTimeout(async () => {
                 showSkeleton();
                 const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&country=de&entity=software&limit=15`);
                 const data = await res.json();
+                if(data.results[0]) {
+                    const topCat = data.results[0].primaryGenreName;
+                    updateAura(catColors[topCat] || '#007aff');
+                }
                 renderHtml(data.results);
             }, 300);
         };
@@ -284,6 +317,8 @@
             document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
             el.classList.add('active');
             document.getElementById('suche').value = "";
+            updateAura(catColors[cat] || 'reset');
+            
             if(cat === 'Boris Charts') loadBorisCharts();
             else {
                 showSkeleton();
