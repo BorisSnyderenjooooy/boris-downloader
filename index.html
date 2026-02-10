@@ -32,8 +32,12 @@
                 const isDark = localStorage.getItem('theme') === 'dark';
                 if (isDark) document.documentElement.setAttribute('data-theme', 'dark');
                 
-                // Hintergrund an die App-Farbe anpassen
-                document.body.style.background = `linear-gradient(135deg, ${auraFarbe}66 0%, ${isDark ? '#000000' : '#ffffff'} 100%)`;
+                // Hintergrund-Stimmung übernehmen
+                if(sessionStorage.getItem('isCharts') === 'true') {
+                    document.body.classList.add('charts-active');
+                } else {
+                    document.body.style.background = `linear-gradient(135deg, ${auraFarbe}66 0%, ${isDark ? '#000000' : '#ffffff'} 100%)`;
+                }
 
                 const meta = document.createElement('meta');
                 meta.name = "apple-itunes-app";
@@ -89,6 +93,19 @@
             background: linear-gradient(135deg, var(--aura-color1) 0%, var(--aura-color2) 100%);
             background-attachment: fixed; min-height: 100vh;
             display: flex; flex-direction: column; align-items: center; padding: 40px 20px; color: var(--text-main);
+        }
+
+        /* CHARTS MESH GRADIENT */
+        @keyframes meshGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .charts-active {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab) !important;
+            background-size: 400% 400% !important;
+            animation: meshGradient 12s ease infinite !important;
         }
 
         .main-card {
@@ -194,10 +211,16 @@
         // AURA FUNKTION
         window.updateAura = (color) => {
             const root = document.documentElement;
+            const body = document.body;
             const isDark = root.getAttribute('data-theme') === 'dark';
+
+            body.classList.remove('charts-active');
+            sessionStorage.setItem('isCharts', 'false');
+
             if(color === 'reset') {
-                root.style.setProperty('--aura-color1', isDark ? '#1c1c1e' : '#e0f7f4');
-                root.style.setProperty('--aura-color2', isDark ? '#000000' : '#f7e8f3');
+                body.classList.add('charts-active');
+                sessionStorage.setItem('isCharts', 'true');
+                sessionStorage.setItem('lastColor', '#e73c7e');
                 return;
             }
             root.style.setProperty('--aura-color1', color + '44');
@@ -206,7 +229,7 @@
         };
 
         window.zeigeImpressum = () => alert("Impressum\n\nBetreiber: Moritz Schmalle\nAnschrift: Auf Anfrage per E-Mail\nE-Mail: info@boris-store.xyz");
-        window.zeigeDatenschutz = () => alert("Datenschutz\n\nAnonyme Analyse der Klicks zur Chart-Erstellung.");
+        window.zeigeDatenschutz = () => alert("Datenschutz\n\nKlicks werden anonym gezählt.");
 
         if (localStorage.getItem('theme') === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
@@ -217,24 +240,13 @@
             document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
             document.getElementById('themeBtn').innerText = isDark ? '🌙' : '☀️';
             localStorage.setItem('theme', isDark ? 'light' : 'dark');
-            updateAura('reset');
+            updateAura(sessionStorage.getItem('isCharts') === 'true' ? 'reset' : sessionStorage.getItem('lastColor'));
         };
 
-        // KATEGORIE-FARBEN MAP
-        const catColors = {
-            'Entertainment': '#ff9500', 
-            'Games': '#ff3b30',        
-            'Social Networking': '#007aff', 
-            'Music': '#ff2d55',        
-            'Productivity': '#5856d6', 
-            'Finance': '#34c759',      
-            'Photo & Video': '#af52de',
-            'Education': '#5ac8fa'
-        };
+        const catColors = { 'Entertainment': '#ff9500', 'Games': '#ff3b30', 'Social Networking': '#007aff', 'Music': '#ff2d55', 'Productivity': '#5856d6', 'Finance': '#34c759', 'Photo & Video': '#af52de' };
 
         window.handleAppClick = async (trackId, name, icon, cat) => {
             if (window.navigator.vibrate) window.navigator.vibrate(12);
-            
             const farbe = catColors[cat] || '#007aff';
             sessionStorage.setItem('lastColor', farbe);
 
@@ -247,16 +259,13 @@
 
         window.shareApp = (id, name) => {
             const shareData = { title: 'Boris Store', text: `Schau dir ${name} an!`, url: `https://boris-store.xyz/?id=${id}` };
-            if (navigator.share) navigator.share(shareData);
-            else alert("Link kopiert!");
+            if (navigator.share) navigator.share(shareData); else alert("Link kopiert!");
         };
 
         function showSkeleton() {
             const liste = document.getElementById('liste');
             liste.innerHTML = "";
-            for(let i=0; i<5; i++) {
-                liste.innerHTML += `<div class="app-item"><div class="skeleton" style="width:55px; height:55px; border-radius:12px; margin-right:15px;"></div><div style="flex-grow:1;"><div class="skeleton" style="width:70%; height:15px; margin-bottom:8px;"></div><div class="skeleton" style="width:40%; height:10px;"></div></div></div>`;
-            }
+            for(let i=0; i<5; i++) liste.innerHTML += `<div class="app-item"><div class="skeleton" style="width:55px; height:55px; border-radius:12px; margin-right:15px;"></div><div style="flex-grow:1;"><div class="skeleton" style="width:70%; height:15px; margin-bottom:8px;"></div><div class="skeleton" style="width:40%; height:10px;"></div></div></div>`;
         }
 
         window.loadBorisCharts = () => {
@@ -305,10 +314,7 @@
                 showSkeleton();
                 const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&country=de&entity=software&limit=15`);
                 const data = await res.json();
-                if(data.results[0]) {
-                    const topCat = data.results[0].primaryGenreName;
-                    updateAura(catColors[topCat] || '#007aff');
-                }
+                if(data.results[0]) updateAura(catColors[data.results[0].primaryGenreName] || '#007aff');
                 renderHtml(data.results);
             }, 300);
         };
@@ -317,14 +323,9 @@
             document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
             el.classList.add('active');
             document.getElementById('suche').value = "";
-            updateAura(catColors[cat] || 'reset');
-            
+            updateAura(catColors[cat] || (cat === 'Boris Charts' ? 'reset' : '#007aff'));
             if(cat === 'Boris Charts') loadBorisCharts();
-            else {
-                showSkeleton();
-                fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(cat)}&country=de&entity=software&limit=15`)
-                .then(r => r.json()).then(d => renderHtml(d.results));
-            }
+            else { showSkeleton(); fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(cat)}&country=de&entity=software&limit=15`).then(r => r.json()).then(d => renderHtml(d.results)); }
         };
 
         loadBorisCharts();
