@@ -4,7 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Boris Store</title>
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Boris Store">
     
+    <link rel="apple-touch-icon" href="icon.png">
+
     <script>
         // DOMAIN-LOCK: Schützt vor Kopien auf anderen Webseiten
         const host = window.location.hostname;
@@ -130,13 +136,11 @@
             const begriff = document.getElementById('suche').value;
             const liste = document.getElementById('liste');
             
-            // Wenn das Feld leer ist, zeige wieder den Standardtext
             if (begriff.length < 2) {
                 liste.innerHTML = '<p style="text-align:center; color:#86868b; font-size:14px;">Durchsuche den Boris Store nach Apps.</p>';
                 return;
             }
 
-            // Debouncing: Warte kurz, bevor die API angefragt wird
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(async () => {
                 try {
