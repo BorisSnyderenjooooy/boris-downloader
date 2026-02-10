@@ -83,7 +83,6 @@
             --skeleton: #3a3a3c;
         }
 
-        /* SCHNELLERER FARBWECHSEL (0.3s statt 0.8s) */
         * { transition: background 0.3s ease, color 0.3s ease; -webkit-user-select: none; user-select: none; box-sizing: border-box; }
         input { -webkit-user-select: text; user-select: text; }
 
@@ -92,9 +91,9 @@
             background: linear-gradient(135deg, var(--aura-color1) 0%, var(--aura-color2) 100%);
             background-attachment: fixed; min-height: 100vh;
             display: flex; flex-direction: column; align-items: center; padding: 40px 20px; color: var(--text-main);
+            overflow-x: hidden;
         }
 
-        /* SCHNELLERER MESH GRADIENT (6s statt 12s) */
         @keyframes meshGradient {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
@@ -107,11 +106,21 @@
             animation: meshGradient 6s ease infinite !important;
         }
 
+        /* Pokal Regen Effekt */
+        .emoji-rain {
+            position: fixed; top: -50px; font-size: 24px;
+            z-index: -1; opacity: 0.4;
+            animation: fall linear forwards;
+        }
+        @keyframes fall {
+            to { transform: translateY(110vh) rotate(360deg); }
+        }
+
         .main-card {
             background: var(--card-bg); backdrop-filter: blur(30px);
             width: 100%; max-width: 480px; border-radius: 38px; padding: 40px 30px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center; position: relative;
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.2); z-index: 10;
         }
 
         .theme-toggle {
@@ -205,6 +214,26 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
+        // POKAL REGEN LOGIK
+        let rainInterval;
+        function startEmojiRain() {
+            stopEmojiRain();
+            rainInterval = setInterval(() => {
+                const emojis = ['🏆', '⭐', '✨'];
+                const e = document.createElement('div');
+                e.className = 'emoji-rain';
+                e.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+                e.style.left = Math.random() * 100 + 'vw';
+                e.style.animationDuration = (Math.random() * 3 + 4) + 's';
+                document.body.appendChild(e);
+                setTimeout(() => e.remove(), 7000);
+            }, 600);
+        }
+        function stopEmojiRain() {
+            clearInterval(rainInterval);
+            document.querySelectorAll('.emoji-rain').forEach(e => e.remove());
+        }
+
         window.updateAura = (color) => {
             const root = document.documentElement;
             const body = document.body;
@@ -212,11 +241,13 @@
 
             body.classList.remove('charts-active');
             sessionStorage.setItem('isCharts', 'false');
+            stopEmojiRain();
 
             if(color === 'reset') {
                 body.classList.add('charts-active');
                 sessionStorage.setItem('isCharts', 'true');
                 sessionStorage.setItem('lastColor', '#e73c7e');
+                startEmojiRain();
                 return;
             }
             root.style.setProperty('--aura-color1', color + '44');
@@ -312,7 +343,7 @@
                 const data = await res.json();
                 if(data.results[0]) updateAura(catColors[data.results[0].primaryGenreName] || '#007aff');
                 renderHtml(data.results);
-            }, 200); // Suche ebenfalls etwas beschleunigt
+            }, 200);
         };
 
         window.setCategory = (el, cat) => {
