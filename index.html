@@ -12,19 +12,15 @@
     <link rel="apple-touch-icon" href="icon.png">
 
     <script>
-        // DOMAIN-LOCK: Schützt vor Kopien auf anderen Webseiten
+        // DOMAIN-LOCK: Schützt vor Kopien
         const host = window.location.hostname;
-        if (host !== "boris-store.xyz" && 
-            host !== "www.boris-store.xyz" && 
-            host !== "localhost" && 
-            !host.includes("vercel.app")) {
+        if (host !== "boris-store.xyz" && host !== "www.boris-store.xyz" && host !== "localhost" && !host.includes("vercel.app")) {
             window.location.href = "https://boris-store.xyz/?error=unauthorized_copy";
         }
 
         const params = new URLSearchParams(window.location.search);
         const appId = params.get('id');
 
-        // Rechtsklick-Sperre
         document.addEventListener('contextmenu', e => e.preventDefault());
 
         if (appId) {
@@ -36,7 +32,6 @@
             
             window.onload = () => {
                 document.documentElement.style.visibility = 'visible';
-                // Auch in der Download-Ansicht Dark Mode prüfen
                 if (localStorage.getItem('theme') === 'dark') {
                     document.documentElement.setAttribute('data-theme', 'dark');
                 }
@@ -46,19 +41,15 @@
                         <div style="font-size:80px; margin-bottom:20px;">📲</div>
                         <h2 style="color:var(--text-main); font-size:28px; font-weight:700;">Boris Store: Download</h2>
                         <p style="color:var(--text-secondary); margin-bottom:30px;">Der offizielle Apple-Banner erscheint gleich oben.</p>
-                        
                         <div style="background: rgba(255, 193, 7, 0.1); backdrop-filter: blur(10px); border-radius: 25px; padding: 25px; margin-bottom: 40px; max-width: 400px; text-align: left; font-size: 14px; color: #856404; border: 1px solid #ffeeba;">
                             <strong>⚠️ WICHTIG:</strong><br>
                             • Den Banner oben <b>niemals schließen</b> (24h Sperre).<br>
-                            • Nicht zu viele Apps gleichzeitig laden (Spam-Schutz).<br>
+                            • Nicht zu viele Apps gleichzeitig laden.<br>
                             • Bei Problemen kurz hoch/runter scrollen.
                         </div>
-
                         <button onclick="window.location.href=window.location.pathname" style="padding:18px 40px; border-radius:30px; border:none; background:#007aff; color:white; font-weight:bold; font-size:17px; cursor:pointer; box-shadow: 0 10px 20px rgba(0,122,255,0.3);">Zurück zur Suche</button>
-                        
                         <footer style="margin-top:auto; padding:40px 20px; font-size:11px; color:var(--text-secondary);">
-                            &copy; 2026 Boris Store. Alle Rechte vorbehalten.<br>
-                            Apps sind Eigentum der jeweiligen Entwickler und Apple Inc.
+                            &copy; 2026 Boris Store. Alle Rechte vorbehalten.
                         </footer>
                     </div>
                 `;
@@ -67,7 +58,7 @@
         }
 
         function zeigeImpressum() {
-            alert("Impressum\n\nAngaben gemäß § 5 TMG:\nMoritz Schmalle\nHammerstraße 242\n48153 Münster\n\nKontakt:\nTelefon: +49 15750637096\nE-Mail: info@boris-store.xyz");
+            alert("Impressum\n\nMoritz Schmalle\nHammerstraße 242\n48153 Münster\n\nKontakt: +49 15750637096");
         }
     </script>
 
@@ -82,7 +73,6 @@
             --item-bg: rgba(255, 255, 255, 0.6);
         }
 
-        /* Dark Mode Definitionen */
         [data-theme="dark"] {
             --bg-gradient: linear-gradient(135deg, #1c1c1e 0%, #000000 100%);
             --card-bg: rgba(28, 28, 30, 0.9);
@@ -92,7 +82,7 @@
             --item-bg: rgba(44, 44, 46, 0.7);
         }
 
-        * { transition: background 0.3s ease, color 0.3s ease; -webkit-user-select: none; user-select: none; }
+        * { transition: background 0.3s ease, color 0.3s ease; -webkit-user-select: none; user-select: none; box-sizing: border-box; }
         input { -webkit-user-select: text; user-select: text; }
 
         body {
@@ -108,7 +98,6 @@
             width: 100%; max-width: 480px; border-radius: 38px; padding: 40px 30px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.1); text-align: center;
             position: relative;
-            box-sizing: border-box;
         }
 
         .theme-toggle {
@@ -119,16 +108,30 @@
         }
 
         h1 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 38px; font-weight: 800; margin: 0; }
-        .tagline { color: var(--text-secondary); font-size: 14px; margin-bottom: 30px; }
+        .tagline { color: var(--text-secondary); font-size: 14px; margin-bottom: 20px; }
 
         input {
-            width: 100%; padding: 20px; border-radius: 22px; border: 1px solid rgba(0,0,0,0.05);
-            background: var(--input-bg); color: var(--text-main); font-size: 18px; outline: none; box-sizing: border-box;
+            width: 100%; padding: 18px; border-radius: 20px; border: 1px solid rgba(0,0,0,0.05);
+            background: var(--input-bg); color: var(--text-main); font-size: 17px; outline: none;
         }
 
+        /* Kategorien Leiste */
+        .cat-container {
+            display: flex; overflow-x: auto; gap: 10px; margin: 20px -10px 10px -10px;
+            padding: 5px 10px; scrollbar-width: none; -ms-overflow-style: none;
+        }
+        .cat-container::-webkit-scrollbar { display: none; }
+        
+        .cat-pill {
+            background: var(--item-bg); padding: 8px 16px; border-radius: 15px;
+            white-space: nowrap; font-size: 13px; font-weight: 600; cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.1); color: var(--text-main);
+        }
+        .cat-pill.active { background: var(--primary); color: white; border-color: var(--primary); }
+
         .app-item {
-            display: flex; align-items: center; padding: 16px; background: var(--item-bg);
-            margin-bottom: 12px; border-radius: 22px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer;
+            display: flex; align-items: center; padding: 14px; background: var(--item-bg);
+            margin-bottom: 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer;
         }
 
         .btn-laden { background: #f1f3f6; color: var(--primary); border: none; padding: 8px 18px; border-radius: 20px; font-weight: 700; }
@@ -149,23 +152,29 @@
         
         <input type="text" id="suche" placeholder="Apps suchen..." oninput="sucheApps()">
 
-        <div id="liste" style="margin-top:20px; text-align:left;">
-            <p style="text-align:center; color:var(--text-secondary); font-size:14px;">Durchsuche den Boris Store nach Apps.</p>
+        <div class="cat-container" id="catBar">
+            <div class="cat-pill active" onclick="setCategory(this, 'Top Free')">Charts</div>
+            <div class="cat-pill" onclick="setCategory(this, 'Games')">Spiele</div>
+            <div class="cat-pill" onclick="setCategory(this, 'Productivity')">Produktivität</div>
+            <div class="cat-pill" onclick="setCategory(this, 'Social Networking')">Social</div>
+            <div class="cat-pill" onclick="setCategory(this, 'Entertainment')">Entertainment</div>
+        </div>
+
+        <div id="liste" style="margin-top:10px; text-align:left;">
+            <p style="text-align:center; color:var(--text-secondary); font-size:14px;">Lade Charts...</p>
         </div>
 
         <div class="legal-links">
             <a onclick="zeigeImpressum()">Impressum</a>
-            <a onclick="alert('Datenschutz:\nWir speichern keine persönlichen Daten. Die App-Suche erfolgt anonym direkt über die Apple iTunes API.')">Datenschutz</a>
+            <a onclick="alert('Datenschutz:\nAnonyme Suche über Apple API.')">Datenschutz</a>
         </div>
     </div>
 
     <footer>
-        &copy; 2026 Boris Store &bull; Moritz Schmalle<br>
-        Dieses Projekt ist privat und steht in keiner Verbindung zu Apple Inc.
+        &copy; 2026 Boris Store &bull; Moritz Schmalle
     </footer>
 
     <script>
-        // Theme beim Start laden
         if (localStorage.getItem('theme') === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
             document.getElementById('themeBtn').innerText = '☀️';
@@ -187,46 +196,81 @@
 
         let debounceTimer;
 
+        // Kategorie setzen und Suche auslösen
+        async function setCategory(el, catName) {
+            document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('suche').value = ""; // Suche leeren bei Kategorie-Wechsel
+            
+            if(catName === 'Top Free') {
+                loadCharts();
+            } else {
+                renderApps(catName); // Nutzt Suchfunktion für Kategorie-Keywords
+            }
+        }
+
+        // Standard-Charts beim Laden
+        async function loadCharts() {
+            try {
+                // Nutzt einen Suchbegriff für populäre kostenlose Apps in DE
+                const response = await fetch(`https://itunes.apple.com/search?term=popular&country=de&entity=software&limit=15`);
+                const data = await response.json();
+                displayResults(data.results);
+            } catch (e) {
+                document.getElementById('liste').innerHTML = '<p>Fehler beim Laden.</p>';
+            }
+        }
+
         async function sucheApps() {
             const begriff = document.getElementById('suche').value;
-            const liste = document.getElementById('liste');
-            
-            if (begriff.length < 2) {
-                liste.innerHTML = '<p style="text-align:center; color:var(--text-secondary); font-size:14px;">Durchsuche den Boris Store nach Apps.</p>';
-                return;
-            }
+            if (begriff.length < 2) return;
+
+            // Pill-Auswahl aufheben bei manueller Suche
+            document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
 
             clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(async () => {
-                try {
-                    const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(begriff)}&country=de&entity=software&limit=15`);
-                    const data = await response.json();
-                    
-                    liste.innerHTML = "";
-                    if (data.results.length === 0) {
-                        liste.innerHTML = '<p style="text-align:center; color:var(--text-secondary); font-size:14px;">Keine Apps gefunden.</p>';
-                        return;
-                    }
+            debounceTimer = setTimeout(() => renderApps(begriff), 300);
+        }
 
-                    data.results.forEach(app => {
-                        liste.innerHTML += `
-                            <div class="app-item" onclick="ladeApp('${app.trackId}')">
-                                <img src="${app.artworkUrl100}" style="width:55px; height:55px; border-radius:12px; margin-right:15px;">
-                                <div style="flex-grow:1;"><strong>${app.trackName}</strong></div>
-                                <button class="btn-laden">Laden</button>
-                            </div>
-                        `;
-                    });
-                } catch (e) {
-                    liste.innerHTML = '<p style="text-align:center; color:var(--text-secondary); font-size:14px;">Fehler bei der Suche.</p>';
-                }
-            }, 300);
+        async function renderApps(query) {
+            const liste = document.getElementById('liste');
+            try {
+                const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&country=de&entity=software&limit=15`);
+                const data = await response.json();
+                displayResults(data.results);
+            } catch (e) {
+                liste.innerHTML = '<p>Fehler bei der Suche.</p>';
+            }
+        }
+
+        function displayResults(results) {
+            const liste = document.getElementById('liste');
+            liste.innerHTML = "";
+            if (results.length === 0) {
+                liste.innerHTML = '<p style="text-align:center; color:var(--text-secondary);">Keine Apps gefunden.</p>';
+                return;
+            }
+            results.forEach(app => {
+                liste.innerHTML += `
+                    <div class="app-item" onclick="ladeApp('${app.trackId}')">
+                        <img src="${app.artworkUrl100}" style="width:55px; height:55px; border-radius:12px; margin-right:15px;">
+                        <div style="flex-grow:1; overflow:hidden;">
+                            <div style="font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${app.trackName}</div>
+                            <div style="font-size:11px; color:var(--text-secondary);">${app.primaryGenreName}</div>
+                        </div>
+                        <button class="btn-laden">Laden</button>
+                    </div>
+                `;
+            });
         }
 
         function ladeApp(id) {
             const cacheKiller = Math.floor(Math.random() * 999999);
             window.location.href = window.location.pathname + "?id=" + id + "&c=" + cacheKiller;
         }
+
+        // Initialer Start
+        loadCharts();
     </script>
 </body>
 </html>
