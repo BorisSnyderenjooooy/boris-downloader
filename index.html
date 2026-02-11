@@ -13,9 +13,7 @@
     <link rel="icon" type="image/png" href="icon.png">
 
     <script>
-        /**
-         * 1. DYNAMISCHE BANNER-INJEKTION & SAFARI FIX
-         */
+        // 1. URL & Banner Logik
         const params = new URLSearchParams(window.location.search);
         const appId = params.get('id');
 
@@ -31,9 +29,7 @@
             }
         }
 
-        /**
-         * 2. SICHERHEIT & DOMAIN-LOCK
-         */
+        // 2. Domain Lock (Vercel & Localhost erlaubt)
         const host = window.location.hostname.toLowerCase();
         const isAllowed = host.includes("boris-store") || host === "localhost" || host.includes("vercel.app");
         
@@ -41,17 +37,13 @@
             window.location.href = "https://boris-store.xyz/?error=unauthorized_copy";
         }
 
-        /**
-         * 3. THEME INITIALISIERUNG
-         */
+        // 3. Theme Vor-Initialisierung
         const savedTheme = localStorage.getItem('theme') || 'light';
         if (savedTheme === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
         }
 
-        /**
-         * 4. DOWNLOAD-VORSCHAU-SEITE
-         */
+        // 4. Download-Screen (Wird nur angezeigt, wenn eine ID in der URL ist)
         if (appId) {
             document.documentElement.style.visibility = 'hidden'; 
             window.onload = () => {
@@ -68,14 +60,12 @@
                             <h2 style="color:var(--text-main); font-size:28px; font-weight:700; margin-bottom:10px;">Download bereit</h2>
                             <p style="color:var(--text-secondary); font-size:18px; margin-bottom:40px;">Schau jetzt ganz oben am Bildschirmrand.</p>
                         </div>
-
                         <div style="background: #fff3cd; border-radius: 28px; padding: 30px; margin-bottom: 40px; max-width: 420px; text-align: left; font-size: 16px; color: #453505; border: 1px solid #ffeeba; box-shadow: 0 10px 25px rgba(0,0,0,0.08);">
                             <strong style="display:block; margin-bottom:12px; font-size:18px;">⚠️ WICHTIG:</strong>
                             • Banner am oberen Rand <b>nicht</b> wegklicken.<br>
-                            • Dies funktioniert ausschließlich im <b>Safari Browser</b>.<br><br>
-                            • Falls oben nichts erscheint: <a href="javascript:location.reload()" style="color:#856404; font-weight:bold; text-decoration:underline;">Seite neu laden</a>.
+                            • Safari Browser nutzen.<br><br>
+                            • Nichts da? <a href="javascript:location.reload()" style="color:#856404; font-weight:bold; text-decoration:underline;">Seite neu laden</a>.
                         </div>
-
                         <button onclick="window.location.href=window.location.pathname" style="padding:20px 45px; border-radius:35px; border:none; background:${auraFarbe}; color:white; font-weight:bold; font-size:18px; cursor:pointer; box-shadow: 0 10px 20px ${auraFarbe}44;">
                             Zurück zum Store
                         </button>
@@ -110,7 +100,6 @@
         }
 
         * { transition: background 0.4s ease, color 0.4s ease; -webkit-user-select: none; user-select: none; box-sizing: border-box; }
-        input, textarea { -webkit-user-select: text; user-select: text; }
         
         body {
             margin: 0; 
@@ -121,11 +110,8 @@
         }
 
         .layout-master { display: flex; flex-direction: row; align-items: flex-start; justify-content: center; width: 100%; max-width: 1200px; gap: 25px; margin-top: 20px; }
-
         .request-card { background: var(--card-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); width: 250px; border-radius: 30px; padding: 25px; box-shadow: 0 12px 35px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.25); text-align: left; flex-shrink: 0; }
-
         .main-card { background: var(--card-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); width: 100%; max-width: 480px; border-radius: 40px; padding: 45px 35px; box-shadow: 0 25px 60px rgba(0,0,0,0.15); text-align: center; position: relative; border: 1px solid rgba(255,255,255,0.25); flex-shrink: 0; }
-
         .spacer-right { width: 250px; flex-shrink: 0; }
 
         @media (max-width: 1100px) {
@@ -135,48 +121,39 @@
             .main-card { order: 1; }
         }
 
-        .theme-toggle { position: absolute; top: 25px; right: 25px; background: rgba(120, 120, 128, 0.16); border: none; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-
+        .theme-toggle { position: absolute; top: 25px; right: 25px; background: rgba(120, 120, 128, 0.16); border: none; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; z-index: 10; }
         h1 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 42px; font-weight: 800; margin: 0; }
-        
         input, textarea { width: 100%; padding: 14px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.05); background: var(--input-bg); color: var(--text-main); font-size: 15px; outline: none; margin-bottom: 10px; font-family: inherit; }
-
         .btn-send { width: 100%; padding: 14px; border-radius: 14px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; font-size: 15px; }
 
         .cat-container { display: flex; overflow-x: auto; gap: 12px; margin: 25px -10px 15px -10px; padding: 5px 10px; scrollbar-width: none; }
         .cat-container::-webkit-scrollbar { display: none; }
-
         .cat-pill { background: var(--item-bg); padding: 9px 18px; border-radius: 16px; white-space: nowrap; font-size: 14px; font-weight: 600; cursor: pointer; color: var(--text-main); border: 1px solid rgba(255,255,255,0.1); }
         .cat-pill.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-        .app-item { display: flex; align-items: center; padding: 15px; background: var(--item-bg); margin-bottom: 14px; border-radius: 22px; border: 1px solid rgba(255,255,255,0.1); text-align: left; }
-
+        .app-item { display: flex; align-items: center; padding: 15px; background: var(--item-bg); margin-bottom: 14px; border-radius: 22px; border: 1px solid rgba(255,255,255,0.1); text-align: left; overflow: hidden; }
         .btn-laden { background: #f1f3f6; color: var(--primary); border: none; padding: 9px 20px; border-radius: 20px; font-weight: 700; cursor: pointer; font-size: 14px; flex-shrink: 0; margin-left: 10px;}
         [data-theme="dark"] .btn-laden { background: var(--primary); color: white; }
 
-        footer { margin-top: 80px; font-size: 13px; color: var(--text-main); font-weight: 600; text-align: center; width: 100%; opacity: 0.8; }
-
+        /* Skeleton Animation */
         .skeleton-item { background: var(--skeleton); height: 88px; border-radius: 22px; margin-bottom: 14px; animation: pulse 1.5s infinite ease-in-out; }
         @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
 
         .emoji-rain { position: fixed; top: -50px; font-size: 26px; z-index: -1; animation: fall linear forwards; pointer-events: none; opacity: 0.6; }
         @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
         .charts-active { background: linear-gradient(160deg, #6a11cb 0%, #2575fc 100%) !important; background-attachment: fixed !important; }
+        footer { margin-top: 80px; font-size: 13px; color: var(--text-main); font-weight: 600; text-align: center; width: 100%; opacity: 0.8; }
     </style>
 </head>
 <body>
 
     <div class="layout-master">
         <div class="request-card">
-            <h3 style="margin-top:0; font-size: 20px; margin-bottom: 10px;">App-Fehler melden 🛠️</h3>
-            <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.4;">
-                Funktioniert eine App nicht mehr?
-            </p>
-            
+            <h3 style="margin-top:0; font-size: 20px; margin-bottom: 10px;">Fehler melden 🛠️</h3>
             <form action="https://formspree.io/f/mgolonke" method="POST">
-                <input type="email" name="email" placeholder="Deine E-Mail" required>
+                <input type="email" name="email" placeholder="E-Mail" required>
                 <textarea name="message" rows="4" placeholder="Welche App?" required></textarea>
-                <button type="submit" class="btn-send">Fehler senden</button>
+                <button type="submit" class="btn-send">Senden</button>
             </form>
         </div>
 
@@ -184,9 +161,7 @@
             <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
             
             <h1>Boris Store</h1>
-            <div style="font-size: 15px; color: var(--text-secondary); margin-top: 5px; margin-bottom: 25px;">
-                Offizieller App-Vermittler
-            </div>
+            <div style="font-size: 15px; color: var(--text-secondary); margin-top: 5px; margin-bottom: 25px;">Offizieller App-Vermittler</div>
             
             <input type="text" id="suche" placeholder="Apps suchen..." oninput="sucheApps()">
 
@@ -205,7 +180,6 @@
                 <a onclick="zeigeDatenschutz()" style="color: var(--text-secondary); text-decoration: none; margin: 0 12px; cursor: pointer;">Datenschutz</a>
             </div>
         </div>
-
         <div class="spacer-right"></div>
     </div>
 
@@ -236,16 +210,14 @@
             document.getElementById('themeBtn').innerText = newTheme === 'dark' ? '☀️' : '🌙';
             localStorage.setItem('theme', newTheme);
         };
-
-        // Setzt Emoji beim Start korrekt
-        const startTheme = localStorage.getItem('theme') || 'light';
-        document.getElementById('themeBtn').innerText = startTheme === 'dark' ? '☀️' : '🌙';
+        // Emoji beim Laden wiederherstellen
+        document.getElementById('themeBtn').innerText = (localStorage.getItem('theme') === 'dark') ? '☀️' : '🌙';
 
         // --- SKELETON LOADER ---
         window.showSkeletons = () => {
             const liste = document.getElementById('liste');
             liste.innerHTML = "";
-            for(let i=0; i<5; i++) {
+            for(let i=0; i<6; i++) {
                 const s = document.createElement('div');
                 s.className = 'skeleton-item';
                 liste.appendChild(s);
@@ -266,7 +238,6 @@
                 setTimeout(() => e.remove(), 5000);
             }, 350); 
         }
-
         function stopEmojiRain() { 
             clearInterval(rainInterval); 
             document.querySelectorAll('.emoji-rain').forEach(e => e.remove()); 
@@ -276,7 +247,6 @@
             const body = document.body;
             body.classList.remove('charts-active');
             stopEmojiRain();
-
             if (color === 'reset') {
                 body.classList.add('charts-active');
                 startEmojiRain();
@@ -288,38 +258,29 @@
             }
         };
 
-        // --- APP LOGIK ---
-        window.loadBorisCharts = () => {
-            showSkeletons();
-            updateAura('reset');
-            onValue(ref(db, 'charts'), (snapshot) => {
-                const data = snapshot.val();
-                if (!data) return;
-                const sorted = Object.values(data).sort((a,b) => b.count - a.count).slice(0, 10);
-                renderHtml(sorted, true);
-            });
-        };
-
+        // --- LOGIK: RANKING & PFEILE ---
         window.renderHtml = (results, isChart = false) => {
             const liste = document.getElementById('liste');
             liste.innerHTML = "";
-
             if (results.length === 0) {
-                liste.innerHTML = `<div style='padding:50px 20px; color:var(--text-secondary); font-size:16px;'>Keine Apps gefunden. 🕵️‍♂️</div>`;
+                liste.innerHTML = `<div style='padding:50px 20px; color:var(--text-secondary);'>Keine Apps gefunden. 🕵️‍♂️</div>`;
                 return;
             }
 
-            results.forEach((app) => {
+            results.forEach((app, index) => {
                 const id = app.trackId;
                 const name = (app.trackName || app.name).replace(/'/g, "");
                 const icon = app.artworkUrl100 || app.icon;
                 const cat = app.primaryGenreName || app.cat;
                 
-                // Trend-Pfeil Logik
+                // Pfeil-Logik nur für die Top 10 in den Charts
                 let trendTag = "";
                 if (isChart) {
-                    if (app.count >= 10) trendTag = `<span style="color:#34c759; margin-left:4px; font-weight:bold;">↑</span>`;
-                    else if (app.count < 5) trendTag = `<span style="color:#ff3b30; margin-left:4px; font-weight:bold;">↓</span>`;
+                    if (index < 3) {
+                        trendTag = `<span style="color:#34c759; margin-left:4px; font-weight:bold;">↑</span>`; // Top 3 steigen
+                    } else if (index >= 7) {
+                        trendTag = `<span style="color:#ff3b30; margin-left:4px; font-weight:bold;">↓</span>`; // Letzte 3 sinken
+                    }
                 }
 
                 const countBadge = isChart ? `<span style="font-size:10px; background:#34c759; color:white; padding:2px 8px; border-radius:10px; margin-left:6px; flex-shrink:0;">${app.count}x</span>` : "";
@@ -341,24 +302,32 @@
             });
         };
 
+        window.loadBorisCharts = () => {
+            showSkeletons();
+            updateAura('reset');
+            onValue(ref(db, 'charts'), (snapshot) => {
+                const data = snapshot.val();
+                if (!data) return;
+                const sorted = Object.values(data).sort((a,b) => b.count - a.count).slice(0, 10);
+                renderHtml(sorted, true);
+            });
+        };
+
         window.sucheApps = () => {
             const q = document.getElementById('suche').value;
             if (q.length < 2) return loadBorisCharts();
-            
             fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&country=de&entity=software&limit=15`)
-                .then(r => r.json())
-                .then(data => renderHtml(data.results));
+                .then(r => r.json()).then(data => renderHtml(data.results));
         };
 
         window.handleAppClick = async (btn, trackId, name, icon, cat) => {
-            if(btn) btn.innerText = "Moment...";
+            if(btn) btn.innerText = "...";
             try {
                 const appRef = ref(db, 'charts/' + trackId);
                 const snapshot = await get(appRef);
                 let count = snapshot.exists() ? snapshot.val().count : 0;
                 await set(appRef, { trackId, name, icon, cat, count: count + 1 });
-            } catch(e) { console.error("Firebase Fehler:", e); }
-            
+            } catch(e) { console.error(e); }
             window.location.href = window.location.pathname + "?id=" + trackId;
         };
 
@@ -366,18 +335,17 @@
             document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
             el.classList.add('active');
             showSkeletons();
-            
             if (cat === 'Boris Charts') {
                 loadBorisCharts();
             } else {
+                updateAura('#007aff');
                 fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(cat)}&country=de&entity=software&limit=15`)
-                    .then(r => r.json())
-                    .then(d => renderHtml(d.results));
+                    .then(r => r.json()).then(d => renderHtml(d.results));
             }
         };
 
-        window.zeigeImpressum = () => alert("Impressum\n\nBetreiber: Moritz Schmalle\nKontakt: info@boris-store.xyz");
-        window.zeigeDatenschutz = () => alert("Datenschutz\n\nKlicks werden anonym gezählt, um die Top 10 Charts zu erstellen.");
+        window.zeigeImpressum = () => alert("Impressum\nBetreiber: Moritz Schmalle\ninfo@boris-store.xyz");
+        window.zeigeDatenschutz = () => alert("Datenschutz\nAnonyme Klick-Zählung für Charts.");
 
         if (!appId) loadBorisCharts();
     </script>
