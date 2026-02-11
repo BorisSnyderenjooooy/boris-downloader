@@ -2,16 +2,334 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Boris Store - Wartung</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Boris Store</title>
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Boris Store">
+    
+    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="icon" type="image/png" href="icon.png">
+
+    <script>
+        // 1. BANNER-LOGIK
+        const params = new URLSearchParams(window.location.search);
+        const appId = params.get('id');
+        if (appId && /^\d+$/.test(appId)) {
+            const meta = document.createElement('meta');
+            meta.name = "apple-itunes-app";
+            meta.content = `app-id=${appId}`;
+            document.head.appendChild(meta);
+        }
+
+        // 2. DOMAIN-LOCK (Erlaubt jetzt alle deine neuen Domains)
+        const host = window.location.hostname.toLowerCase();
+        const isAllowed = host.includes("boris-store") || host === "localhost" || host.includes("vercel.app");
+        
+        if (!isAllowed) {
+            window.location.href = "https://boris-store.xyz/?error=unauthorized_copy";
+        }
+
+        // 3. THEME INITIALISIERUNG
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+
+        // 4. DOWNLOAD-LOGIK
+        if (appId) {
+            document.documentElement.style.visibility = 'hidden'; 
+            window.onload = () => {
+                const auraFarbe = sessionStorage.getItem('lastColor') || '#007aff';
+                const isDark = localStorage.getItem('theme') === 'dark';
+                document.documentElement.style.visibility = 'visible';
+                
+                document.body.style.background = `linear-gradient(135deg, ${auraFarbe}66 0%, ${isDark ? '#000000' : '#ffffff'} 100%)`;
+                document.body.style.backgroundAttachment = 'fixed';
+
+                document.body.innerHTML = `
+                    <div style="text-align:center; padding: 80px 20px; font-family:-apple-system, sans-serif; display:flex; flex-direction:column; align-items:center; min-height:100vh;">
+                        <div style="margin-top: 40px;">
+                            <h2 style="color:var(--text-main); font-size:26px; font-weight:700; margin-bottom:10px;">Download bereit</h2>
+                            <p style="color:var(--text-secondary); font-size:16px; margin-bottom:40px;">Schau jetzt ganz oben am Bildschirmrand.</p>
+                        </div>
+                        
+                        <div style="background: #fff3cd; border-radius: 24px; padding: 25px; margin-bottom: 40px; max-width: 400px; text-align: left; font-size: 15px; color: #453505; border: 1px solid #ffeeba; box-shadow: 0 8px 20px rgba(0,0,0,0.06);">
+                            <strong style="display:block; margin-bottom:10px; font-size:17px;">⚠️ WICHTIG:</strong>
+                            • Banner oben <b>nicht</b> wegklicken.<br>
+                            • Klappt nur im <b>Safari Browser</b>.<br>
+                            • Falls oben nichts erscheint: <a href="javascript:location.reload()" style="color:#856404; font-weight:bold;">Seite neu laden</a>.
+                        </div>
+
+                        <button onclick="window.location.href=window.location.pathname" style="padding:18px 40px; border-radius:30px; border:none; background:${auraFarbe}; color:white; font-weight:bold; font-size:17px; cursor:pointer; box-shadow: 0 10px 20px ${auraFarbe}44;">Zurück zum Store</button>
+                    </div>
+                `;
+            };
+        }
+    </script>
+
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 50px; }
-        .link { color: blue; text-decoration: underline; }
+        :root { 
+            --primary: #007aff; 
+            --aura-color1: #e0f7f4;
+            --aura-color2: #f7e8f3;
+            --card-bg: rgba(255, 255, 255, 0.75);
+            --text-main: #1d1d1f;
+            --text-secondary: #333333;
+            --input-bg: #ffffff;
+            --item-bg: rgba(255, 255, 255, 0.5);
+        }
+
+        [data-theme="dark"] {
+            --aura-color1: #1c1c1e;
+            --aura-color2: #000000;
+            --card-bg: rgba(28, 28, 30, 0.85);
+            --text-main: #f5f5f7;
+            --text-secondary: #cccccc; 
+            --input-bg: #2c2c2e;
+            --item-bg: rgba(44, 44, 46, 0.6);
+        }
+
+        * { transition: background 0.4s ease, color 0.4s ease; -webkit-user-select: none; user-select: none; box-sizing: border-box; }
+        input { -webkit-user-select: text; user-select: text; }
+        
+        body {
+            margin: 0; font-family: -apple-system, sans-serif;
+            background: linear-gradient(135deg, var(--aura-color1) 0%, var(--aura-color2) 100%);
+            background-attachment: fixed; background-size: cover; min-height: 100vh; 
+            display: flex; flex-direction: column; align-items: center; padding: 40px 20px; color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        .charts-active { background: linear-gradient(160deg, #6a11cb 0%, #2575fc 100%) !important; background-attachment: fixed !important; }
+
+        .emoji-rain { position: fixed; top: -50px; font-size: 26px; z-index: -1; opacity: 0.6; animation: fall linear forwards; pointer-events: none; }
+        @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
+
+        .main-card {
+            background: var(--card-bg); backdrop-filter: blur(30px);
+            width: 100%; max-width: 480px; border-radius: 38px; padding: 40px 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15); text-align: center; position: relative;
+            border: 1px solid rgba(255,255,255,0.25); z-index: 10;
+        }
+
+        .theme-toggle { position: absolute; top: 25px; right: 25px; background: rgba(120, 120, 128, 0.16); border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        h1 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 38px; font-weight: 800; margin: 0; }
+        input { width: 100%; padding: 18px; border-radius: 20px; border: 1px solid rgba(0,0,0,0.05); background: var(--input-bg); color: var(--text-main); font-size: 17px; outline: none; }
+
+        .cat-container { display: flex; overflow-x: auto; gap: 10px; margin: 20px -10px 10px -10px; padding: 5px 10px; scrollbar-width: none; }
+        .cat-container::-webkit-scrollbar { display: none; }
+
+        .cat-pill { background: var(--item-bg); padding: 8px 16px; border-radius: 15px; white-space: nowrap; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); color: var(--text-main); }
+        .cat-pill.active { background: var(--primary); color: white; }
+
+        .app-item { display: flex; align-items: center; padding: 14px; background: var(--item-bg); margin-bottom: 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); text-align: left; animation: fadeIn 0.4s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .btn-laden { background: #f1f3f6; color: var(--primary); border: none; padding: 8px 18px; border-radius: 20px; font-weight: 700; cursor: pointer; }
+        [data-theme="dark"] .btn-laden { background: var(--primary); color: white; }
+        
+        .btn-share { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--primary); margin-right: 12px; padding: 5px; opacity: 0.9; }
+        .btn-share:active { opacity: 0.5; }
+
+        footer { margin-top: 40px; font-size: 12px; color: var(--text-main); text-align: center; font-weight: 600; opacity: 0.8; }
     </style>
 </head>
 <body>
-    <h1>Die Website ist gerade in Bearbeitung</h1>
-    <p>Wenn ihr dennoch was runterladen wollt, dann geht auf diese Website:</p>
-    <a class="link" href="DEINE-VERCEL-PREVIEW-URL">Hier geht es zum Download-Bereich</a>
-    <p>Danke, liebe Grüße Boris</p>
+
+    <div class="main-card">
+        <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+        <h1>Boris Store</h1>
+        <div class="tagline" style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px;">Offizieller App-Vermittler</div>
+        
+        <input type="text" id="suche" placeholder="Apps suchen..." oninput="sucheApps()">
+
+        <div class="cat-container" id="catBar">
+            <div class="cat-pill active" onclick="setCategory(this, 'Boris Charts')">Boris Charts</div>
+            <div class="cat-pill" onclick="setCategory(this, 'Games')">Spiele</div>
+            <div class="cat-pill" onclick="setCategory(this, 'Productivity')">Produktivität</div>
+            <div class="cat-pill" onclick="setCategory(this, 'Social Networking')">Social</div>
+            <div class="cat-pill" onclick="setCategory(this, 'Entertainment')">Entertainment</div>
+        </div>
+
+        <div id="liste" style="margin-top:10px;"></div>
+
+        <div style="margin-top: 20px; font-size: 11px;">
+            <a onclick="zeigeImpressum()" style="color: var(--text-secondary); text-decoration: none; margin: 0 10px; cursor: pointer;">Impressum</a>
+            <a onclick="zeigeDatenschutz()" style="color: var(--text-secondary); text-decoration: none; margin: 0 10px; cursor: pointer;">Datenschutz</a>
+        </div>
+    </div>
+
+    <footer>&copy; 2026 Boris Store &bull; Moritz Schmalle</footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDh0q3c7o9bxPLXs6ac4HV33Bm_M_BbAHo",
+            authDomain: "boris-store.firebaseapp.com",
+            databaseURL: "https://boris-store-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "boris-store",
+            storageBucket: "boris-store.firebasestorage.app",
+            messagingSenderId: "942183293125",
+            appId: "1:942183293125:web:552537b1829e2245d350ac"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let rainInterval;
+        function startEmojiRain() {
+            stopEmojiRain();
+            rainInterval = setInterval(() => {
+                const emojis = ['🏆', '⭐', '✨', '👑'];
+                const e = document.createElement('div');
+                e.className = 'emoji-rain';
+                e.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+                e.style.left = Math.random() * 100 + 'vw';
+                e.style.animationDuration = (Math.random() * 2 + 3) + 's';
+                document.body.appendChild(e);
+                setTimeout(() => e.remove(), 5000);
+            }, 350); 
+        }
+        function stopEmojiRain() {
+            clearInterval(rainInterval);
+            document.querySelectorAll('.emoji-rain').forEach(e => e.remove());
+        }
+
+        window.updateAura = (color) => {
+            const body = document.body;
+            const root = document.documentElement;
+            const isDark = root.getAttribute('data-theme') === 'dark';
+
+            body.classList.remove('charts-active');
+            sessionStorage.setItem('isCharts', 'false');
+            stopEmojiRain();
+
+            if(color === 'reset') {
+                body.classList.add('charts-active');
+                sessionStorage.setItem('isCharts', 'true');
+                startEmojiRain();
+            } else {
+                root.style.setProperty('--aura-color1', color + '44');
+                root.style.setProperty('--aura-color2', isDark ? '#000000' : '#ffffff');
+                sessionStorage.setItem('lastColor', color);
+                body.style.background = `linear-gradient(135deg, var(--aura-color1) 0%, var(--aura-color2) 100%)`;
+                body.style.backgroundAttachment = 'fixed';
+            }
+        };
+
+        window.toggleTheme = () => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const newTheme = isDark ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            document.getElementById('themeBtn').innerText = isDark ? '🌙' : '☀️';
+            localStorage.setItem('theme', newTheme);
+            updateAura(sessionStorage.getItem('isCharts') === 'true' ? 'reset' : sessionStorage.getItem('lastColor'));
+        };
+
+        const catColors = { 'Entertainment': '#ff9500', 'Games': '#ff3b30', 'Social Networking': '#007aff', 'Music': '#ff2d55', 'Productivity': '#5856d6', 'Finance': '#34c759', 'Photo & Video': '#af52de' };
+
+        window.shareApp = (name, id) => {
+            // Erkennt automatisch die aktuelle Domain für den Share-Link
+            const url = `${window.location.origin}/?id=${id}`;
+            if (navigator.share) {
+                navigator.share({ title: name, text: `Check mal diese App im Boris Store aus: ${name}`, url: url });
+            } else {
+                navigator.clipboard.writeText(url);
+                alert(`Link zu "${name}" kopiert!`);
+            }
+        };
+
+        window.handleAppClick = async (btn, trackId, name, icon, cat) => {
+            btn.innerText = "Moment...";
+            const farbe = catColors[cat] || '#007aff';
+            sessionStorage.setItem('lastColor', farbe);
+            
+            try {
+                const appRef = ref(db, 'charts/' + trackId);
+                const snapshot = await get(appRef);
+                let count = snapshot.exists() ? snapshot.val().count : 0;
+                await set(appRef, { trackId, name, icon, cat, count: count + 1 });
+            } catch(e) {}
+            
+            window.location.href = window.location.pathname + "?id=" + trackId;
+        };
+
+        window.loadBorisCharts = () => {
+            updateAura('reset');
+            onValue(ref(db, 'charts'), (snapshot) => {
+                const data = snapshot.val();
+                if(!data) {
+                    document.getElementById('liste').innerHTML = "<div style='padding:20px; color:var(--text-secondary);'>Noch keine Charts vorhanden.</div>";
+                    return;
+                }
+                const sorted = Object.values(data).sort((a,b) => b.count - a.count);
+                renderHtml(sorted, true);
+            });
+        };
+
+        function renderHtml(results, isChart = false) {
+            const liste = document.getElementById('liste');
+            liste.innerHTML = "";
+            
+            if (!results || results.length === 0) {
+                liste.innerHTML = "<div style='padding:20px; color:var(--text-secondary);'>Keine Ergebnisse gefunden.</div>";
+                return;
+            }
+
+            results.forEach((app) => {
+                const id = app.trackId;
+                const name = (app.trackName || app.name).replace(/'/g, "");
+                const icon = app.artworkUrl100 || app.icon;
+                const cat = app.primaryGenreName || app.cat;
+                const countText = isChart ? `<span style="font-size:10px; background:#34c759; color:white; padding:2px 6px; border-radius:8px; margin-left:5px;">${app.count}x</span>` : "";
+
+                const item = document.createElement('div');
+                item.className = 'app-item';
+                item.innerHTML = `
+                    <img src="${icon}" style="width:55px; height:55px; border-radius:12px; margin-right:15px; cursor:pointer;" onclick="window.handleAppClick(this.parentElement.querySelector('.btn-laden'), '${id}', '${name}', '${icon}', '${cat}')">
+                    <div style="flex-grow:1; overflow:hidden;">
+                        <div style="font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${name} ${countText}</div>
+                        <div style="font-size:11px; color:var(--text-secondary);">${cat}</div>
+                    </div>
+                    <button class="btn-share" onclick="shareApp('${name}', '${id}')">📤</button>
+                    <button class="btn-laden" onclick="handleAppClick(this, '${id}', '${name}', '${icon}', '${cat}')">Laden</button>
+                `;
+                liste.appendChild(item);
+            });
+        }
+
+        window.sucheApps = () => {
+            const q = document.getElementById('suche').value;
+            if(q.length < 2) return loadBorisCharts();
+            fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&country=de&entity=software&limit=15`)
+                .then(r => r.json()).then(data => {
+                    if(data.results[0]) updateAura(catColors[data.results[0].primaryGenreName] || '#007aff');
+                    renderHtml(data.results);
+                }).catch(() => {
+                    document.getElementById('liste').innerHTML = "<div style='padding:20px; color:var(--text-secondary);'>Suche fehlgeschlagen.</div>";
+                });
+        };
+
+        window.setCategory = (el, cat) => {
+            document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+            el.classList.add('active');
+            if(cat === 'Boris Charts') loadBorisCharts();
+            else { 
+                updateAura(catColors[cat] || '#007aff');
+                fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(cat)}&country=de&entity=software&limit=15`)
+                    .then(r => r.json()).then(d => renderHtml(d.results)); 
+            }
+        };
+
+        window.zeigeImpressum = () => alert("Impressum\n\nBetreiber: Moritz Schmalle\nAnschrift: Auf Anfrage per E-Mail\nE-Mail: info@boris-store.xyz");
+        window.zeigeDatenschutz = () => alert("Datenschutz\n\nKlicks werden anonym gezählt.");
+
+        if(!appId) loadBorisCharts();
+    </script>
 </body>
 </html>
+
