@@ -13,6 +13,9 @@
     <link rel="icon" type="image/png" href="icon.png">
 
     <script>
+        /**
+         * 1. DYNAMISCHE BANNER-INJEKTION & SAFARI FIX
+         */
         const params = new URLSearchParams(window.location.search);
         const appId = params.get('id');
 
@@ -28,6 +31,9 @@
             }
         }
 
+        /**
+         * 2. SICHERHEIT & DOMAIN-LOCK
+         */
         const host = window.location.hostname.toLowerCase();
         const isAllowed = host.includes("boris-store") || host === "localhost" || host.includes("vercel.app");
         
@@ -35,11 +41,17 @@
             window.location.href = "https://boris-store.xyz/?error=unauthorized_copy";
         }
 
+        /**
+         * 3. THEME INITIALISIERUNG
+         */
         const savedTheme = localStorage.getItem('theme') || 'light';
         if (savedTheme === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
         }
 
+        /**
+         * 4. DOWNLOAD-VORSCHAU-SEITE
+         */
         if (appId) {
             document.documentElement.style.visibility = 'hidden'; 
             window.onload = () => {
@@ -144,7 +156,6 @@
 
         footer { margin-top: 80px; font-size: 13px; color: var(--text-main); font-weight: 600; text-align: center; width: 100%; opacity: 0.8; }
 
-        /* SKELETON ANIMATION */
         .skeleton-item { background: var(--skeleton); height: 88px; border-radius: 22px; margin-bottom: 14px; animation: pulse 1.5s infinite ease-in-out; }
         @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
 
@@ -159,12 +170,12 @@
         <div class="request-card">
             <h3 style="margin-top:0; font-size: 20px; margin-bottom: 10px;">App-Fehler melden 🛠️</h3>
             <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.4;">
-                Funktioniert eine App nicht mehr? Sag mir Bescheid!
+                Funktioniert eine App nicht mehr?
             </p>
             
             <form action="https://formspree.io/f/mgolonke" method="POST">
                 <input type="email" name="email" placeholder="Deine E-Mail" required>
-                <textarea name="message" rows="4" placeholder="Welche App funktioniert nicht?" required></textarea>
+                <textarea name="message" rows="4" placeholder="Welche App?" required></textarea>
                 <button type="submit" class="btn-send">Fehler senden</button>
             </form>
         </div>
@@ -217,6 +228,19 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
+        // --- THEME & EMOJI FIX ---
+        window.toggleTheme = () => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const newTheme = isDark ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            document.getElementById('themeBtn').innerText = newTheme === 'dark' ? '☀️' : '🌙';
+            localStorage.setItem('theme', newTheme);
+        };
+
+        // Setzt Emoji beim Start korrekt
+        const startTheme = localStorage.getItem('theme') || 'light';
+        document.getElementById('themeBtn').innerText = startTheme === 'dark' ? '☀️' : '🌙';
+
         // --- SKELETON LOADER ---
         window.showSkeletons = () => {
             const liste = document.getElementById('liste');
@@ -264,14 +288,7 @@
             }
         };
 
-        window.toggleTheme = () => {
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            const newTheme = isDark ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', newTheme);
-            document.getElementById('themeBtn').innerText = isDark ? '🌙' : '☀️';
-            localStorage.setItem('theme', newTheme);
-        };
-
+        // --- APP LOGIK ---
         window.loadBorisCharts = () => {
             showSkeletons();
             updateAura('reset');
@@ -298,8 +315,13 @@
                 const icon = app.artworkUrl100 || app.icon;
                 const cat = app.primaryGenreName || app.cat;
                 
-                // Pfeil-Logik: Nur in Charts und wenn count > 5
-                const arrow = (isChart && app.count >= 5) ? `<span style="color:#34c759; margin-left:4px;">↑</span>` : "";
+                // Trend-Pfeil Logik
+                let trendTag = "";
+                if (isChart) {
+                    if (app.count >= 10) trendTag = `<span style="color:#34c759; margin-left:4px; font-weight:bold;">↑</span>`;
+                    else if (app.count < 5) trendTag = `<span style="color:#ff3b30; margin-left:4px; font-weight:bold;">↓</span>`;
+                }
+
                 const countBadge = isChart ? `<span style="font-size:10px; background:#34c759; color:white; padding:2px 8px; border-radius:10px; margin-left:6px; flex-shrink:0;">${app.count}x</span>` : "";
                 
                 const item = document.createElement('div');
@@ -311,7 +333,7 @@
                             <span style="font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:16px; flex-shrink:1;">${name}</span>
                             ${countBadge}
                         </div>
-                        <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">${cat} ${arrow}</div>
+                        <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">${cat} ${trendTag}</div>
                     </div>
                     <button class="btn-laden" onclick="handleAppClick(this, '${id}', '${name}', '${icon}', '${cat}')">Laden</button>
                 `;
