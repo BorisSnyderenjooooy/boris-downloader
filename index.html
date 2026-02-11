@@ -13,34 +13,35 @@
     <link rel="icon" type="image/png" href="icon.png">
 
     <script>
-        // 1. OPTIMIERTE URL & BANNER LOGIK (Anti-Cache / Cache-Buster)
+        // 1. URL & BANNER LOGIK (Anti-Cache)
         const params = new URLSearchParams(window.location.search);
         const appId = params.get('id');
 
         if (appId && /^\d+$/.test(appId)) {
-            // Meta-Tag sofort erstellen und einfügen
             const meta = document.createElement('meta');
             meta.name = "apple-itunes-app";
             meta.content = `app-id=${appId}`;
             document.head.insertBefore(meta, document.head.firstChild);
 
-            // Prüfen, ob wir für diese ID schon einen Cache-Buster-Reload hatten
             if (sessionStorage.getItem('last_id') !== appId) {
                 sessionStorage.setItem('last_id', appId);
-                
-                // Wir hängen einen Zeitstempel (cb) an, um den Safari-Cache zu zwingen, das Banner neu zu laden
                 const cleanPath = window.location.pathname;
                 const cacheBuster = Date.now();
                 window.location.replace(`${cleanPath}?id=${appId}&cb=${cacheBuster}`);
             }
         }
 
-        // 2. Domain Lock (Vercel & Localhost erlaubt)
+        // 2. EXKLUSIVER DOMAIN LOCK
         const host = window.location.hostname.toLowerCase();
-        const isAllowed = host.includes("boris-store") || host === "localhost" || host.includes("vercel.app");
+        // Erlaubt NUR die spezifische Vercel-Domain und lokales Testen
+        const isAllowed = 
+            host === "boris-downloader-4k1hq33ku-boris-projects-305ec7b0.vercel.app" || 
+            host === "localhost" || 
+            host === "127.0.0.1";
         
         if (!isAllowed) {
-            window.location.href = "https://boris-store.xyz/?error=unauthorized_copy";
+            // Leitet alle anderen (auch boris-store.xyz) auf eine Fehlermeldung um
+            window.location.href = "https://google.com"; 
         }
 
         // 3. Theme Vor-Initialisierung
@@ -49,7 +50,7 @@
             document.documentElement.setAttribute('data-theme', 'dark');
         }
 
-        // 4. Download-Screen (Wird nur angezeigt, wenn eine ID in der URL ist)
+        // 4. Download-Screen
         if (appId) {
             document.documentElement.style.visibility = 'hidden'; 
             window.onload = () => {
@@ -207,7 +208,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // --- THEME & EMOJI FIX ---
         window.toggleTheme = () => {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
             const newTheme = isDark ? 'light' : 'dark';
@@ -215,10 +215,8 @@
             document.getElementById('themeBtn').innerText = newTheme === 'dark' ? '☀️' : '🌙';
             localStorage.setItem('theme', newTheme);
         };
-        // Emoji beim Laden wiederherstellen
         document.getElementById('themeBtn').innerText = (localStorage.getItem('theme') === 'dark') ? '☀️' : '🌙';
 
-        // --- SKELETON LOADER ---
         window.showSkeletons = () => {
             const liste = document.getElementById('liste');
             liste.innerHTML = "";
@@ -229,7 +227,6 @@
             }
         };
 
-        // --- EMOJI REGEN ---
         let rainInterval;
         function startEmojiRain() {
             stopEmojiRain();
@@ -263,7 +260,6 @@
             }
         };
 
-        // --- LOGIK: RANKING & PFEILE ---
         window.renderHtml = (results, isChart = false) => {
             const liste = document.getElementById('liste');
             liste.innerHTML = "";
@@ -278,14 +274,10 @@
                 const icon = app.artworkUrl100 || app.icon;
                 const cat = app.primaryGenreName || app.cat;
                 
-                // Pfeil-Logik nur für die Top 10 in den Charts
                 let trendTag = "";
                 if (isChart) {
-                    if (index < 3) {
-                        trendTag = `<span style="color:#34c759; margin-left:4px; font-weight:bold;">↑</span>`; // Top 3 steigen
-                    } else if (index >= 7) {
-                        trendTag = `<span style="color:#ff3b30; margin-left:4px; font-weight:bold;">↓</span>`; // Letzte 3 sinken
-                    }
+                    if (index < 3) trendTag = `<span style="color:#34c759; margin-left:4px; font-weight:bold;">↑</span>`;
+                    else if (index >= 7) trendTag = `<span style="color:#ff3b30; margin-left:4px; font-weight:bold;">↓</span>`;
                 }
 
                 const countBadge = isChart ? `<span style="font-size:10px; background:#34c759; color:white; padding:2px 8px; border-radius:10px; margin-left:6px; flex-shrink:0;">${app.count}x</span>` : "";
@@ -350,7 +342,7 @@
         };
 
         window.zeigeImpressum = () => alert("Impressum\nBetreiber: Moritz Schmalle\ninfo@boris-store.xyz");
-        window.zeigeDatenschutz = () => alert("Datenschutz\nAnonyme Klick-Zählung für Galaxy Charts.");
+        window.zeigeDatenschutz = () => alert("Datenschutz\nAnonyme Klick-Zählung für Charts.");
 
         if (!appId) loadBorisCharts();
     </script>
