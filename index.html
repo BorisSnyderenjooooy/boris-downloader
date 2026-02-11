@@ -13,60 +13,58 @@
     <link rel="icon" type="image/png" href="icon.png">
 
     <script>
-        // 1. URL & Banner Logik
+        // --- BANNER LOGIK & ZUVERLÄSSIGKEIT ---
         const params = new URLSearchParams(window.location.search);
         const appId = params.get('id');
 
         if (appId && /^\d+$/.test(appId)) {
+            // Meta-Tag sofort erstellen
             const meta = document.createElement('meta');
             meta.name = "apple-itunes-app";
             meta.content = `app-id=${appId}`;
-            document.head.insertBefore(meta, document.head.firstChild);
+            document.head.prepend(meta); // Ganz nach oben im Head für Safari
 
-            if (sessionStorage.getItem('last_id') !== appId) {
-                sessionStorage.setItem('last_id', appId);
+            // Erzwinge Reload bei ID-Wechsel für Safari-Crawler
+            if (sessionStorage.getItem('active_id') !== appId) {
+                sessionStorage.setItem('active_id', appId);
                 window.location.reload();
             }
         }
 
-        // 2. Domain Lock (Vercel & Localhost erlaubt)
+        // Domain-Check
         const host = window.location.hostname.toLowerCase();
-        const isAllowed = host.includes("boris-store") || host === "localhost" || host.includes("vercel.app");
-        
-        if (!isAllowed) {
-            window.location.href = "https://boris-store.xyz/?error=unauthorized_copy";
+        if (!(host.includes("boris-store") || host === "localhost" || host.includes("vercel.app"))) {
+            window.location.href = "https://boris-store.xyz/?error=unauthorized";
         }
 
-        // 3. Theme Vor-Initialisierung
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        if (savedTheme === 'dark') {
+        // Theme-Check
+        if (localStorage.getItem('theme') === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
         }
 
-        // 4. Download-Screen (Wird nur angezeigt, wenn eine ID in der URL ist)
+        // Download-Ansicht
         if (appId) {
             document.documentElement.style.visibility = 'hidden'; 
             window.onload = () => {
                 const auraFarbe = sessionStorage.getItem('lastColor') || '#007aff';
-                const isDark = localStorage.getItem('theme') === 'dark';
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
                 document.documentElement.style.visibility = 'visible';
-                
                 document.body.style.background = `linear-gradient(135deg, ${auraFarbe}66 0%, ${isDark ? '#000000' : '#ffffff'} 100%)`;
                 document.body.style.backgroundAttachment = 'fixed';
 
                 document.body.innerHTML = `
-                    <div style="text-align:center; padding: 80px 20px; font-family:-apple-system, sans-serif; display:flex; flex-direction:column; align-items:center; min-height:100vh;">
-                        <div style="margin-top: 40px;">
-                            <h2 style="color:var(--text-main); font-size:28px; font-weight:700; margin-bottom:10px;">Download bereit</h2>
-                            <p style="color:var(--text-secondary); font-size:18px; margin-bottom:40px;">Schau jetzt ganz oben am Bildschirmrand.</p>
+                    <div style="text-align:center; padding: 60px 20px; font-family:-apple-system, sans-serif; display:flex; flex-direction:column; align-items:center; min-height:100vh;">
+                        <h2 style="color:var(--text-main); font-size:28px; font-weight:700; margin-top:40px;">Download bereit</h2>
+                        <p style="color:var(--text-secondary); font-size:18px; margin-bottom:30px;">Schau jetzt ganz oben am Bildschirmrand.</p>
+                        
+                        <div style="background: #fff3cd; border-radius: 24px; padding: 25px; margin-bottom: 30px; max-width: 400px; text-align: left; font-size: 15px; color: #453505; border: 1px solid #ffeeba;">
+                            <strong>💡 Falls kein Banner erscheint:</strong><br>
+                            • Nicht im <b>Privaten Modus</b> surfen.<br>
+                            • Seite in <b>Safari</b> öffnen.<br>
+                            • Seite einmal <a href="javascript:location.reload()" style="color:#856404; font-weight:bold;">neu laden</a>.
                         </div>
-                        <div style="background: #fff3cd; border-radius: 28px; padding: 30px; margin-bottom: 40px; max-width: 420px; text-align: left; font-size: 16px; color: #453505; border: 1px solid #ffeeba; box-shadow: 0 10px 25px rgba(0,0,0,0.08);">
-                            <strong style="display:block; margin-bottom:12px; font-size:18px;">⚠️ WICHTIG:</strong>
-                            • Banner am oberen Rand <b>nicht</b> wegklicken.<br>
-                            • Safari Browser nutzen.<br><br>
-                            • Nichts da? <a href="javascript:location.reload()" style="color:#856404; font-weight:bold; text-decoration:underline;">Seite neu laden</a>.
-                        </div>
-                        <button onclick="window.location.href=window.location.pathname" style="padding:20px 45px; border-radius:35px; border:none; background:${auraFarbe}; color:white; font-weight:bold; font-size:18px; cursor:pointer; box-shadow: 0 10px 20px ${auraFarbe}44;">
+
+                        <button onclick="window.location.href=window.location.pathname" style="padding:18px 40px; border-radius:30px; border:none; background:${auraFarbe}; color:white; font-weight:bold; font-size:16px; box-shadow: 0 8px 20px ${auraFarbe}44;">
                             Zurück zum Store
                         </button>
                     </div>
@@ -78,112 +76,77 @@
     <style>
         :root { 
             --primary: #007aff; 
-            --aura-color1: #e0f7f4;
-            --aura-color2: #f7e8f3;
+            --aura-color1: #e0f7f4; --aura-color2: #f7e8f3;
             --card-bg: rgba(255, 255, 255, 0.75);
-            --text-main: #1d1d1f;
-            --text-secondary: #333333;
-            --input-bg: #ffffff;
-            --item-bg: rgba(255, 255, 255, 0.5);
+            --text-main: #1d1d1f; --text-secondary: #333333;
+            --input-bg: #ffffff; --item-bg: rgba(255, 255, 255, 0.5);
             --skeleton: #e1e1e1;
         }
-
         [data-theme="dark"] {
-            --aura-color1: #1c1c1e;
-            --aura-color2: #000000;
+            --aura-color1: #1c1c1e; --aura-color2: #000000;
             --card-bg: rgba(28, 28, 30, 0.85);
-            --text-main: #f5f5f7;
-            --text-secondary: #cccccc; 
-            --input-bg: #2c2c2e;
-            --item-bg: rgba(44, 44, 46, 0.6);
+            --text-main: #f5f5f7; --text-secondary: #cccccc; 
+            --input-bg: #2c2c2e; --item-bg: rgba(44, 44, 46, 0.6);
             --skeleton: #3a3a3c;
         }
 
-        * { transition: background 0.4s ease, color 0.4s ease; -webkit-user-select: none; user-select: none; box-sizing: border-box; }
+        * { transition: background 0.3s, color 0.3s; box-sizing: border-box; -webkit-user-select: none; }
+        body { margin: 0; font-family: -apple-system, sans-serif; background: linear-gradient(135deg, var(--aura-color1) 0%, var(--aura-color2) 100%); background-attachment: fixed; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px; color: var(--text-main); }
+
+        .layout-master { display: flex; width: 100%; max-width: 1100px; gap: 20px; margin-top: 20px; justify-content: center; }
+        .request-card { background: var(--card-bg); backdrop-filter: blur(20px); width: 260px; border-radius: 24px; padding: 20px; border: 1px solid rgba(255,255,255,0.2); height: fit-content; }
+        .main-card { background: var(--card-bg); backdrop-filter: blur(20px); width: 100%; max-width: 460px; border-radius: 35px; padding: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); position: relative; border: 1px solid rgba(255,255,255,0.2); }
         
-        body {
-            margin: 0; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: linear-gradient(135deg, var(--aura-color1) 0%, var(--aura-color2) 100%);
-            background-attachment: fixed; background-size: cover; min-height: 100vh; 
-            display: flex; flex-direction: column; align-items: center; padding: 40px 20px; color: var(--text-main); overflow-x: hidden;
-        }
+        @media (max-width: 900px) { .layout-master { flex-direction: column; align-items: center; } .request-card { width: 100%; max-width: 460px; order: 2; } }
 
-        .layout-master { display: flex; flex-direction: row; align-items: flex-start; justify-content: center; width: 100%; max-width: 1200px; gap: 25px; margin-top: 20px; }
-        .request-card { background: var(--card-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); width: 250px; border-radius: 30px; padding: 25px; box-shadow: 0 12px 35px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.25); text-align: left; flex-shrink: 0; }
-        .main-card { background: var(--card-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); width: 100%; max-width: 480px; border-radius: 40px; padding: 45px 35px; box-shadow: 0 25px 60px rgba(0,0,0,0.15); text-align: center; position: relative; border: 1px solid rgba(255,255,255,0.25); flex-shrink: 0; }
-        .spacer-right { width: 250px; flex-shrink: 0; }
+        .theme-toggle { position: absolute; top: 20px; right: 20px; background: rgba(120, 120, 128, 0.15); border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; }
+        h1 { font-size: 36px; font-weight: 800; margin: 0; background: linear-gradient(135deg, #f093fb, #f5576c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        input { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.05); background: var(--input-bg); color: var(--text-main); margin-bottom: 15px; }
+        
+        .cat-container { display: flex; overflow-x: auto; gap: 10px; margin-bottom: 20px; padding-bottom: 5px; scrollbar-width: none; }
+        .cat-pill { background: var(--item-bg); padding: 8px 15px; border-radius: 14px; font-size: 13px; font-weight: 600; white-space: nowrap; cursor: pointer; }
+        .cat-pill.active { background: var(--primary); color: white; }
 
-        @media (max-width: 1100px) {
-            .layout-master { flex-direction: column; align-items: center; }
-            .spacer-right { display: none; }
-            .request-card { width: 100%; max-width: 480px; order: 2; margin-top: 35px; }
-            .main-card { order: 1; }
-        }
-
-        .theme-toggle { position: absolute; top: 25px; right: 25px; background: rgba(120, 120, 128, 0.16); border: none; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; z-index: 10; }
-        h1 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 42px; font-weight: 800; margin: 0; }
-        input, textarea { width: 100%; padding: 14px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.05); background: var(--input-bg); color: var(--text-main); font-size: 15px; outline: none; margin-bottom: 10px; font-family: inherit; }
-        .btn-send { width: 100%; padding: 14px; border-radius: 14px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; font-size: 15px; }
-
-        .cat-container { display: flex; overflow-x: auto; gap: 12px; margin: 25px -10px 15px -10px; padding: 5px 10px; scrollbar-width: none; }
-        .cat-container::-webkit-scrollbar { display: none; }
-        .cat-pill { background: var(--item-bg); padding: 9px 18px; border-radius: 16px; white-space: nowrap; font-size: 14px; font-weight: 600; cursor: pointer; color: var(--text-main); border: 1px solid rgba(255,255,255,0.1); }
-        .cat-pill.active { background: var(--primary); color: white; border-color: var(--primary); }
-
-        .app-item { display: flex; align-items: center; padding: 15px; background: var(--item-bg); margin-bottom: 14px; border-radius: 22px; border: 1px solid rgba(255,255,255,0.1); text-align: left; overflow: hidden; }
-        .btn-laden { background: #f1f3f6; color: var(--primary); border: none; padding: 9px 20px; border-radius: 20px; font-weight: 700; cursor: pointer; font-size: 14px; flex-shrink: 0; margin-left: 10px;}
+        .app-item { display: flex; align-items: center; padding: 12px; background: var(--item-bg); margin-bottom: 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); }
+        .btn-laden { background: #f1f3f6; color: var(--primary); border: none; padding: 8px 18px; border-radius: 18px; font-weight: 700; font-size: 13px; margin-left: auto; }
         [data-theme="dark"] .btn-laden { background: var(--primary); color: white; }
 
-        /* Skeleton Animation */
-        .skeleton-item { background: var(--skeleton); height: 88px; border-radius: 22px; margin-bottom: 14px; animation: pulse 1.5s infinite ease-in-out; }
-        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
-
-        .emoji-rain { position: fixed; top: -50px; font-size: 26px; z-index: -1; animation: fall linear forwards; pointer-events: none; opacity: 0.6; }
-        @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
-        .charts-active { background: linear-gradient(160deg, #6a11cb 0%, #2575fc 100%) !important; background-attachment: fixed !important; }
-        footer { margin-top: 80px; font-size: 13px; color: var(--text-main); font-weight: 600; text-align: center; width: 100%; opacity: 0.8; }
+        .badge-new { font-size: 9px; background: #007aff; color: white; padding: 2px 6px; border-radius: 6px; margin-left: 5px; font-weight: 800; }
+        .skeleton-item { background: var(--skeleton); height: 75px; border-radius: 20px; margin-bottom: 12px; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+        .charts-active { background: linear-gradient(160deg, #6a11cb, #2575fc) !important; background-attachment: fixed !important; }
     </style>
 </head>
 <body>
 
     <div class="layout-master">
         <div class="request-card">
-            <h3 style="margin-top:0; font-size: 20px; margin-bottom: 10px;">Fehler melden 🛠️</h3>
+            <h3 style="margin-top:0;">Fehler melden 🛠️</h3>
             <form action="https://formspree.io/f/mgolonke" method="POST">
-                <input type="email" name="email" placeholder="E-Mail" required>
-                <textarea name="message" rows="4" placeholder="Welche App?" required></textarea>
-                <button type="submit" class="btn-send">Senden</button>
+                <input type="email" name="email" placeholder="Deine E-Mail" required>
+                <textarea name="message" style="width:100%; border-radius:12px; padding:10px; margin-bottom:10px;" rows="3" placeholder="Welche App?" required></textarea>
+                <button type="submit" class="btn-send" style="width:100%; padding:10px; border-radius:12px; background:var(--primary); color:white; border:none; font-weight:bold;">Senden</button>
             </form>
         </div>
 
         <div class="main-card">
             <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
-            
             <h1>Boris Store</h1>
-            <div style="font-size: 15px; color: var(--text-secondary); margin-top: 5px; margin-bottom: 25px;">Offizieller App-Vermittler</div>
+            <p style="opacity:0.6; margin-bottom:20px;">Offizieller App-Vermittler</p>
             
             <input type="text" id="suche" placeholder="Apps suchen..." oninput="sucheApps()">
 
             <div class="cat-container" id="catBar">
                 <div class="cat-pill active" onclick="setCategory(this, 'Boris Charts')">Boris Charts</div>
                 <div class="cat-pill" onclick="setCategory(this, 'Games')">Spiele</div>
-                <div class="cat-pill" onclick="setCategory(this, 'Productivity')">Produktivität</div>
+                <div class="cat-pill" onclick="setCategory(this, 'Productivity')">Tools</div>
                 <div class="cat-pill" onclick="setCategory(this, 'Social Networking')">Social</div>
-                <div class="cat-pill" onclick="setCategory(this, 'Entertainment')">Entertainment</div>
             </div>
 
-            <div id="liste" style="margin-top:15px; min-height: 200px;"></div>
-
-            <div style="margin-top: 30px; font-size: 12px; opacity: 0.7;">
-                <a onclick="zeigeImpressum()" style="color: var(--text-secondary); text-decoration: none; margin: 0 12px; cursor: pointer;">Impressum</a>
-                <a onclick="zeigeDatenschutz()" style="color: var(--text-secondary); text-decoration: none; margin: 0 12px; cursor: pointer;">Datenschutz</a>
-            </div>
+            <div id="liste"></div>
         </div>
-        <div class="spacer-right"></div>
     </div>
-
-    <footer>&copy; 2026 Boris Store &bull; Moritz Schmalle</footer>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -202,7 +165,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // --- THEME & EMOJI FIX ---
+        // Theme Toggle
         window.toggleTheme = () => {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
             const newTheme = isDark ? 'light' : 'dark';
@@ -210,142 +173,93 @@
             document.getElementById('themeBtn').innerText = newTheme === 'dark' ? '☀️' : '🌙';
             localStorage.setItem('theme', newTheme);
         };
-        // Emoji beim Laden wiederherstellen
         document.getElementById('themeBtn').innerText = (localStorage.getItem('theme') === 'dark') ? '☀️' : '🌙';
 
-        // --- SKELETON LOADER ---
+        // Skeleton
         window.showSkeletons = () => {
-            const liste = document.getElementById('liste');
-            liste.innerHTML = "";
-            for(let i=0; i<6; i++) {
-                const s = document.createElement('div');
-                s.className = 'skeleton-item';
-                liste.appendChild(s);
-            }
+            const l = document.getElementById('liste');
+            l.innerHTML = "";
+            for(let i=0; i<5; i++) { l.innerHTML += '<div class="skeleton-item"></div>'; }
         };
 
-        // --- EMOJI REGEN ---
-        let rainInterval;
-        function startEmojiRain() {
-            stopEmojiRain();
-            rainInterval = setInterval(() => {
-                const e = document.createElement('div');
-                e.className = 'emoji-rain';
-                e.innerText = ['🏆', '⭐', '✨', '👑'][Math.floor(Math.random() * 4)];
-                e.style.left = Math.random() * 100 + 'vw';
-                e.style.animationDuration = (Math.random() * 2 + 3) + 's';
-                document.body.appendChild(e);
-                setTimeout(() => e.remove(), 5000);
-            }, 350); 
-        }
-        function stopEmojiRain() { 
-            clearInterval(rainInterval); 
-            document.querySelectorAll('.emoji-rain').forEach(e => e.remove()); 
-        }
-
-        window.updateAura = (color) => {
-            const body = document.body;
-            body.classList.remove('charts-active');
-            stopEmojiRain();
-            if (color === 'reset') {
-                body.classList.add('charts-active');
-                startEmojiRain();
-            } else {
-                document.documentElement.style.setProperty('--aura-color1', color + '44');
-                sessionStorage.setItem('lastColor', color);
-                body.style.background = `linear-gradient(135deg, var(--aura-color1) 0%, var(--aura-color2) 100%)`;
-                body.style.backgroundAttachment = 'fixed';
-            }
-        };
-
-        // --- LOGIK: RANKING & PFEILE ---
+        // Render mit Ranking & NEU-Logik
         window.renderHtml = (results, isChart = false) => {
-            const liste = document.getElementById('liste');
-            liste.innerHTML = "";
-            if (results.length === 0) {
-                liste.innerHTML = `<div style='padding:50px 20px; color:var(--text-secondary);'>Keine Apps gefunden. 🕵️‍♂️</div>`;
-                return;
-            }
+            const l = document.getElementById('liste');
+            l.innerHTML = "";
+            const now = Date.now();
 
             results.forEach((app, index) => {
                 const id = app.trackId;
                 const name = (app.trackName || app.name).replace(/'/g, "");
                 const icon = app.artworkUrl100 || app.icon;
-                const cat = app.primaryGenreName || app.cat;
                 
-                // Pfeil-Logik nur für die Top 10 in den Charts
-                let trendTag = "";
+                // NEU Badge Logik (Apps jünger als 48 Stunden)
+                const isNew = app.timestamp && (now - app.timestamp < 172800000);
+                const neuBadge = isNew ? '<span class="badge-new">NEU</span>' : '';
+
+                // Pfeil Logik
+                let trend = "";
                 if (isChart) {
-                    if (index < 3) {
-                        trendTag = `<span style="color:#34c759; margin-left:4px; font-weight:bold;">↑</span>`; // Top 3 steigen
-                    } else if (index >= 7) {
-                        trendTag = `<span style="color:#ff3b30; margin-left:4px; font-weight:bold;">↓</span>`; // Letzte 3 sinken
-                    }
+                    if (index < 3) trend = '<span style="color:#34c759; margin-left:5px;">↑</span>';
+                    else if (index >= 7) trend = '<span style="color:#ff3b30; margin-left:5px;">↓</span>';
                 }
 
-                const countBadge = isChart ? `<span style="font-size:10px; background:#34c759; color:white; padding:2px 8px; border-radius:10px; margin-left:6px; flex-shrink:0;">${app.count}x</span>` : "";
-                
-                const item = document.createElement('div');
-                item.className = 'app-item';
-                item.innerHTML = `
-                    <img src="${icon}" style="width:58px; height:58px; border-radius:14px; margin-right:16px; cursor:pointer;" onclick="window.handleAppClick(null, '${id}', '${name}', '${icon}', '${cat}')">
-                    <div style="flex-grow:1; min-width:0; display:flex; flex-direction:column; justify-content:center;">
-                        <div style="display:flex; align-items:center; width:100%;">
-                            <span style="font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:16px; flex-shrink:1;">${name}</span>
-                            ${countBadge}
+                l.innerHTML += `
+                    <div class="app-item">
+                        <img src="${icon}" style="width:50px; height:50px; border-radius:12px; margin-right:12px; cursor:pointer;" onclick="handleAppClick(null, '${id}', '${name}', '${icon}')">
+                        <div style="flex-grow:1; min-width:0;">
+                            <div style="display:flex; align-items:center;">
+                                <span style="font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${name}</span>
+                                ${isChart ? `<span style="font-size:10px; opacity:0.5; margin-left:5px;">${app.count}x</span>` : ''}
+                            </div>
+                            <div style="font-size:11px; opacity:0.6;">${app.primaryGenreName || app.cat} ${neuBadge} ${trend}</div>
                         </div>
-                        <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">${cat} ${trendTag}</div>
+                        <button class="btn-laden" onclick="handleAppClick(this, '${id}', '${name}', '${icon}', '${app.primaryGenreName || app.cat}')">Laden</button>
                     </div>
-                    <button class="btn-laden" onclick="handleAppClick(this, '${id}', '${name}', '${icon}', '${cat}')">Laden</button>
                 `;
-                liste.appendChild(item);
             });
         };
 
         window.loadBorisCharts = () => {
             showSkeletons();
-            updateAura('reset');
-            onValue(ref(db, 'charts'), (snapshot) => {
-                const data = snapshot.val();
+            onValue(ref(db, 'charts'), (snap) => {
+                const data = snap.val();
                 if (!data) return;
                 const sorted = Object.values(data).sort((a,b) => b.count - a.count).slice(0, 10);
                 renderHtml(sorted, true);
             });
         };
 
-        window.sucheApps = () => {
-            const q = document.getElementById('suche').value;
-            if (q.length < 2) return loadBorisCharts();
-            fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&country=de&entity=software&limit=15`)
-                .then(r => r.json()).then(data => renderHtml(data.results));
-        };
-
         window.handleAppClick = async (btn, trackId, name, icon, cat) => {
             if(btn) btn.innerText = "...";
             try {
                 const appRef = ref(db, 'charts/' + trackId);
-                const snapshot = await get(appRef);
-                let count = snapshot.exists() ? snapshot.val().count : 0;
-                await set(appRef, { trackId, name, icon, cat, count: count + 1 });
-            } catch(e) { console.error(e); }
+                const snap = await get(appRef);
+                const data = snap.val();
+                await set(appRef, {
+                    trackId, name, icon, cat: cat || "App",
+                    count: (data?.count || 0) + 1,
+                    timestamp: data?.timestamp || Date.now() // Behalte altes Datum oder setze neu
+                });
+            } catch(e) {}
             window.location.href = window.location.pathname + "?id=" + trackId;
+        };
+
+        window.sucheApps = () => {
+            const q = document.getElementById('suche').value;
+            if (q.length < 2) return loadBorisCharts();
+            fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&country=de&entity=software&limit=15`)
+                .then(r => r.json()).then(d => renderHtml(d.results));
         };
 
         window.setCategory = (el, cat) => {
             document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
             el.classList.add('active');
             showSkeletons();
-            if (cat === 'Boris Charts') {
-                loadBorisCharts();
-            } else {
-                updateAura('#007aff');
-                fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(cat)}&country=de&entity=software&limit=15`)
-                    .then(r => r.json()).then(d => renderHtml(d.results));
-            }
+            if (cat === 'Boris Charts') loadBorisCharts();
+            else fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(cat)}&country=de&entity=software&limit=15`)
+                .then(r => r.json()).then(d => renderHtml(d.results));
         };
-
-        window.zeigeImpressum = () => alert("Impressum\nBetreiber: Moritz Schmalle\ninfo@boris-store.xyz");
-        window.zeigeDatenschutz = () => alert("Datenschutz\nAnonyme Klick-Zählung für Charts.");
 
         if (!appId) loadBorisCharts();
     </script>
