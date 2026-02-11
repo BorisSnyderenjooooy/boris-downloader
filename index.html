@@ -13,17 +13,25 @@
     <link rel="icon" type="image/png" href="icon.png">
 
     <script>
-        // 1. BANNER-LOGIK
+        // 1. STABILISIERTE BANNER-LOGIK (Fix für Tennis TV, Roblox & Co.)
         const params = new URLSearchParams(window.location.search);
         const appId = params.get('id');
+
         if (appId && /^\d+$/.test(appId)) {
+            // Wir erstellen den Meta-Tag sofort und setzen ihn ganz nach oben
             const meta = document.createElement('meta');
             meta.name = "apple-itunes-app";
             meta.content = `app-id=${appId}`;
-            document.head.appendChild(meta);
+            document.head.prepend(meta);
+
+            // Safari-Fix: Erzwingt einen einmaligen Reload pro App-ID, damit der Banner sicher erscheint
+            if (!sessionStorage.getItem('reloaded_' + appId)) {
+                sessionStorage.setItem('reloaded_' + appId, 'true');
+                window.location.reload();
+            }
         }
 
-        // 2. DOMAIN-LOCK (Erlaubt jetzt alle deine neuen Domains)
+        // 2. DOMAIN-LOCK (Erlaubt boris-store.xyz, .com, .de, .store, .info)
         const host = window.location.hostname.toLowerCase();
         const isAllowed = host.includes("boris-store") || host === "localhost" || host.includes("vercel.app");
         
@@ -37,7 +45,7 @@
             document.documentElement.setAttribute('data-theme', 'dark');
         }
 
-        // 4. DOWNLOAD-LOGIK
+        // 4. DOWNLOAD-VORSCHAU-LOGIK
         if (appId) {
             document.documentElement.style.visibility = 'hidden'; 
             window.onload = () => {
@@ -233,7 +241,6 @@
         const catColors = { 'Entertainment': '#ff9500', 'Games': '#ff3b30', 'Social Networking': '#007aff', 'Music': '#ff2d55', 'Productivity': '#5856d6', 'Finance': '#34c759', 'Photo & Video': '#af52de' };
 
         window.shareApp = (name, id) => {
-            // Erkennt automatisch die aktuelle Domain für den Share-Link
             const url = `${window.location.origin}/?id=${id}`;
             if (navigator.share) {
                 navigator.share({ title: name, text: `Check mal diese App im Boris Store aus: ${name}`, url: url });
