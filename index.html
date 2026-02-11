@@ -13,25 +13,25 @@
     <link rel="icon" type="image/png" href="icon.png">
 
     <script>
-        // 1. STABILISIERTE BANNER-LOGIK (Fix für Tennis TV, Roblox & Co.)
+        // 1. STABILISIERTE BANNER-LOGIK (Optimiert für Safari)
         const params = new URLSearchParams(window.location.search);
         const appId = params.get('id');
 
         if (appId && /^\d+$/.test(appId)) {
-            // Wir erstellen den Meta-Tag sofort und setzen ihn ganz nach oben
+            // Meta-Tag sofort an die erste Stelle im Head setzen
             const meta = document.createElement('meta');
             meta.name = "apple-itunes-app";
             meta.content = `app-id=${appId}`;
-            document.head.prepend(meta);
+            document.head.insertBefore(meta, document.head.firstChild);
 
-            // Safari-Fix: Erzwingt einen einmaligen Reload pro App-ID, damit der Banner sicher erscheint
-            if (!sessionStorage.getItem('reloaded_' + appId)) {
-                sessionStorage.setItem('reloaded_' + appId, 'true');
+            // Verhindert unnötige Doppel-Reloads: Nur laden wenn ID neu ist
+            if (sessionStorage.getItem('last_id') !== appId) {
+                sessionStorage.setItem('last_id', appId);
                 window.location.reload();
             }
         }
 
-        // 2. DOMAIN-LOCK (Erlaubt boris-store.xyz, .com, .de, .store, .info)
+        // 2. DOMAIN-LOCK
         const host = window.location.hostname.toLowerCase();
         const isAllowed = host.includes("boris-store") || host === "localhost" || host.includes("vercel.app");
         
