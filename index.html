@@ -13,7 +13,7 @@
     <link rel="icon" type="image/png" href="icon.png">
 
     <script>
-        // 1. BANNER-LOGIK
+        // 1. STABILISIERTE BANNER-LOGIK
         const params = new URLSearchParams(window.location.search);
         const appId = params.get('id');
         if (appId && /^\d+$/.test(appId)) {
@@ -74,45 +74,48 @@
             overflow-x: hidden;
         }
 
-        /* Layout-Container für iPad Querformat Optimierung */
-        .content-container {
-            display: flex; flex-direction: row; align-items: flex-start; justify-content: center;
-            gap: 40px; width: 100%; max-width: 1100px; margin-top: 20px;
+        /* Zentrierungs-System */
+        .layout-master {
+            display: flex; align-items: flex-start; justify-content: center;
+            width: 100%; max-width: 1400px; gap: 30px; margin-top: 20px;
         }
 
-        /* Das Fehler-Fenster */
+        /* Linkes Fenster */
         .request-card {
             background: var(--card-bg); backdrop-filter: blur(30px);
             width: 300px; border-radius: 30px; padding: 25px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.25);
-            flex-shrink: 0; text-align: left;
+            text-align: left; flex-shrink: 0;
         }
 
-        /* Der Store */
+        /* Der Store (Haupt-Element) */
         .main-card {
             background: var(--card-bg); backdrop-filter: blur(30px);
             width: 100%; max-width: 480px; border-radius: 38px; padding: 40px 30px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.15); text-align: center; position: relative;
-            border: 1px solid rgba(255,255,255,0.25);
+            border: 1px solid rgba(255,255,255,0.25); flex-shrink: 0;
         }
 
+        /* Das unsichtbare Gegengewicht für perfekte Zentrierung auf Desktop/iPad Quer */
+        .spacer-right { width: 300px; flex-shrink: 0; }
+
         /* Mobile / iPad Hochformat / Kleine Screens */
-        @media (max-width: 950px) {
-            .content-container { flex-direction: column; align-items: center; gap: 30px; }
-            .request-card { order: 2; width: 100%; max-width: 480px; }
+        @media (max-width: 1150px) {
+            .layout-master { flex-direction: column; align-items: center; }
+            .spacer-right { display: none; }
+            .request-card { width: 100%; max-width: 480px; margin-top: 30px; order: 2; }
             .main-card { order: 1; }
         }
 
-        .theme-toggle { position: absolute; top: 25px; right: 25px; background: rgba(120, 120, 128, 0.16); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .theme-toggle { position: absolute; top: 25px; right: 25px; background: rgba(120, 120, 128, 0.16); border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         h1 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 38px; font-weight: 800; margin: 0; }
         
         input, textarea { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.05); background: var(--input-bg); color: var(--text-main); font-size: 14px; outline: none; margin-bottom: 8px; font-family: inherit; }
         .btn-send { width: 100%; padding: 12px; border-radius: 12px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; }
 
         .cat-container { display: flex; overflow-x: auto; gap: 10px; margin: 20px -10px 10px -10px; padding: 5px 10px; scrollbar-width: none; }
-        .cat-pill { background: var(--item-bg); padding: 8px 16px; border-radius: 15px; white-space: nowrap; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text-main); border: 1px solid rgba(255,255,255,0.1); }
+        .cat-pill { background: var(--item-bg); padding: 8px 16px; border-radius: 15px; white-space: nowrap; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text-main); }
         .cat-pill.active { background: var(--primary); color: white; }
-        
         .app-item { display: flex; align-items: center; padding: 14px; background: var(--item-bg); margin-bottom: 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); text-align: left; }
         .btn-laden { background: #f1f3f6; color: var(--primary); border: none; padding: 8px 18px; border-radius: 20px; font-weight: 700; cursor: pointer; }
         [data-theme="dark"] .btn-laden { background: var(--primary); color: white; }
@@ -125,7 +128,7 @@
 </head>
 <body>
 
-    <div class="content-container">
+    <div class="layout-master">
         <div class="request-card">
             <h3 style="margin-top:0; font-size: 20px;">App-Fehler melden 🛠️</h3>
             <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px;">Funktioniert eine App nicht mehr? Sag mir Bescheid!</p>
@@ -140,9 +143,7 @@
             <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
             <h1>Boris Store</h1>
             <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px;">Offizieller App-Vermittler</div>
-            
             <input type="text" id="suche" placeholder="Apps suchen..." oninput="sucheApps()">
-
             <div class="cat-container" id="catBar">
                 <div class="cat-pill active" onclick="setCategory(this, 'Boris Charts')">Boris Charts</div>
                 <div class="cat-pill" onclick="setCategory(this, 'Games')">Spiele</div>
@@ -150,14 +151,14 @@
                 <div class="cat-pill" onclick="setCategory(this, 'Social Networking')">Social</div>
                 <div class="cat-pill" onclick="setCategory(this, 'Entertainment')">Entertainment</div>
             </div>
-
             <div id="liste" style="margin-top:10px;"></div>
-
             <div style="margin-top: 20px; font-size: 11px;">
                 <a onclick="zeigeImpressum()" style="color: var(--text-secondary); text-decoration: none; margin: 0 10px; cursor: pointer;">Impressum</a>
                 <a onclick="zeigeDatenschutz()" style="color: var(--text-secondary); text-decoration: none; margin: 0 10px; cursor: pointer;">Datenschutz</a>
             </div>
         </div>
+
+        <div class="spacer-right"></div>
     </div>
 
     <footer>&copy; 2026 Boris Store &bull; Moritz Schmalle</footer>
@@ -178,6 +179,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
+        // Alle restlichen Funktionen (loadBorisCharts, sucheApps, etc.) bleiben exakt gleich wie in deiner funktionierenden Version.
         let rainInterval;
         function startEmojiRain() {
             stopEmojiRain();
