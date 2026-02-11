@@ -160,6 +160,10 @@
                 <textarea name="message" rows="4" placeholder="Welche App?" required></textarea>
                 <button type="submit" class="btn-send">Senden</button>
             </form>
+            <div style="margin-top: 20px; font-size: 13px; color: var(--text-secondary); line-height: 1.4;">
+                Hier sind eure apps zu finden die nicht im boris store funktionieren: <br>
+                <a href="https://notworkingapps.vercel.app" style="color: var(--primary); font-weight: 600; text-decoration: none;">notworkingapps.vercel.app</a>
+            </div>
         </div>
 
         <div class="main-card">
@@ -192,7 +196,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.app";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDh0q3c7o9bxPLXs6ac4HV33Bm_M_BbAHo",
@@ -267,28 +271,29 @@
         window.renderHtml = (results, isChart = false) => {
             const liste = document.getElementById('liste');
             liste.innerHTML = "";
-            if (results.length === 0) {
+            if (!results || results.length === 0) {
                 liste.innerHTML = `<div style='padding:50px 20px; color:var(--text-secondary);'>Keine Apps gefunden. 🕵️‍♂️</div>`;
                 return;
             }
 
             results.forEach((app, index) => {
-                const id = app.trackId;
-                const name = (app.trackName || app.name).replace(/'/g, "");
+                const id = app.trackId || app.id;
+                // SICHERHEIT: Sonderzeichen entfernen, damit die Buttons funktionieren
+                const rawName = app.trackName || app.name || "App";
+                const name = rawName.replace(/['"]/g, "");
                 const icon = app.artworkUrl100 || app.icon;
                 const cat = app.primaryGenreName || app.cat;
                 
-                // Pfeil-Logik nur für die Top 10 in den Charts
                 let trendTag = "";
                 if (isChart) {
                     if (index < 3) {
-                        trendTag = `<span style="color:#34c759; margin-left:4px; font-weight:bold;">↑</span>`; // Top 3 steigen
+                        trendTag = `<span style="color:#34c759; margin-left:4px; font-weight:bold;">↑</span>`; 
                     } else if (index >= 7) {
-                        trendTag = `<span style="color:#ff3b30; margin-left:4px; font-weight:bold;">↓</span>`; // Letzte 3 sinken
+                        trendTag = `<span style="color:#ff3b30; margin-left:4px; font-weight:bold;">↓</span>`;
                     }
                 }
 
-                const countBadge = isChart ? `<span style="font-size:10px; background:#34c759; color:white; padding:2px 8px; border-radius:10px; margin-left:6px; flex-shrink:0;">${app.count}x</span>` : "";
+                const countBadge = (isChart && app.count) ? `<span style="font-size:10px; background:#34c759; color:white; padding:2px 8px; border-radius:10px; margin-left:6px; flex-shrink:0;">${app.count}x</span>` : "";
                 
                 const item = document.createElement('div');
                 item.className = 'app-item';
@@ -296,7 +301,7 @@
                     <img src="${icon}" style="width:58px; height:58px; border-radius:14px; margin-right:16px; cursor:pointer;" onclick="window.handleAppClick(null, '${id}', '${name}', '${icon}', '${cat}')">
                     <div style="flex-grow:1; min-width:0; display:flex; flex-direction:column; justify-content:center;">
                         <div style="display:flex; align-items:center; width:100%;">
-                            <span style="font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:16px; flex-shrink:1;">${name}</span>
+                            <span style="font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:16px; flex-shrink:1;">${rawName}</span>
                             ${countBadge}
                         </div>
                         <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">${cat} ${trendTag}</div>
@@ -356,4 +361,3 @@
     </script>
 </body>
 </html>
-
