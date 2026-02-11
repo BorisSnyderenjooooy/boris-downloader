@@ -18,13 +18,11 @@
         const appId = params.get('id');
 
         if (appId && /^\d+$/.test(appId)) {
-            // Meta-Tag sofort an die erste Stelle im Head setzen
             const meta = document.createElement('meta');
             meta.name = "apple-itunes-app";
             meta.content = `app-id=${appId}`;
             document.head.insertBefore(meta, document.head.firstChild);
 
-            // Verhindert unnötige Doppel-Reloads: Nur laden wenn ID neu ist
             if (sessionStorage.getItem('last_id') !== appId) {
                 sessionStorage.setItem('last_id', appId);
                 window.location.reload();
@@ -273,7 +271,10 @@
                     document.getElementById('liste').innerHTML = "<div style='padding:20px; color:var(--text-secondary);'>Noch keine Charts vorhanden.</div>";
                     return;
                 }
-                const sorted = Object.values(data).sort((a,b) => b.count - a.count);
+                // HIER IST DIE BEGRENZUNG AUF TOP 10
+                const sorted = Object.values(data)
+                    .sort((a,b) => b.count - a.count)
+                    .slice(0, 10);
                 renderHtml(sorted, true);
             });
         };
