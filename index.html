@@ -13,19 +13,25 @@
     <link rel="icon" type="image/png" href="icon.png">
 
     <script>
-        // 1. URL & Banner Logik
+        // 1. OPTIMIERTE URL & BANNER LOGIK (Anti-Cache / Cache-Buster)
         const params = new URLSearchParams(window.location.search);
         const appId = params.get('id');
 
         if (appId && /^\d+$/.test(appId)) {
+            // Meta-Tag sofort erstellen und einfügen
             const meta = document.createElement('meta');
             meta.name = "apple-itunes-app";
             meta.content = `app-id=${appId}`;
             document.head.insertBefore(meta, document.head.firstChild);
 
+            // Prüfen, ob wir für diese ID schon einen Cache-Buster-Reload hatten
             if (sessionStorage.getItem('last_id') !== appId) {
                 sessionStorage.setItem('last_id', appId);
-                window.location.reload();
+                
+                // Wir hängen einen Zeitstempel (cb) an, um den Safari-Cache zu zwingen, das Banner neu zu laden
+                const cleanPath = window.location.pathname;
+                const cacheBuster = Date.now();
+                window.location.replace(`${cleanPath}?id=${appId}&cb=${cacheBuster}`);
             }
         }
 
@@ -135,7 +141,6 @@
         .btn-laden { background: #f1f3f6; color: var(--primary); border: none; padding: 9px 20px; border-radius: 20px; font-weight: 700; cursor: pointer; font-size: 14px; flex-shrink: 0; margin-left: 10px;}
         [data-theme="dark"] .btn-laden { background: var(--primary); color: white; }
 
-        /* Skeleton Animation */
         .skeleton-item { background: var(--skeleton); height: 88px; border-radius: 22px; margin-bottom: 14px; animation: pulse 1.5s infinite ease-in-out; }
         @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
 
@@ -345,7 +350,7 @@
         };
 
         window.zeigeImpressum = () => alert("Impressum\nBetreiber: Moritz Schmalle\ninfo@boris-store.xyz");
-        window.zeigeDatenschutz = () => alert("Datenschutz\nAnonyme Klick-Zählung für Charts.");
+        window.zeigeDatenschutz = () => alert("Datenschutz\nAnonyme Klick-Zählung für Galaxy Charts.");
 
         if (!appId) loadBorisCharts();
     </script>
