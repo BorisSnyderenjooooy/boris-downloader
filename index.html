@@ -2,349 +2,122 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Boris Store</title>
-
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Boris Store">
-    
-    <link rel="apple-touch-icon" href="icon.png">
-    <link rel="icon" type="image/png" href="icon.png">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script>
-        // 1. URL & BANNER LOGIK (Anti-Cache)
-        const params = new URLSearchParams(window.location.search);
-        const appId = params.get('id');
+        // TRICK: ID sofort aus der URL ziehen für den Banner
+        const p = new URLSearchParams(window.location.search);
+        const id = p.get('id');
 
-        if (appId && /^\d+$/.test(appId)) {
+        if (id) {
             const meta = document.createElement('meta');
             meta.name = "apple-itunes-app";
-            meta.content = `app-id=${appId}`;
-            document.head.insertBefore(meta, document.head.firstChild);
-
-            if (sessionStorage.getItem('last_id') !== appId) {
-                sessionStorage.setItem('last_id', appId);
-                const cleanPath = window.location.pathname;
-                const cacheBuster = Date.now();
-                window.location.replace(`${cleanPath}?id=${appId}&cb=${cacheBuster}`);
-            }
-        }
-
-        // 2. EXKLUSIVER DOMAIN LOCK
-        const host = window.location.hostname.toLowerCase();
-        // Erlaubt NUR die spezifische Vercel-Domain und lokales Testen
-        const isAllowed = 
-            host === "boris-downloader-4k1hq33ku-boris-projects-305ec7b0.vercel.app" || 
-            host === "localhost" || 
-            host === "127.0.0.1";
-        
-        if (!isAllowed) {
-            // Leitet alle anderen (auch boris-store.xyz) auf eine Fehlermeldung um
-            window.location.href = "https://google.com"; 
-        }
-
-        // 3. Theme Vor-Initialisierung
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        if (savedTheme === 'dark') {
-            document.documentElement.setAttribute('data-theme', 'dark');
-        }
-
-        // 4. Download-Screen
-        if (appId) {
-            document.documentElement.style.visibility = 'hidden'; 
-            window.onload = () => {
-                const auraFarbe = sessionStorage.getItem('lastColor') || '#007aff';
-                const isDark = localStorage.getItem('theme') === 'dark';
-                document.documentElement.style.visibility = 'visible';
-                
-                document.body.style.background = `linear-gradient(135deg, ${auraFarbe}66 0%, ${isDark ? '#000000' : '#ffffff'} 100%)`;
-                document.body.style.backgroundAttachment = 'fixed';
-
-                document.body.innerHTML = `
-                    <div style="text-align:center; padding: 80px 20px; font-family:-apple-system, sans-serif; display:flex; flex-direction:column; align-items:center; min-height:100vh;">
-                        <div style="margin-top: 40px;">
-                            <h2 style="color:var(--text-main); font-size:28px; font-weight:700; margin-bottom:10px;">Download bereit</h2>
-                            <p style="color:var(--text-secondary); font-size:18px; margin-bottom:40px;">Schau jetzt ganz oben am Bildschirmrand.</p>
-                        </div>
-                        <div style="background: #fff3cd; border-radius: 28px; padding: 30px; margin-bottom: 40px; max-width: 420px; text-align: left; font-size: 16px; color: #453505; border: 1px solid #ffeeba; box-shadow: 0 10px 25px rgba(0,0,0,0.08);">
-                            <strong style="display:block; margin-bottom:12px; font-size:18px;">⚠️ WICHTIG:</strong>
-                            • Banner am oberen Rand <b>nicht</b> wegklicken.<br>
-                            • Safari Browser nutzen.<br><br>
-                            • Nichts da? <a href="javascript:location.reload()" style="color:#856404; font-weight:bold; text-decoration:underline;">Seite neu laden</a>.
-                        </div>
-                        <button onclick="window.location.href=window.location.pathname" style="padding:20px 45px; border-radius:35px; border:none; background:${auraFarbe}; color:white; font-weight:bold; font-size:18px; cursor:pointer; box-shadow: 0 10px 20px ${auraFarbe}44;">
-                            Zurück zum Store
-                        </button>
-                    </div>
-                `;
-            };
+            meta.content = `app-id=${id}, app-argument=https://apps.apple.com/app/id${id}, affiliate-data=ct=install_button&mt=8`;
+            document.head.appendChild(meta);
         }
     </script>
-
+    <title>App Installer</title>
     <style>
-        :root { 
-            --primary: #007aff; 
-            --aura-color1: #e0f7f4;
-            --aura-color2: #f7e8f3;
-            --card-bg: rgba(255, 255, 255, 0.75);
-            --text-main: #1d1d1f;
-            --text-secondary: #333333;
-            --input-bg: #ffffff;
-            --item-bg: rgba(255, 255, 255, 0.5);
-            --skeleton: #e1e1e1;
-        }
-
-        [data-theme="dark"] {
-            --aura-color1: #1c1c1e;
-            --aura-color2: #000000;
-            --card-bg: rgba(28, 28, 30, 0.85);
-            --text-main: #f5f5f7;
-            --text-secondary: #cccccc; 
-            --input-bg: #2c2c2e;
-            --item-bg: rgba(44, 44, 46, 0.6);
-            --skeleton: #3a3a3c;
-        }
-
-        * { transition: background 0.4s ease, color 0.4s ease; -webkit-user-select: none; user-select: none; box-sizing: border-box; }
+        body { font-family: -apple-system, system-ui; background: #f0f0f5; text-align: center; padding: 40px 20px; margin: 0; }
+        .box { background: white; padding: 25px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 350px; margin: auto; }
+        .app { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; text-align: left; }
+        .app-info { display: flex; flex-direction: column; max-width: 70%; }
+        .error-text { color: #ff3b30; font-size: 10px; margin-top: 4px; line-height: 1.2; }
+        button { background: #007aff; color: white; border: none; padding: 10px 18px; border-radius: 20px; font-weight: 600; cursor: pointer; flex-shrink: 0; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        input { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 12px; border: 1px solid #ccc; box-sizing: border-box; font-size: 16px; }
         
-        body {
-            margin: 0; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: linear-gradient(135deg, var(--aura-color1) 0%, var(--aura-color2) 100%);
-            background-attachment: fixed; background-size: cover; min-height: 100vh; 
-            display: flex; flex-direction: column; align-items: center; padding: 40px 20px; color: var(--text-main); overflow-x: hidden;
+        .footer-note { margin-top: 25px; font-size: 13px; color: #888; }
+        .footer-note a { color: #007aff; text-decoration: none; font-weight: 500; }
+
+        /* Der Spenden-Button Style */
+        .coffee-btn {
+            display: inline-block;
+            margin-top: 20px;
+            background: #FFDD00;
+            color: #000;
+            padding: 8px 15px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
-
-        .layout-master { display: flex; flex-direction: row; align-items: flex-start; justify-content: center; width: 100%; max-width: 1200px; gap: 25px; margin-top: 20px; }
-        .request-card { background: var(--card-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); width: 250px; border-radius: 30px; padding: 25px; box-shadow: 0 12px 35px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.25); text-align: left; flex-shrink: 0; }
-        .main-card { background: var(--card-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); width: 100%; max-width: 480px; border-radius: 40px; padding: 45px 35px; box-shadow: 0 25px 60px rgba(0,0,0,0.15); text-align: center; position: relative; border: 1px solid rgba(255,255,255,0.25); flex-shrink: 0; }
-        .spacer-right { width: 250px; flex-shrink: 0; }
-
-        @media (max-width: 1100px) {
-            .layout-master { flex-direction: column; align-items: center; }
-            .spacer-right { display: none; }
-            .request-card { width: 100%; max-width: 480px; order: 2; margin-top: 35px; }
-            .main-card { order: 1; }
-        }
-
-        .theme-toggle { position: absolute; top: 25px; right: 25px; background: rgba(120, 120, 128, 0.16); border: none; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; z-index: 10; }
-        h1 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 42px; font-weight: 800; margin: 0; }
-        input, textarea { width: 100%; padding: 14px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.05); background: var(--input-bg); color: var(--text-main); font-size: 15px; outline: none; margin-bottom: 10px; font-family: inherit; }
-        .btn-send { width: 100%; padding: 14px; border-radius: 14px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; font-size: 15px; }
-
-        .cat-container { display: flex; overflow-x: auto; gap: 12px; margin: 25px -10px 15px -10px; padding: 5px 10px; scrollbar-width: none; }
-        .cat-container::-webkit-scrollbar { display: none; }
-        .cat-pill { background: var(--item-bg); padding: 9px 18px; border-radius: 16px; white-space: nowrap; font-size: 14px; font-weight: 600; cursor: pointer; color: var(--text-main); border: 1px solid rgba(255,255,255,0.1); }
-        .cat-pill.active { background: var(--primary); color: white; border-color: var(--primary); }
-
-        .app-item { display: flex; align-items: center; padding: 15px; background: var(--item-bg); margin-bottom: 14px; border-radius: 22px; border: 1px solid rgba(255,255,255,0.1); text-align: left; overflow: hidden; }
-        .btn-laden { background: #f1f3f6; color: var(--primary); border: none; padding: 9px 20px; border-radius: 20px; font-weight: 700; cursor: pointer; font-size: 14px; flex-shrink: 0; margin-left: 10px;}
-        [data-theme="dark"] .btn-laden { background: var(--primary); color: white; }
-
-        .skeleton-item { background: var(--skeleton); height: 88px; border-radius: 22px; margin-bottom: 14px; animation: pulse 1.5s infinite ease-in-out; }
-        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
-
-        .emoji-rain { position: fixed; top: -50px; font-size: 26px; z-index: -1; animation: fall linear forwards; pointer-events: none; opacity: 0.6; }
-        @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
-        .charts-active { background: linear-gradient(160deg, #6a11cb 0%, #2575fc 100%) !important; background-attachment: fixed !important; }
-        footer { margin-top: 80px; font-size: 13px; color: var(--text-main); font-weight: 600; text-align: center; width: 100%; opacity: 0.8; }
     </style>
 </head>
 <body>
 
-    <div class="layout-master">
-        <div class="request-card">
-            <h3 style="margin-top:0; font-size: 20px; margin-bottom: 10px;">Fehler melden 🛠️</h3>
-            <form action="https://formspree.io/f/mgolonke" method="POST">
-                <input type="email" name="email" placeholder="E-Mail" required>
-                <textarea name="message" rows="4" placeholder="Welche App?" required></textarea>
-                <button type="submit" class="btn-send">Senden</button>
-            </form>
-        </div>
+    <button id="openPopupBtn">Anmelden</button>
 
-        <div class="main-card">
-            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
-            
-            <h1>Boris Store</h1>
-            <div style="font-size: 15px; color: var(--text-secondary); margin-top: 5px; margin-bottom: 25px;">Offizieller App-Vermittler</div>
-            
-            <input type="text" id="suche" placeholder="Apps suchen..." oninput="sucheApps()">
+<div id="popup" class="popup">
+    <div class="popup-content">
+        <span class="close-btn">&times;</span>
+        <h2>Anmeldung</h2>
+        <form id="loginForm">
+            <label for="username">E-Mail:</label>
+            <input type="email" id="username" name="username" required>
 
-            <div class="cat-container" id="catBar">
-                <div class="cat-pill active" onclick="setCategory(this, 'Boris Charts')">Boris Charts</div>
-                <div class="cat-pill" onclick="setCategory(this, 'Games')">Spiele</div>
-                <div class="cat-pill" onclick="setCategory(this, 'Productivity')">Produktivität</div>
-                <div class="cat-pill" onclick="setCategory(this, 'Social Networking')">Social</div>
-                <div class="cat-pill" onclick="setCategory(this, 'Entertainment')">Entertainment</div>
-            </div>
+            <label for="password">Passwort:</label>
+            <input type="password" id="password" name="password" required>
 
-            <div id="liste" style="margin-top:15px; min-height: 200px;"></div>
+            <button type="submit">Anmelden</button>
+        </form>
+    </div>
+</div>
 
-            <div style="margin-top: 30px; font-size: 12px; opacity: 0.7;">
-                <a onclick="zeigeImpressum()" style="color: var(--text-secondary); text-decoration: none; margin: 0 12px; cursor: pointer;">Impressum</a>
-                <a onclick="zeigeDatenschutz()" style="color: var(--text-secondary); text-decoration: none; margin: 0 12px; cursor: pointer;">Datenschutz</a>
-            </div>
-        </div>
-        <div class="spacer-right"></div>
+    <div class="box">
+        <h2>App Download</h2>
+        <input type="text" id="s" placeholder="Suchen..." onkeyup="search()">
+        <div id="l"></div>
     </div>
 
-    <footer>&copy; 2026 Boris Store &bull; Moritz Schmalle</footer>
+    <div style="max-width: 350px; margin: auto; text-align: left;">
+        <a href="https://www.paypal.com/paypalme/your-profile-slug-or-link-here?amount=5&currency_code=EUR" 
+           onclick="window.location.href='https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=moritz.schmalle09@gmail.com&item_name=Buy%20me%20a%20coffee&currency_code=EUR'; return false;"
+           class="coffee-btn">
+           ☕ Buy me a coffee
+        </a>
+    </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    <div class="footer-note">
+        Der originale Store ist: <a href="https://boris-store.xyz">boris-store.xyz</a>
+    </div>
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyDh0q3c7o9bxPLXs6ac4HV33Bm_M_BbAHo",
-            authDomain: "boris-store.firebaseapp.com",
-            databaseURL: "https://boris-store-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "boris-store",
-            storageBucket: "boris-store.firebasestorage.app",
-            messagingSenderId: "942183293125",
-            appId: "1:942183293125:web:552537b1829e2245d350ac"
-        };
+    <script>
+        const apps = [
+            { n: "Tennis TV", i: "1114471030", ok: true },
+            { n: "Roblox", i: "431946152", ok: true },
+            { n: "ChatGPT", i: "6448311069", ok: false, msg: "Apple blockiert Banner auf Drittseiten für diese App." },
+            { n: "Gemini", i: "6477489729", ok: false, msg: "Apple Sicherheitsregeln verhindern den Banner hier." }
+        ];
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-
-        window.toggleTheme = () => {
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            const newTheme = isDark ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', newTheme);
-            document.getElementById('themeBtn').innerText = newTheme === 'dark' ? '☀️' : '🌙';
-            localStorage.setItem('theme', newTheme);
-        };
-        document.getElementById('themeBtn').innerText = (localStorage.getItem('theme') === 'dark') ? '☀️' : '🌙';
-
-        window.showSkeletons = () => {
-            const liste = document.getElementById('liste');
-            liste.innerHTML = "";
-            for(let i=0; i<6; i++) {
-                const s = document.createElement('div');
-                s.className = 'skeleton-item';
-                liste.appendChild(s);
-            }
-        };
-
-        let rainInterval;
-        function startEmojiRain() {
-            stopEmojiRain();
-            rainInterval = setInterval(() => {
-                const e = document.createElement('div');
-                e.className = 'emoji-rain';
-                e.innerText = ['🏆', '⭐', '✨', '👑'][Math.floor(Math.random() * 4)];
-                e.style.left = Math.random() * 100 + 'vw';
-                e.style.animationDuration = (Math.random() * 2 + 3) + 's';
-                document.body.appendChild(e);
-                setTimeout(() => e.remove(), 5000);
-            }, 350); 
-        }
-        function stopEmojiRain() { 
-            clearInterval(rainInterval); 
-            document.querySelectorAll('.emoji-rain').forEach(e => e.remove()); 
-        }
-
-        window.updateAura = (color) => {
-            const body = document.body;
-            body.classList.remove('charts-active');
-            stopEmojiRain();
-            if (color === 'reset') {
-                body.classList.add('charts-active');
-                startEmojiRain();
-            } else {
-                document.documentElement.style.setProperty('--aura-color1', color + '44');
-                sessionStorage.setItem('lastColor', color);
-                body.style.background = `linear-gradient(135deg, var(--aura-color1) 0%, var(--aura-color2) 100%)`;
-                body.style.backgroundAttachment = 'fixed';
-            }
-        };
-
-        window.renderHtml = (results, isChart = false) => {
-            const liste = document.getElementById('liste');
-            liste.innerHTML = "";
-            if (results.length === 0) {
-                liste.innerHTML = `<div style='padding:50px 20px; color:var(--text-secondary);'>Keine Apps gefunden. 🕵️‍♂️</div>`;
-                return;
-            }
-
-            results.forEach((app, index) => {
-                const id = app.trackId;
-                const name = (app.trackName || app.name).replace(/'/g, "");
-                const icon = app.artworkUrl100 || app.icon;
-                const cat = app.primaryGenreName || app.cat;
+        function render(data) {
+            const list = document.getElementById('l');
+            list.innerHTML = "";
+            data.forEach(a => {
+                const info = a.ok ? '' : `<span class="error-text">${a.msg}</span>`;
+                const btnAttr = a.ok ? `onclick="go('${a.i}')"` : `disabled`;
                 
-                let trendTag = "";
-                if (isChart) {
-                    if (index < 3) trendTag = `<span style="color:#34c759; margin-left:4px; font-weight:bold;">↑</span>`;
-                    else if (index >= 7) trendTag = `<span style="color:#ff3b30; margin-left:4px; font-weight:bold;">↓</span>`;
-                }
-
-                const countBadge = isChart ? `<span style="font-size:10px; background:#34c759; color:white; padding:2px 8px; border-radius:10px; margin-left:6px; flex-shrink:0;">${app.count}x</span>` : "";
-                
-                const item = document.createElement('div');
-                item.className = 'app-item';
-                item.innerHTML = `
-                    <img src="${icon}" style="width:58px; height:58px; border-radius:14px; margin-right:16px; cursor:pointer;" onclick="window.handleAppClick(null, '${id}', '${name}', '${icon}', '${cat}')">
-                    <div style="flex-grow:1; min-width:0; display:flex; flex-direction:column; justify-content:center;">
-                        <div style="display:flex; align-items:center; width:100%;">
-                            <span style="font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:16px; flex-shrink:1;">${name}</span>
-                            ${countBadge}
+                list.innerHTML += `
+                    <div class="app">
+                        <div class="app-info">
+                            <strong>${a.n}</strong>
+                            ${info}
                         </div>
-                        <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">${cat} ${trendTag}</div>
-                    </div>
-                    <button class="btn-laden" onclick="handleAppClick(this, '${id}', '${name}', '${icon}', '${cat}')">Laden</button>
-                `;
-                liste.appendChild(item);
+                        <button ${btnAttr}>${a.ok ? 'Laden' : 'N/A'}</button>
+                    </div>`;
             });
-        };
+        }
 
-        window.loadBorisCharts = () => {
-            showSkeletons();
-            updateAura('reset');
-            onValue(ref(db, 'charts'), (snapshot) => {
-                const data = snapshot.val();
-                if (!data) return;
-                const sorted = Object.values(data).sort((a,b) => b.count - a.count).slice(0, 10);
-                renderHtml(sorted, true);
-            });
-        };
+        function search() {
+            const val = document.getElementById('s').value.toLowerCase();
+            render(apps.filter(x => x.n.toLowerCase().includes(val)));
+        }
 
-        window.sucheApps = () => {
-            const q = document.getElementById('suche').value;
-            if (q.length < 2) return loadBorisCharts();
-            fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&country=de&entity=software&limit=15`)
-                .then(r => r.json()).then(data => renderHtml(data.results));
-        };
+        function go(i) {
+            window.location.href = window.location.origin + window.location.pathname + "?id=" + i;
+        }
 
-        window.handleAppClick = async (btn, trackId, name, icon, cat) => {
-            if(btn) btn.innerText = "...";
-            try {
-                const appRef = ref(db, 'charts/' + trackId);
-                const snapshot = await get(appRef);
-                let count = snapshot.exists() ? snapshot.val().count : 0;
-                await set(appRef, { trackId, name, icon, cat, count: count + 1 });
-            } catch(e) { console.error(e); }
-            window.location.href = window.location.pathname + "?id=" + trackId;
-        };
-
-        window.setCategory = (el, cat) => {
-            document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
-            el.classList.add('active');
-            showSkeletons();
-            if (cat === 'Boris Charts') {
-                loadBorisCharts();
-            } else {
-                updateAura('#007aff');
-                fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(cat)}&country=de&entity=software&limit=15`)
-                    .then(r => r.json()).then(d => renderHtml(d.results));
-            }
-        };
-
-        window.zeigeImpressum = () => alert("Impressum\nBetreiber: Moritz Schmalle\ninfo@boris-store.xyz");
-        window.zeigeDatenschutz = () => alert("Datenschutz\nAnonyme Klick-Zählung für Charts.");
-
-        if (!appId) loadBorisCharts();
+        render(apps);
     </script>
 </body>
 </html>
