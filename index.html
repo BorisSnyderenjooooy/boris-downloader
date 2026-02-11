@@ -13,7 +13,7 @@
     <link rel="icon" type="image/png" href="icon.png">
 
     <script>
-        // 1. STABILISIERTE BANNER-LOGIK (Optimiert für Safari)
+        // 1. STABILISIERTE BANNER-LOGIK
         const params = new URLSearchParams(window.location.search);
         const appId = params.get('id');
 
@@ -60,14 +60,12 @@
                             <h2 style="color:var(--text-main); font-size:26px; font-weight:700; margin-bottom:10px;">Download bereit</h2>
                             <p style="color:var(--text-secondary); font-size:16px; margin-bottom:40px;">Schau jetzt ganz oben am Bildschirmrand.</p>
                         </div>
-                        
                         <div style="background: #fff3cd; border-radius: 24px; padding: 25px; margin-bottom: 40px; max-width: 400px; text-align: left; font-size: 15px; color: #453505; border: 1px solid #ffeeba; box-shadow: 0 8px 20px rgba(0,0,0,0.06);">
                             <strong style="display:block; margin-bottom:10px; font-size:17px;">⚠️ WICHTIG:</strong>
                             • Banner oben <b>nicht</b> wegklicken.<br>
                             • Klappt nur im <b>Safari Browser</b>.<br>
                             • Falls oben nichts erscheint: <a href="javascript:location.reload()" style="color:#856404; font-weight:bold;">Seite neu laden</a>.
                         </div>
-
                         <button onclick="window.location.href=window.location.pathname" style="padding:18px 40px; border-radius:30px; border:none; background:${auraFarbe}; color:white; font-weight:bold; font-size:17px; cursor:pointer; box-shadow: 0 10px 20px ${auraFarbe}44;">Zurück zum Store</button>
                     </div>
                 `;
@@ -98,72 +96,94 @@
         }
 
         * { transition: background 0.4s ease, color 0.4s ease; -webkit-user-select: none; user-select: none; box-sizing: border-box; }
-        input { -webkit-user-select: text; user-select: text; }
+        input, textarea { -webkit-user-select: text; user-select: text; }
         
         body {
             margin: 0; font-family: -apple-system, sans-serif;
             background: linear-gradient(135deg, var(--aura-color1) 0%, var(--aura-color2) 100%);
             background-attachment: fixed; background-size: cover; min-height: 100vh; 
-            display: flex; flex-direction: column; align-items: center; padding: 40px 20px; color: var(--text-main);
+            display: flex; justify-content: center; align-items: flex-start; padding: 40px 20px; color: var(--text-main);
             overflow-x: hidden;
         }
 
-        .charts-active { background: linear-gradient(160deg, #6a11cb 0%, #2575fc 100%) !important; background-attachment: fixed !important; }
+        .layout-container { display: flex; gap: 30px; max-width: 950px; width: 100%; flex-wrap: wrap; justify-content: center; }
 
-        .emoji-rain { position: fixed; top: -50px; font-size: 26px; z-index: -1; opacity: 0.6; animation: fall linear forwards; pointer-events: none; }
-        @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
+        .request-card {
+            background: var(--card-bg); backdrop-filter: blur(30px);
+            width: 100%; max-width: 320px; border-radius: 30px; padding: 25px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.25);
+            height: fit-content; text-align: left;
+        }
 
         .main-card {
             background: var(--card-bg); backdrop-filter: blur(30px);
             width: 100%; max-width: 480px; border-radius: 38px; padding: 40px 30px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.15); text-align: center; position: relative;
-            border: 1px solid rgba(255,255,255,0.25); z-index: 10;
+            border: 1px solid rgba(255,255,255,0.25);
         }
 
         .theme-toggle { position: absolute; top: 25px; right: 25px; background: rgba(120, 120, 128, 0.16); border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         h1 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 38px; font-weight: 800; margin: 0; }
-        input { width: 100%; padding: 18px; border-radius: 20px; border: 1px solid rgba(0,0,0,0.05); background: var(--input-bg); color: var(--text-main); font-size: 17px; outline: none; }
+        
+        input, textarea { 
+            width: 100%; padding: 15px; border-radius: 15px; border: 1px solid rgba(0,0,0,0.05); 
+            background: var(--input-bg); color: var(--text-main); font-size: 15px; outline: none; margin-bottom: 10px;
+            font-family: inherit;
+        }
+
+        .btn-send { width: 100%; padding: 12px; border-radius: 15px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; }
 
         .cat-container { display: flex; overflow-x: auto; gap: 10px; margin: 20px -10px 10px -10px; padding: 5px 10px; scrollbar-width: none; }
         .cat-container::-webkit-scrollbar { display: none; }
-
-        .cat-pill { background: var(--item-bg); padding: 8px 16px; border-radius: 15px; white-space: nowrap; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); color: var(--text-main); }
+        .cat-pill { background: var(--item-bg); padding: 8px 16px; border-radius: 15px; white-space: nowrap; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text-main); }
         .cat-pill.active { background: var(--primary); color: white; }
 
-        .app-item { display: flex; align-items: center; padding: 14px; background: var(--item-bg); margin-bottom: 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); text-align: left; animation: fadeIn 0.4s ease forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
+        .app-item { display: flex; align-items: center; padding: 14px; background: var(--item-bg); margin-bottom: 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); text-align: left; }
         .btn-laden { background: #f1f3f6; color: var(--primary); border: none; padding: 8px 18px; border-radius: 20px; font-weight: 700; cursor: pointer; }
         [data-theme="dark"] .btn-laden { background: var(--primary); color: white; }
-        
-        .btn-share { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--primary); margin-right: 12px; padding: 5px; opacity: 0.9; }
-        .btn-share:active { opacity: 0.5; }
+        .btn-share { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--primary); margin-right: 12px; }
 
-        footer { margin-top: 40px; font-size: 12px; color: var(--text-main); text-align: center; font-weight: 600; opacity: 0.8; }
+        .emoji-rain { position: fixed; top: -50px; font-size: 26px; z-index: -1; opacity: 0.6; animation: fall linear forwards; pointer-events: none; }
+        @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
+        .charts-active { background: linear-gradient(160deg, #6a11cb 0%, #2575fc 100%) !important; background-attachment: fixed !important; }
+
+        footer { width: 100%; margin-top: 40px; font-size: 12px; color: var(--text-main); text-align: center; font-weight: 600; }
     </style>
 </head>
 <body>
 
-    <div class="main-card">
-        <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
-        <h1>Boris Store</h1>
-        <div class="tagline" style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px;">Offizieller App-Vermittler</div>
-        
-        <input type="text" id="suche" placeholder="Apps suchen..." oninput="sucheApps()">
-
-        <div class="cat-container" id="catBar">
-            <div class="cat-pill active" onclick="setCategory(this, 'Boris Charts')">Boris Charts</div>
-            <div class="cat-pill" onclick="setCategory(this, 'Games')">Spiele</div>
-            <div class="cat-pill" onclick="setCategory(this, 'Productivity')">Produktivität</div>
-            <div class="cat-pill" onclick="setCategory(this, 'Social Networking')">Social</div>
-            <div class="cat-pill" onclick="setCategory(this, 'Entertainment')">Entertainment</div>
+    <div class="layout-container">
+        <div class="request-card">
+            <h3 style="margin-top:0; font-size: 20px;">App-Wunsch 📬</h3>
+            <p style="font-size: 13px; color: var(--text-secondary);">Fehlt eine App? Schreib mir, ich füge sie hinzu!</p>
+            <form action="https://formspree.io/f/mgolonke" method="POST">
+                <input type="email" name="email" placeholder="Deine E-Mail" required>
+                <textarea name="message" rows="4" placeholder="Welche App fehlt?" required></textarea>
+                <button type="submit" class="btn-send">Absenden</button>
+            </form>
         </div>
 
-        <div id="liste" style="margin-top:10px;"></div>
+        <div class="main-card">
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+            <h1>Boris Store</h1>
+            <div class="tagline" style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px;">Offizieller App-Vermittler</div>
+            
+            <input type="text" id="suche" placeholder="Apps suchen..." oninput="sucheApps()">
 
-        <div style="margin-top: 20px; font-size: 11px;">
-            <a onclick="zeigeImpressum()" style="color: var(--text-secondary); text-decoration: none; margin: 0 10px; cursor: pointer;">Impressum</a>
-            <a onclick="zeigeDatenschutz()" style="color: var(--text-secondary); text-decoration: none; margin: 0 10px; cursor: pointer;">Datenschutz</a>
+            <div class="cat-container" id="catBar">
+                <div class="cat-pill active" onclick="setCategory(this, 'Boris Charts')">Boris Charts</div>
+                <div class="cat-pill" onclick="setCategory(this, 'Games')">Spiele</div>
+                <div class="cat-pill" onclick="setCategory(this, 'Productivity')">Produktivität</div>
+                <div class="cat-pill" onclick="setCategory(this, 'Social Networking')">Social</div>
+                <div class="cat-pill" onclick="setCategory(this, 'Entertainment')">Entertainment</div>
+            </div>
+
+            <div id="liste" style="margin-top:10px;"></div>
+
+            <div style="margin-top: 20px; font-size: 11px;">
+                <a onclick="zeigeImpressum()" style="color: var(--text-secondary); text-decoration: none; margin: 0 10px; cursor: pointer;">Impressum</a>
+                <a onclick="zeigeDatenschutz()" style="color: var(--text-secondary); text-decoration: none; margin: 0 10px; cursor: pointer;">Datenschutz</a>
+            </div>
         </div>
     </div>
 
@@ -209,7 +229,6 @@
             const body = document.body;
             const root = document.documentElement;
             const isDark = root.getAttribute('data-theme') === 'dark';
-
             body.classList.remove('charts-active');
             sessionStorage.setItem('isCharts', 'false');
             stopEmojiRain();
@@ -238,31 +257,6 @@
 
         const catColors = { 'Entertainment': '#ff9500', 'Games': '#ff3b30', 'Social Networking': '#007aff', 'Music': '#ff2d55', 'Productivity': '#5856d6', 'Finance': '#34c759', 'Photo & Video': '#af52de' };
 
-        window.shareApp = (name, id) => {
-            const url = `${window.location.origin}/?id=${id}`;
-            if (navigator.share) {
-                navigator.share({ title: name, text: `Check mal diese App im Boris Store aus: ${name}`, url: url });
-            } else {
-                navigator.clipboard.writeText(url);
-                alert(`Link zu "${name}" kopiert!`);
-            }
-        };
-
-        window.handleAppClick = async (btn, trackId, name, icon, cat) => {
-            btn.innerText = "Moment...";
-            const farbe = catColors[cat] || '#007aff';
-            sessionStorage.setItem('lastColor', farbe);
-            
-            try {
-                const appRef = ref(db, 'charts/' + trackId);
-                const snapshot = await get(appRef);
-                let count = snapshot.exists() ? snapshot.val().count : 0;
-                await set(appRef, { trackId, name, icon, cat, count: count + 1 });
-            } catch(e) {}
-            
-            window.location.href = window.location.pathname + "?id=" + trackId;
-        };
-
         window.loadBorisCharts = () => {
             updateAura('reset');
             onValue(ref(db, 'charts'), (snapshot) => {
@@ -271,30 +265,20 @@
                     document.getElementById('liste').innerHTML = "<div style='padding:20px; color:var(--text-secondary);'>Noch keine Charts vorhanden.</div>";
                     return;
                 }
-                // HIER IST DIE BEGRENZUNG AUF TOP 10
-                const sorted = Object.values(data)
-                    .sort((a,b) => b.count - a.count)
-                    .slice(0, 10);
+                const sorted = Object.values(data).sort((a,b) => b.count - a.count).slice(0, 10);
                 renderHtml(sorted, true);
             });
         };
 
-        function renderHtml(results, isChart = false) {
+        window.renderHtml = (results, isChart = false) => {
             const liste = document.getElementById('liste');
             liste.innerHTML = "";
-            
-            if (!results || results.length === 0) {
-                liste.innerHTML = "<div style='padding:20px; color:var(--text-secondary);'>Keine Ergebnisse gefunden.</div>";
-                return;
-            }
-
             results.forEach((app) => {
                 const id = app.trackId;
                 const name = (app.trackName || app.name).replace(/'/g, "");
                 const icon = app.artworkUrl100 || app.icon;
                 const cat = app.primaryGenreName || app.cat;
                 const countText = isChart ? `<span style="font-size:10px; background:#34c759; color:white; padding:2px 6px; border-radius:8px; margin-left:5px;">${app.count}x</span>` : "";
-
                 const item = document.createElement('div');
                 item.className = 'app-item';
                 item.innerHTML = `
@@ -308,7 +292,7 @@
                 `;
                 liste.appendChild(item);
             });
-        }
+        };
 
         window.sucheApps = () => {
             const q = document.getElementById('suche').value;
@@ -317,23 +301,44 @@
                 .then(r => r.json()).then(data => {
                     if(data.results[0]) updateAura(catColors[data.results[0].primaryGenreName] || '#007aff');
                     renderHtml(data.results);
-                }).catch(() => {
-                    document.getElementById('liste').innerHTML = "<div style='padding:20px; color:var(--text-secondary);'>Suche fehlgeschlagen.</div>";
                 });
+        };
+
+        window.handleAppClick = async (btn, trackId, name, icon, cat) => {
+            btn.innerText = "Moment...";
+            const farbe = catColors[cat] || '#007aff';
+            sessionStorage.setItem('lastColor', farbe);
+            try {
+                const appRef = ref(db, 'charts/' + trackId);
+                const snapshot = await get(appRef);
+                let count = snapshot.exists() ? snapshot.val().count : 0;
+                await set(appRef, { trackId, name, icon, cat, count: count + 1 });
+            } catch(e) {}
+            window.location.href = window.location.pathname + "?id=" + trackId;
+        };
+
+        window.shareApp = (name, id) => {
+            const url = `${window.location.origin}/?id=${id}`;
+            if (navigator.share) {
+                navigator.share({ title: name, text: `Check mal diese App im Boris Store aus: ${name}`, url: url });
+            } else {
+                navigator.clipboard.writeText(url);
+                alert(`Link kopiert!`);
+            }
         };
 
         window.setCategory = (el, cat) => {
             document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
             el.classList.add('active');
             if(cat === 'Boris Charts') loadBorisCharts();
-            else { 
+            else {
                 updateAura(catColors[cat] || '#007aff');
                 fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(cat)}&country=de&entity=software&limit=15`)
-                    .then(r => r.json()).then(d => renderHtml(d.results)); 
+                    .then(r => r.json()).then(d => renderHtml(d.results));
             }
         };
 
-        window.zeigeImpressum = () => alert("Impressum\n\nBetreiber: Moritz Schmalle\nAnschrift: Auf Anfrage per E-Mail\nE-Mail: info@boris-store.xyz");
+        window.zeigeImpressum = () => alert("Impressum\n\nBetreiber: Moritz Schmalle\ninfo@boris-store.xyz");
         window.zeigeDatenschutz = () => alert("Datenschutz\n\nKlicks werden anonym gezählt.");
 
         if(!appId) loadBorisCharts();
