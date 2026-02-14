@@ -13,7 +13,7 @@
     <link rel="icon" type="image/png" href="icon.png">
 
     <script>
-        // 1. BANNER LOGIK - MIT RANDOM PATHS (Cache-Bypass)
+        // 1. VERBESSERTE URL & BANNER LOGIK (Anti-Cache / Cache-Buster)
         const params = new URLSearchParams(window.location.search);
         const appId = params.get('id');
 
@@ -29,8 +29,15 @@
                 document.head.appendChild(meta);
             }
 
-            // Random Pfad = natürlicher Cache-Bypass! Kein zusätzlicher reload nötig
-            console.log('✅ Banner auf Pfad geladen:', window.location.pathname);
+            const currentCb = params.get('cb');
+            const lastReload = sessionStorage.getItem('last_reload_' + appId);
+            const now = Date.now();
+
+            if (!currentCb && (!lastReload || (now - parseInt(lastReload)) > 2000)) {
+                sessionStorage.setItem('last_reload_' + appId, now.toString());
+                const cleanPath = window.location.pathname;
+                window.location.replace(`${cleanPath}?id=${appId}&cb=${now}`);
+            }
 
             setTimeout(() => {
                 const existingMeta = document.querySelector('meta[name="apple-itunes-app"]');
@@ -51,12 +58,9 @@
             }, 500);
         }
 
-        // 2. Domain Lock - ERLAUBT WILDCARD SUBDOMAINS
+        // 2. Domain Lock (Vercel & Localhost erlaubt)
         const host = window.location.hostname.toLowerCase();
-        const isAllowed = 
-            host.includes("boris-store") || // Alle *.boris-store.xyz Subdomains
-            host === "localhost" || 
-            host.includes("vercel.app"); // Alle *.vercel.app Subdomains
+        const isAllowed = host.includes("boris-store") || host === "localhost" || host.includes("vercel.app");
         
         if (!isAllowed) {
             window.location.href = "https://boris-store.xyz/?error=unauthorized_copy";
@@ -91,24 +95,9 @@
                             • Safari Browser nutzen.<br><br>
                             • Nichts da? <a href="javascript:location.reload()" style="color:#856404; font-weight:bold; text-decoration:underline;">Seite neu laden</a>.
                         </div>
-                        <button onclick="goToMainSite()" style="padding:20px 45px; border-radius:35px; border:none; background:${auraFarbe}; color:white; font-weight:bold; font-size:18px; cursor:pointer; box-shadow: 0 10px 20px ${auraFarbe}44;">
+                        <button onclick="window.location.href=window.location.pathname" style="padding:20px 45px; border-radius:35px; border:none; background:${auraFarbe}; color:white; font-weight:bold; font-size:18px; cursor:pointer; box-shadow: 0 10px 20px ${auraFarbe}44;">
                             Zurück zum Store
                         </button>
-                        <script>
-                            function goToMainSite() {
-                                const currentHost = window.location.hostname;
-                                if (currentHost.includes('vercel.app')) {
-                                    window.location.href = 'https://boris-store.vercel.app/';
-                                } else if (currentHost.includes('localhost')) {
-                                    window.location.href = 'http://localhost/';
-                                } else {
-                                    // Gehe zur Hauptdomain (ohne Subdomain)
-                                    const parts = currentHost.split('.');
-                                    const mainDomain = parts.slice(-2).join('.');
-                                    window.location.href = 'https://' + mainDomain + '/';
-                                }
-                            }
-                        </script>
                     </div>
                 `;
             };
@@ -846,6 +835,7 @@
 </head>
 <body>
 
+    <!-- Header mit Anmelde-Button -->
     <div class="header-bar">
         <div class="header-logo">Boris Store</div>
         <div class="header-controls">
@@ -855,6 +845,7 @@
     </div>
 
     <div class="layout-master">
+        <!-- Fehler melden Links -->
         <div class="request-card">
             <h3 class="card-header">Fehler melden 🛠️</h3>
             <form action="https://formspree.io/f/mgolonke" method="POST">
@@ -868,6 +859,7 @@
             </p>
         </div>
 
+        <!-- Main Card -->
         <div class="main-card">
             <h1>Boris Store</h1>
             <div class="subtitle">Dein Premium App-Vermittler</div>
@@ -891,6 +883,7 @@
                     <div class="cat-pill" onclick="setCategory(this, 'Social Networking')">Social</div>
                     <div class="cat-pill" onclick="setCategory(this, 'Entertainment')">Entertainment</div>
                 </div>
+                <!-- Pfeil AUSSERHALB des Scroll-Containers -->
                 <div class="scroll-indicator-fixed" id="scrollIndicatorFixed">→</div>
             </div>
 
@@ -902,6 +895,7 @@
             </div>
         </div>
 
+        <!-- Leaderboard Rechts -->
         <div class="side-card">
             <h3 class="card-header">🏆 Leaderboard</h3>
             <div id="leaderboardList">
@@ -916,6 +910,7 @@
         </div>
     </div>
 
+    <!-- App Detail Modal -->
     <div class="modal-overlay" id="appModal" onclick="closeModal(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
             <button class="modal-close" onclick="closeModal()">✕</button>
@@ -1321,7 +1316,7 @@
                 }
                 
                 modalBody.innerHTML = `
-                    <img src="${app.artworkUrl100 || app.artworkUrl512}" class="modal-app-icon" onerror="this.src='${app.artworkUrl100}'">
+                    <img src="${app.artworkUrl512 || app.artworkUrl100}" class="modal-app-icon" onerror="this.src='${app.artworkUrl100}'">
                     <h2 style="color: var(--text-main); margin: 0 0 10px 0; font-size: 26px; font-weight: 800;">${app.trackName}</h2>
                     <div style="color: var(--text-secondary); margin-bottom: 15px; font-weight: 600;">${app.artistName}</div>
                     <div class="rating-stars">${stars} ${app.averageUserRating ? app.averageUserRating.toFixed(1) : 'Keine Bewertung'}</div>
@@ -1750,38 +1745,8 @@
             // PUNKTE FÜR LADEN HINZUFÜGEN
             await addPointsForAction('download');
             
-            // WÄHLE EINE DEINER MANUELL HINZUGEFÜGTEN SUBDOMAINS (app1 bis app15)
-            // Dies funktioniert auch im Vercel Free-Tier!
-            const subdomains = Array.from({ length: 15 }, (_, i) => `app${i + 1}`);
-            const randomSubdomain = subdomains[Math.floor(Math.random() * subdomains.length)];
-            
-            const currentDomain = window.location.hostname;
-            
-            let baseDomain;
-            if (currentDomain.includes('vercel.app')) {
-                baseDomain = 'vercel.app'; // Für Vercel Preview
-            } else if (currentDomain.includes('localhost')) {
-                // Localhost bleibt gleich (für Testing)
-                window.location.href = `/?id=${trackId}`;
-                return;
-            } else {
-                // Extrahiere Hauptdomain (z.B. boris-store.xyz)
-                const parts = currentDomain.split('.');
-                // Wenn wir schon auf einer Subdomain sind (appX.boris-store.xyz), nehmen wir nur die letzen zwei Teile
-                if (parts.length >= 3) {
-                     baseDomain = parts.slice(-2).join('.');
-                } else {
-                     baseDomain = currentDomain;
-                }
-            }
-            
-            // Leite zu zufälliger Subdomain aus der Liste weiter
-            const newUrl = `https://${randomSubdomain}.${baseDomain}/?id=${trackId}`;
-            console.log('🚀 Weiterleitung zu neuer Subdomain:', newUrl);
-            window.location.href = newUrl;
+            window.location.href = window.location.pathname + "?id=" + trackId;
         };
-
-        // window.setCategory = (el, cat) => { ... } bleibt gleich, unten weiter...
 
         window.setCategory = (el, cat) => {
             document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
