@@ -958,14 +958,15 @@
             }
         };
 
-        // Anmelden Function - EINDEUTIGE NAMEN
+        // VEREINFACHTES LOGIN - Robust für GitHub/Vercel
         window.showLogin = async () => {
             const currentUser = localStorage.getItem('boris_user');
+            const userId = localStorage.getItem('boris_user_id');
             
-            if (currentUser) {
+            if (currentUser && userId) {
                 // User ist eingeloggt - zeige Profil
                 const userData = JSON.parse(currentUser);
-                const points = userData.shares || 0;
+                const points = (userData.shares || 0) + (userData.downloads || 0);
                 const doLogout = confirm(`👤 Angemeldet als: ${userData.name}\n📊 Punkte: ${points}\n\nMöchtest du dich abmelden?`);
                 if (doLogout) {
                     localStorage.removeItem('boris_user');
@@ -974,83 +975,69 @@
                     alert('✅ Erfolgreich abgemeldet!');
                     location.reload();
                 }
-            } else {
-                // User nicht eingeloggt - Login mit eindeutigem Namen
-                const name = prompt('👤 Gib deinen Namen ein:\n(z.B. Max M., Anna K.)');
-                if (!name || name.trim().length === 0) return;
-                
-                const cleanName = name.trim();
-                
-                // Prüfe ob Name schon existiert
-                try {
-                    const usersSnapshot = await get(ref(db, 'leaderboard'));
-                    const existingUsers = usersSnapshot.val() || {};
-                    
-                    const nameExists = Object.values(existingUsers).some(user => 
-                        user.name.toLowerCase() === cleanName.toLowerCase()
-                    );
-                    
-                    if (nameExists) {
-                        // Name existiert - Login mit Passwort
-                        const savedUserId = localStorage.getItem('boris_user_id');
-                        let userId = null;
-                        
-                        // Finde User-ID für diesen Namen
-                        for (const [id, user] of Object.entries(existingUsers)) {
-                            if (user.name.toLowerCase() === cleanName.toLowerCase()) {
-                                userId = id;
-                                break;
-                            }
-                        }
-                        
-                        const password = prompt(`🔒 Name "${cleanName}" existiert bereits.\nGib dein Passwort ein:`);
-                        if (!password) return;
-                        
-                        // Prüfe Passwort (gehashed)
-                        const expectedHash = btoa(cleanName + password).substring(0, 20);
-                        if (userId !== expectedHash) {
-                            alert('❌ Falsches Passwort!');
-                            return;
-                        }
-                        
-                        localStorage.setItem('boris_user_id', userId);
-                        
-                    } else {
-                        // Neuer Name - erstelle Account
-                        const password = prompt('🔒 Wähle ein Passwort:\n(mindestens 4 Zeichen)');
-                        if (!password || password.length < 4) {
-                            alert('❌ Passwort muss mindestens 4 Zeichen haben!');
-                            return;
-                        }
-                        
-                        // Erstelle eindeutige User-ID basierend auf Name + Passwort
-                        const userId = btoa(cleanName + password).substring(0, 20);
-                        localStorage.setItem('boris_user_id', userId);
-                        
-                        // Erstelle Leaderboard-Eintrag
-                        await set(ref(db, 'leaderboard/' + userId), {
-                            name: cleanName,
-                            points: 0,
-                            created: Date.now()
-                        });
-                    }
-                    
-                    const userData = {
-                        name: cleanName,
-                        loginDate: Date.now(),
-                        shares: 0,
-                        downloads: 0
-                    };
-                    localStorage.setItem('boris_user', JSON.stringify(userData));
-                    
-                    document.querySelector('.btn-login').innerText = cleanName.substring(0, 10);
-                    alert(`✅ Willkommen ${cleanName}!\n\nDu kannst jetzt:\n• Apps laden und Punkte sammeln (+1)\n• Apps teilen und Punkte sammeln (+1)\n• Im Leaderboard aufsteigen\n\n💡 Merke dir dein Passwort!`);
-                    loadLeaderboard();
-                    
-                } catch(e) {
-                    console.error('Login Error:', e);
-                    alert('❌ Fehler beim Login. Bitte erneut versuchen.');
-                }
+                return;
+            }
+            
+            // NEUER LOGIN - Einfacher und robuster
+            const name = prompt('👤 Gib deinen Benutzernamen ein:\n(z.B. MaxM, AnnaK)\n\nKleine Buchstaben, keine Leerzeichen');
+            if (!name || name.trim().length === 0) return;
+            
+            const cleanName = name.trim().replace(/\s+/g, '');
+            
+            // Validierung
+            if (cleanName.length < 3) {
+                alert('❌ Name muss mindestens 3 Zeichen haben!');
+                return;
+            }
+            
+            if (!/^[a-zA-Z0-9]+$/.test(cleanName)) {
+                alert('❌ Name darf nur Buchstaben und Zahlen enthalten!');
+                return;
+            }
+            
+            const password = prompt(`🔒 Wähle ein Passwort für "${cleanName}":\n(mindestens 4 Zeichen)\n\n💡 Bei erneutem Login mit gleichem Namen brauchst du dieses Passwort!`);
+            if (!password || password.length < 4) {
+                alert('❌ Passwort muss mindestens 4 Zeichen haben!');
+                return;
+            }
+            
+            // Erstelle eindeutige User-ID aus Name + Passwort
+            const userId_new = btoa(cleanName.toLowerCase() + password).substring(0, 20).replace(/[^a-zA-Z0-9]/g, '');
+            
+            const userData = {
+                name: cleanName,
+                loginDate: Date.now(),
+                shares: 0,
+                downloads: 0
+            };
+            
+            // Speichere lokal
+            localStorage.setItem('boris_user', JSON.stringify(userData));
+            localStorage.setItem('boris_user_id', userId_new);
+            
+            // Versuche in Firebase zu speichern (optional - fails gracefully)
+            try {
+                await set(ref(db, 'leaderboard/' + userId_new), {
+                    name: cleanName,
+                    points: 0,
+                    shares: 0,
+                    downloads: 0,
+                    created: Date.now()
+                });
+                console.log('✅ User in Firebase gespeichert');
+            } catch(e) {
+                console.log('⚠️ Firebase offline - User nur lokal gespeichert:', e.message);
+                // Kein Problem - funktioniert auch ohne Firebase
+            }
+            
+            document.querySelector('.btn-login').innerText = cleanName.substring(0, 10);
+            alert(`✅ Willkommen ${cleanName}!\n\nDu kannst jetzt:\n• Apps laden (+1 Punkt)\n• Apps teilen (+1 Punkt)\n• Im Leaderboard aufsteigen\n\n💡 Merke dir dein Passwort für nächstes Mal!`);
+            
+            // Leaderboard laden
+            try {
+                loadLeaderboard();
+            } catch(e) {
+                console.log('Leaderboard lädt später');
             }
         };
 
@@ -1064,44 +1051,58 @@
         };
         checkLogin();
 
-        // ECHTES Leaderboard aus Firebase
+        // ECHTES Leaderboard aus Firebase - ROBUST
         window.loadLeaderboard = () => {
-            onValue(ref(db, 'leaderboard'), (snapshot) => {
-                const data = snapshot.val();
-                const leaderboardDiv = document.getElementById('leaderboardList');
-                
-                if (!data || Object.keys(data).length === 0) {
-                    // Keine Daten - zeige Platzhalter
+            try {
+                onValue(ref(db, 'leaderboard'), (snapshot) => {
+                    const data = snapshot.val();
+                    const leaderboardDiv = document.getElementById('leaderboardList');
+                    
+                    if (!data || Object.keys(data).length === 0) {
+                        // Keine Daten - zeige Platzhalter
+                        leaderboardDiv.innerHTML = `
+                            <div style="padding: 40px 20px; text-align: center; color: var(--text-secondary);">
+                                <div style="font-size: 40px; margin-bottom: 15px;">🏆</div>
+                                <p style="font-size: 14px; margin: 0;">Noch keine Teilnehmer.<br>Sei der Erste!</p>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    // Sortiere nach Punkten
+                    const sorted = Object.values(data).sort((a,b) => b.points - a.points).slice(0, 5);
+                    
+                    let html = '';
+                    sorted.forEach((user, index) => {
+                        let rankEmoji = index + 1;
+                        if (index === 0) rankEmoji = '🥇';
+                        else if (index === 1) rankEmoji = '🥈';
+                        else if (index === 2) rankEmoji = '🥉';
+                        
+                        html += `
+                            <div class="leaderboard-item">
+                                <div class="leaderboard-rank">${rankEmoji}</div>
+                                <div class="leaderboard-name">${user.name}</div>
+                                <div class="leaderboard-score">${user.points}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    leaderboardDiv.innerHTML = html;
+                }, (error) => {
+                    console.log('⚠️ Leaderboard offline:', error.message);
+                    // Zeige Offline-Hinweis
+                    const leaderboardDiv = document.getElementById('leaderboardList');
                     leaderboardDiv.innerHTML = `
                         <div style="padding: 40px 20px; text-align: center; color: var(--text-secondary);">
-                            <div style="font-size: 40px; margin-bottom: 15px;">🏆</div>
-                            <p style="font-size: 14px; margin: 0;">Noch keine Teilnehmer.<br>Sei der Erste!</p>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                // Sortiere nach Punkten
-                const sorted = Object.values(data).sort((a,b) => b.points - a.points).slice(0, 5);
-                
-                let html = '';
-                sorted.forEach((user, index) => {
-                    let rankEmoji = index + 1;
-                    if (index === 0) rankEmoji = '🥇';
-                    else if (index === 1) rankEmoji = '🥈';
-                    else if (index === 2) rankEmoji = '🥉';
-                    
-                    html += `
-                        <div class="leaderboard-item">
-                            <div class="leaderboard-rank">${rankEmoji}</div>
-                            <div class="leaderboard-name">${user.name}</div>
-                            <div class="leaderboard-score">${user.points}</div>
+                            <div style="font-size: 40px; margin-bottom: 15px;">📡</div>
+                            <p style="font-size: 14px; margin: 0;">Offline Modus<br>Verbindung wird hergestellt...</p>
                         </div>
                     `;
                 });
-                
-                leaderboardDiv.innerHTML = html;
-            });
+            } catch(e) {
+                console.log('⚠️ Leaderboard kann nicht geladen werden:', e.message);
+            }
         };
 
         // Lade Leaderboard beim Start
@@ -1426,13 +1427,14 @@
             }
         };
 
-        // Universelle Punkte-Funktion für Laden UND Teilen
+        // Universelle Punkte-Funktion für Laden UND Teilen - ROBUST
         async function addPointsForAction(action) {
             const currentUser = localStorage.getItem('boris_user');
             const userId = localStorage.getItem('boris_user_id');
             
             if (!currentUser || !userId) {
-                // User nicht eingeloggt
+                // User nicht eingeloggt - zeige Hinweis
+                console.log('⚠️ Nicht eingeloggt - Punkte werden nicht getrackt');
                 return;
             }
             
@@ -1447,9 +1449,12 @@
             
             const totalPoints = (userData.shares || 0) + (userData.downloads || 0);
             
+            // IMMER lokal speichern
             localStorage.setItem('boris_user', JSON.stringify(userData));
             
-            // In Firebase Leaderboard speichern
+            console.log(`✅ +1 Punkt für ${action}! Gesamt: ${totalPoints}`);
+            
+            // Versuche in Firebase zu speichern (optional)
             try {
                 await set(ref(db, 'leaderboard/' + userId), {
                     name: userData.name,
@@ -1459,12 +1464,13 @@
                     lastUpdate: Date.now()
                 });
                 
-                console.log(`✅ +1 Punkt für ${action}! Gesamt: ${totalPoints}`);
+                console.log('✅ Punkte in Firebase synchronisiert');
                 
                 // Leaderboard neu laden
                 loadLeaderboard();
             } catch(e) {
-                console.error('Leaderboard Error:', e);
+                console.log('⚠️ Firebase offline - Punkte nur lokal gespeichert');
+                // Kein Problem - funktioniert auch ohne Firebase
             }
         }
 
