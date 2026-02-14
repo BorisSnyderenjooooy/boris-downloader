@@ -455,32 +455,30 @@
         }
         .cat-container::-webkit-scrollbar { display: none; }
         
-        /* NEUER ANSATZ: Scroll-Indikator rechts */
-        .scroll-indicator {
+        /* Scroll-Indikator AUSSERHALB - komplett fixiert */
+        .scroll-indicator-fixed {
             position: absolute;
-            right: -5px;
+            right: -10px;
             top: 50%;
             transform: translateY(-50%);
-            background: linear-gradient(to right, transparent, var(--card-bg) 30%);
-            padding: 10px 15px 10px 30px;
-            font-size: 20px;
+            background: linear-gradient(to right, transparent, var(--card-bg) 30%, var(--card-bg));
+            padding: 10px 18px 10px 35px;
+            font-size: 22px;
             font-weight: 900;
             color: var(--primary);
             pointer-events: none;
             animation: pulse 2s infinite;
-            z-index: 10;
-            opacity: 1;
-            transition: opacity 0.3s ease;
-        }
-        
-        .scroll-indicator.hidden {
-            opacity: 0;
-            pointer-events: none;
+            z-index: 100;
         }
         
         @keyframes pulse {
             0%, 100% { opacity: 0.6; transform: translateY(-50%) translateX(0); }
             50% { opacity: 1; transform: translateY(-50%) translateX(5px); }
+        }
+        
+        /* Indikator verschwindet wenn ganz nach rechts gescrollt */
+        .scroll-indicator-fixed.hidden {
+            display: none;
         }
         
         .cat-pill { 
@@ -875,15 +873,18 @@
                 <button class="filter-btn" onclick="filterApps('rating')">4+ ⭐</button>
             </div>
 
-            <div class="cat-container" id="catBar">
-                <div class="cat-pill active" onclick="setCategory(this, 'Boris Charts')">Boris Charts</div>
-                <div class="cat-pill" onclick="setCategory(this, 'Für dich')">Für dich 💡</div>
-                <div class="cat-pill" onclick="setCategory(this, 'Favoriten')">Favoriten ⭐</div>
-                <div class="cat-pill" onclick="setCategory(this, 'Games')">Spiele</div>
-                <div class="cat-pill" onclick="setCategory(this, 'Productivity')">Produktivität</div>
-                <div class="cat-pill" onclick="setCategory(this, 'Social Networking')">Social</div>
-                <div class="cat-pill" onclick="setCategory(this, 'Entertainment')">Entertainment</div>
-                <div class="scroll-indicator" id="scrollIndicator">→</div>
+            <div style="position: relative;">
+                <div class="cat-container" id="catBar">
+                    <div class="cat-pill active" onclick="setCategory(this, 'Boris Charts')">Boris Charts</div>
+                    <div class="cat-pill" onclick="setCategory(this, 'Für dich')">Für dich 💡</div>
+                    <div class="cat-pill" onclick="setCategory(this, 'Favoriten')">Favoriten ⭐</div>
+                    <div class="cat-pill" onclick="setCategory(this, 'Games')">Spiele</div>
+                    <div class="cat-pill" onclick="setCategory(this, 'Productivity')">Produktivität</div>
+                    <div class="cat-pill" onclick="setCategory(this, 'Social Networking')">Social</div>
+                    <div class="cat-pill" onclick="setCategory(this, 'Entertainment')">Entertainment</div>
+                </div>
+                <!-- Pfeil AUSSERHALB des Scroll-Containers -->
+                <div class="scroll-indicator-fixed" id="scrollIndicatorFixed">→</div>
             </div>
 
             <div id="liste" style="margin-top:20px; min-height: 200px;"></div>
@@ -926,7 +927,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, get, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDh0q3c7o9bxPLXs6ac4HV33Bm_M_BbAHo",
@@ -945,185 +946,111 @@
         let currentFilter = 'all';
         let chartsData = null;
 
-        // ============================================
-        // NEUER ANSATZ #1: SCROLL-PFEIL MIT INTERVAL
-        // ============================================
-        let scrollCheckInterval = null;
-
-        function initScrollIndicator() {
-            const catContainer = document.getElementById('catBar');
-            const scrollIndicator = document.getElementById('scrollIndicator');
-            
-            if (!catContainer || !scrollIndicator) return;
-            
-            // Funktion zum Prüfen der Scroll-Position
-            function checkScroll() {
-                const scrollLeft = catContainer.scrollLeft;
-                const scrollWidth = catContainer.scrollWidth;
-                const clientWidth = catContainer.clientWidth;
-                
-                // Prüfe ob überhaupt scrollbar nötig ist
-                const needsScroll = scrollWidth > clientWidth;
-                
-                if (!needsScroll) {
-                    scrollIndicator.classList.add('hidden');
-                    return;
-                }
-                
-                // Prüfe ob am Ende (mit 30px Toleranz)
-                const isAtEnd = scrollLeft >= (scrollWidth - clientWidth - 30);
-                
-                if (isAtEnd) {
-                    scrollIndicator.classList.add('hidden');
-                } else {
-                    scrollIndicator.classList.remove('hidden');
-                }
-            }
-            
-            // SOFORTIGER Check
-            checkScroll();
-            
-            // Scroll Event Listener
-            catContainer.addEventListener('scroll', checkScroll);
-            
-            // INTERVALL-Check alle 100ms (zuverlässiger!)
-            if (scrollCheckInterval) clearInterval(scrollCheckInterval);
-            scrollCheckInterval = setInterval(checkScroll, 100);
-            
-            // Window Resize
-            window.addEventListener('resize', checkScroll);
-        }
-
         // Filter anzeigen beim Fokus auf Suchfeld
         window.showFilters = () => {
             const q = document.getElementById('suche').value;
             if (q.length > 0) {
                 document.getElementById('filterBar').style.display = 'flex';
+                // Automatisch auf "Alle" setzen
                 currentFilter = 'all';
                 document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
                 document.querySelector('.filter-btn').classList.add('active');
             }
         };
 
-        // ============================================
-        // NEUER ANSATZ #2: VEREINFACHTES ANMELDE-SYSTEM
-        // ============================================
-        
+        // Anmelden Function - EINDEUTIGE NAMEN
         window.showLogin = async () => {
-            try {
-                const currentUser = localStorage.getItem('boris_user');
-                
-                if (currentUser) {
-                    // User ist eingeloggt - zeige Profil
-                    const userData = JSON.parse(currentUser);
-                    const userId = localStorage.getItem('boris_user_id');
-                    
-                    // Hole aktuelle Punkte aus Firebase
-                    const userRef = ref(db, 'leaderboard/' + userId);
-                    const snapshot = await get(userRef);
-                    const firebaseData = snapshot.val();
-                    const totalPoints = firebaseData ? (firebaseData.points || 0) : 0;
-                    
-                    const doLogout = confirm(`👤 Angemeldet als: ${userData.name}\n📊 Punkte: ${totalPoints}\n\nMöchtest du dich abmelden?`);
-                    
-                    if (doLogout) {
-                        localStorage.removeItem('boris_user');
-                        localStorage.removeItem('boris_user_id');
-                        document.querySelector('.btn-login').innerText = 'Anmelden';
-                        alert('✅ Erfolgreich abgemeldet!');
-                        location.reload();
-                    }
-                    return;
+            const currentUser = localStorage.getItem('boris_user');
+            
+            if (currentUser) {
+                // User ist eingeloggt - zeige Profil
+                const userData = JSON.parse(currentUser);
+                const points = userData.shares || 0;
+                const doLogout = confirm(`👤 Angemeldet als: ${userData.name}\n📊 Punkte: ${points}\n\nMöchtest du dich abmelden?`);
+                if (doLogout) {
+                    localStorage.removeItem('boris_user');
+                    localStorage.removeItem('boris_user_id');
+                    document.querySelector('.btn-login').innerText = 'Anmelden';
+                    alert('✅ Erfolgreich abgemeldet!');
+                    location.reload();
                 }
-                
-                // === NEUER LOGIN-FLOW ===
-                
+            } else {
+                // User nicht eingeloggt - Login mit eindeutigem Namen
                 const name = prompt('👤 Gib deinen Namen ein:\n(z.B. Max M., Anna K.)');
                 if (!name || name.trim().length === 0) return;
                 
                 const cleanName = name.trim();
                 
-                // Lade alle User
-                const usersSnapshot = await get(ref(db, 'leaderboard'));
-                const allUsers = usersSnapshot.val() || {};
-                
-                // Suche ob Name existiert (Case-Insensitive)
-                let existingUserId = null;
-                let existingUserData = null;
-                
-                for (const [userId, userData] of Object.entries(allUsers)) {
-                    if (userData.name && userData.name.toLowerCase() === cleanName.toLowerCase()) {
-                        existingUserId = userId;
-                        existingUserData = userData;
-                        break;
-                    }
-                }
-                
-                if (existingUserId) {
-                    // === BESTEHENDER USER - LOGIN ===
-                    const password = prompt(`🔒 Name "${cleanName}" existiert.\nGib dein Passwort ein:`);
-                    if (!password) return;
+                // Prüfe ob Name schon existiert
+                try {
+                    const usersSnapshot = await get(ref(db, 'leaderboard'));
+                    const existingUsers = usersSnapshot.val() || {};
                     
-                    // VEREINFACHTE ID-Generierung (nur aus Name, ohne komplexes Hashing)
-                    const simpleHash = cleanName.toLowerCase().replace(/\s/g, '') + '_' + password.length;
+                    const nameExists = Object.values(existingUsers).some(user => 
+                        user.name.toLowerCase() === cleanName.toLowerCase()
+                    );
                     
-                    // Prüfe ob gespeicherter Hash übereinstimmt
-                    if (existingUserData.hash === simpleHash) {
-                        // Login erfolgreich
-                        const userData = {
-                            name: cleanName,
-                            loginDate: Date.now(),
-                            shares: existingUserData.points || 0
-                        };
+                    if (nameExists) {
+                        // Name existiert - Login mit Passwort
+                        const savedUserId = localStorage.getItem('boris_user_id');
+                        let userId = null;
                         
-                        localStorage.setItem('boris_user', JSON.stringify(userData));
-                        localStorage.setItem('boris_user_id', existingUserId);
+                        // Finde User-ID für diesen Namen
+                        for (const [id, user] of Object.entries(existingUsers)) {
+                            if (user.name.toLowerCase() === cleanName.toLowerCase()) {
+                                userId = id;
+                                break;
+                            }
+                        }
                         
-                        document.querySelector('.btn-login').innerText = cleanName.substring(0, 10);
-                        alert(`✅ Willkommen zurück, ${cleanName}!\n\n📊 Deine Punkte: ${existingUserData.points || 0}`);
-                        loadLeaderboard();
+                        const password = prompt(`🔒 Name "${cleanName}" existiert bereits.\nGib dein Passwort ein:`);
+                        if (!password) return;
+                        
+                        // Prüfe Passwort (gehashed)
+                        const expectedHash = btoa(cleanName + password).substring(0, 20);
+                        if (userId !== expectedHash) {
+                            alert('❌ Falsches Passwort!');
+                            return;
+                        }
+                        
+                        localStorage.setItem('boris_user_id', userId);
+                        
                     } else {
-                        alert('❌ Falsches Passwort!');
+                        // Neuer Name - erstelle Account
+                        const password = prompt('🔒 Wähle ein Passwort:\n(mindestens 4 Zeichen)');
+                        if (!password || password.length < 4) {
+                            alert('❌ Passwort muss mindestens 4 Zeichen haben!');
+                            return;
+                        }
+                        
+                        // Erstelle eindeutige User-ID basierend auf Name + Passwort
+                        const userId = btoa(cleanName + password).substring(0, 20);
+                        localStorage.setItem('boris_user_id', userId);
+                        
+                        // Erstelle Leaderboard-Eintrag
+                        await set(ref(db, 'leaderboard/' + userId), {
+                            name: cleanName,
+                            points: 0,
+                            created: Date.now()
+                        });
                     }
                     
-                } else {
-                    // === NEUER USER - REGISTRIERUNG ===
-                    const password = prompt('🔒 Wähle ein Passwort:\n(mindestens 4 Zeichen)');
-                    if (!password || password.length < 4) {
-                        alert('❌ Passwort muss mindestens 4 Zeichen haben!');
-                        return;
-                    }
-                    
-                    // VEREINFACHTE ID (einfacher Timestamp)
-                    const userId = 'user_' + Date.now();
-                    const simpleHash = cleanName.toLowerCase().replace(/\s/g, '') + '_' + password.length;
-                    
-                    // In Firebase speichern (MIT Hash für Login-Verifikation)
-                    await set(ref(db, 'leaderboard/' + userId), {
-                        name: cleanName,
-                        points: 0,
-                        hash: simpleHash, // Gespeicherter Hash für Login
-                        created: Date.now()
-                    });
-                    
-                    // Lokal speichern
                     const userData = {
                         name: cleanName,
                         loginDate: Date.now(),
-                        shares: 0
+                        shares: 0,
+                        downloads: 0
                     };
-                    
                     localStorage.setItem('boris_user', JSON.stringify(userData));
-                    localStorage.setItem('boris_user_id', userId);
                     
                     document.querySelector('.btn-login').innerText = cleanName.substring(0, 10);
-                    alert(`✅ Account erstellt!\n\nWillkommen ${cleanName}!\n\nSammle Punkte durch:\n• Apps laden (+1)\n• Apps teilen (+1)\n\n💡 Merke dir dein Passwort!`);
+                    alert(`✅ Willkommen ${cleanName}!\n\nDu kannst jetzt:\n• Apps laden und Punkte sammeln (+1)\n• Apps teilen und Punkte sammeln (+1)\n• Im Leaderboard aufsteigen\n\n💡 Merke dir dein Passwort!`);
                     loadLeaderboard();
+                    
+                } catch(e) {
+                    console.error('Login Error:', e);
+                    alert('❌ Fehler beim Login. Bitte erneut versuchen.');
                 }
-                
-            } catch(error) {
-                console.error('Login Error:', error);
-                alert('❌ Fehler beim Login:\n' + error.message);
             }
         };
 
@@ -1137,13 +1064,14 @@
         };
         checkLogin();
 
-        // Leaderboard laden
+        // ECHTES Leaderboard aus Firebase
         window.loadLeaderboard = () => {
             onValue(ref(db, 'leaderboard'), (snapshot) => {
                 const data = snapshot.val();
                 const leaderboardDiv = document.getElementById('leaderboardList');
                 
                 if (!data || Object.keys(data).length === 0) {
+                    // Keine Daten - zeige Platzhalter
                     leaderboardDiv.innerHTML = `
                         <div style="padding: 40px 20px; text-align: center; color: var(--text-secondary);">
                             <div style="font-size: 40px; margin-bottom: 15px;">🏆</div>
@@ -1153,7 +1081,8 @@
                     return;
                 }
                 
-                const sorted = Object.values(data).sort((a,b) => (b.points || 0) - (a.points || 0)).slice(0, 5);
+                // Sortiere nach Punkten
+                const sorted = Object.values(data).sort((a,b) => b.points - a.points).slice(0, 5);
                 
                 let html = '';
                 sorted.forEach((user, index) => {
@@ -1166,7 +1095,7 @@
                         <div class="leaderboard-item">
                             <div class="leaderboard-rank">${rankEmoji}</div>
                             <div class="leaderboard-name">${user.name}</div>
-                            <div class="leaderboard-score">${user.points || 0}</div>
+                            <div class="leaderboard-score">${user.points}</div>
                         </div>
                     `;
                 });
@@ -1175,6 +1104,7 @@
             });
         };
 
+        // Lade Leaderboard beim Start
         loadLeaderboard();
 
         // Theme Toggle
@@ -1186,6 +1116,38 @@
             localStorage.setItem('theme', newTheme);
         };
         document.getElementById('themeBtn').innerText = (localStorage.getItem('theme') === 'dark') ? '☀️' : '🌙';
+
+        // Scroll-Indikator für Kategorien (FIXIERT außerhalb)
+        const catContainer = document.getElementById('catBar');
+        const scrollIndicator = document.getElementById('scrollIndicatorFixed');
+        if (catContainer && scrollIndicator) {
+            // Prüfe initial ob scrollbar nötig ist
+            const checkScrollNeeded = () => {
+                if (catContainer.scrollWidth <= catContainer.clientWidth) {
+                    // Kein Scroll nötig - verstecke Indikator
+                    scrollIndicator.style.display = 'none';
+                } else {
+                    scrollIndicator.style.display = 'block';
+                }
+            };
+            
+            checkScrollNeeded();
+            window.addEventListener('resize', checkScrollNeeded);
+            
+            catContainer.addEventListener('scroll', () => {
+                const scrollLeft = catContainer.scrollLeft;
+                const scrollWidth = catContainer.scrollWidth;
+                const clientWidth = catContainer.clientWidth;
+                const isAtEnd = scrollLeft >= (scrollWidth - clientWidth - 10);
+                
+                // Zeige Indikator nur wenn NICHT am Ende und Scroll möglich ist
+                if (isAtEnd || scrollWidth <= clientWidth) {
+                    scrollIndicator.classList.add('hidden');
+                } else {
+                    scrollIndicator.classList.remove('hidden');
+                }
+            });
+        }
 
         // Skeleton Loader
         window.showSkeletons = () => {
@@ -1232,11 +1194,12 @@
             }
         };
 
-        // App Detail Modal
+        // VERBESSERTES App Detail Modal mit Error Handling
         window.showAppDetails = async (trackId) => {
             const modal = document.getElementById('appModal');
             const modalBody = document.getElementById('modalBody');
             
+            // Zeige Modal mit Loading
             modal.style.display = 'block';
             modalBody.innerHTML = `
                 <div class="modal-loading">
@@ -1248,7 +1211,9 @@
             try {
                 const response = await fetch(`https://itunes.apple.com/lookup?id=${trackId}&country=de&entity=software`);
                 
-                if (!response.ok) throw new Error('Network response was not ok');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
                 
                 const data = await response.json();
                 
@@ -1307,6 +1272,7 @@
                     </div>
                 `;
                 
+                // Ähnliche Apps laden
                 setTimeout(() => loadSimilarApps(app.primaryGenreName, trackId), 500);
                 
             } catch(err) {
@@ -1439,6 +1405,7 @@
                         url: url
                     });
                     
+                    // Punkte hinzufügen wenn erfolgreich geteilt
                     await addPointsForAction('share');
                     
                 } catch(err) {
@@ -1453,40 +1420,51 @@
                     btn.innerText = '✅';
                     setTimeout(() => { btn.innerText = originalText; }, 1500);
                     
+                    // Punkte auch beim Kopieren
                     await addPointsForAction('share');
                 });
             }
         };
 
-        // Punkte hinzufügen
+        // Universelle Punkte-Funktion für Laden UND Teilen
         async function addPointsForAction(action) {
             const currentUser = localStorage.getItem('boris_user');
             const userId = localStorage.getItem('boris_user_id');
             
-            if (!currentUser || !userId) return;
+            if (!currentUser || !userId) {
+                // User nicht eingeloggt
+                return;
+            }
             
+            const userData = JSON.parse(currentUser);
+            
+            // Update lokale Daten
+            if (action === 'share') {
+                userData.shares = (userData.shares || 0) + 1;
+            } else if (action === 'download') {
+                userData.downloads = (userData.downloads || 0) + 1;
+            }
+            
+            const totalPoints = (userData.shares || 0) + (userData.downloads || 0);
+            
+            localStorage.setItem('boris_user', JSON.stringify(userData));
+            
+            // In Firebase Leaderboard speichern
             try {
-                const userRef = ref(db, 'leaderboard/' + userId);
-                const snapshot = await get(userRef);
-                const currentData = snapshot.val() || {};
-                
-                const newPoints = (currentData.points || 0) + 1;
-                
-                await update(userRef, {
-                    points: newPoints,
-                    lastAction: action,
+                await set(ref(db, 'leaderboard/' + userId), {
+                    name: userData.name,
+                    points: totalPoints,
+                    shares: userData.shares || 0,
+                    downloads: userData.downloads || 0,
                     lastUpdate: Date.now()
                 });
                 
-                // Lokal updaten
-                const userData = JSON.parse(currentUser);
-                userData.shares = newPoints;
-                localStorage.setItem('boris_user', JSON.stringify(userData));
+                console.log(`✅ +1 Punkt für ${action}! Gesamt: ${totalPoints}`);
                 
-                console.log(`✅ +1 Punkt! Total: ${newPoints}`);
-                
+                // Leaderboard neu laden
+                loadLeaderboard();
             } catch(e) {
-                console.error('Points Error:', e);
+                console.error('Leaderboard Error:', e);
             }
         }
 
@@ -1614,11 +1592,13 @@
             const q = document.getElementById('suche').value;
             const filterBar = document.getElementById('filterBar');
             
+            // Wenn leer, Filter verstecken und Charts zeigen
             if (q.length === 0) {
                 filterBar.style.display = 'none';
                 return loadBorisCharts();
             }
             
+            // AB ERSTEM BUCHSTABEN: Filter anzeigen und Apps laden
             showSkeletons();
             filterBar.style.display = 'flex';
             currentFilter = 'all';
@@ -1629,6 +1609,7 @@
                 .then(r => r.json())
                 .then(data => {
                     currentApps = data.results;
+                    // Zeige alle Ergebnisse ohne Filter
                     renderHtml(data.results);
                 })
                 .catch(err => {
@@ -1661,6 +1642,7 @@
                 console.error("Firebase Error:", e); 
             }
             
+            // PUNKTE FÜR LADEN HINZUFÜGEN
             await addPointsForAction('download');
             
             window.location.href = window.location.pathname + "?id=" + trackId;
@@ -1695,14 +1677,7 @@
         window.zeigeImpressum = () => alert("Impressum\nBetreiber: Boris\nboris.snyder7@outlook.de\nDies ist ein privates Projekt ohne Einnahmen");
         window.zeigeDatenschutz = () => alert("Datenschutz\nAnonyme Klick-Zählung für Boris Charts.");
 
-        // INITIALISIERUNG
-        if (!appId) {
-            loadBorisCharts();
-            // Scroll-Indikator NACH dem Laden der Apps initialisieren
-            setTimeout(() => {
-                initScrollIndicator();
-            }, 500);
-        }
+        if (!appId) loadBorisCharts();
     </script>
 </body>
 </html>
