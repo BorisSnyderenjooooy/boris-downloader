@@ -958,7 +958,7 @@
             }
         };
 
-        // LOGIN MIT FIREBASE - FUNKTIONIERT AUF ALLEN GERÄTEN
+        // LOGIN MIT FIREBASE - LÄDT FAVORITEN UND HISTORIE
         window.showLogin = async () => {
             const currentUser = localStorage.getItem('boris_current_user');
             
@@ -1021,16 +1021,31 @@
                     
                     const userData = {
                         username: savedAccount.username,
+                        userId: userId,
                         created: savedAccount.created,
                         shares: leaderData.shares || 0,
                         downloads: leaderData.downloads || 0
                     };
                     
                     localStorage.setItem('boris_current_user', JSON.stringify(userData));
+                    
+                    // LADE FAVORITEN UND HISTORIE AUS FIREBASE
+                    const favSnapshot = await get(ref(db, 'users/' + userId + '/favorites'));
+                    if (favSnapshot.exists()) {
+                        localStorage.setItem('boris_favoriten', JSON.stringify(favSnapshot.val()));
+                        console.log('✅ Favoriten geladen');
+                    }
+                    
+                    const historySnapshot = await get(ref(db, 'users/' + userId + '/history'));
+                    if (historySnapshot.exists()) {
+                        localStorage.setItem('app_history', JSON.stringify(historySnapshot.val()));
+                        console.log('✅ App-Historie geladen');
+                    }
+                    
                     document.querySelector('.btn-login').innerText = userData.username.substring(0, 10);
                     
                     const points = (userData.shares || 0) + (userData.downloads || 0);
-                    alert(`✅ Willkommen zurück ${userData.username}!\n\n📊 Deine Punkte: ${points}`);
+                    alert(`✅ Willkommen zurück ${userData.username}!\n\n📊 Deine Punkte: ${points}\n⭐ Favoriten & Historie synchronisiert!`);
                     
                 } else {
                     // NEUER ACCOUNT - REGISTRIERUNG
@@ -1053,7 +1068,9 @@
                     await set(ref(db, 'users/' + userId), {
                         username: cleanUsername,
                         passwordHash: hashedPassword,
-                        created: Date.now()
+                        created: Date.now(),
+                        favorites: [],
+                        history: []
                     });
                     
                     // Erstelle Leaderboard-Eintrag
@@ -1067,15 +1084,21 @@
                     
                     const userData = {
                         username: cleanUsername,
+                        userId: userId,
                         created: Date.now(),
                         shares: 0,
                         downloads: 0
                     };
                     
                     localStorage.setItem('boris_current_user', JSON.stringify(userData));
+                    
+                    // Leere Favoriten und Historie
+                    localStorage.setItem('boris_favoriten', '[]');
+                    localStorage.setItem('app_history', '[]');
+                    
                     document.querySelector('.btn-login').innerText = cleanUsername.substring(0, 10);
                     
-                    alert(`✅ Account erstellt!\n\nWillkommen ${cleanUsername}!\n\nDu kannst dich jetzt auf ALLEN Geräten mit diesem Account anmelden!\n\n💡 Merke dir dein Passwort!`);
+                    alert(`✅ Account erstellt!\n\nWillkommen ${cleanUsername}!\n\nDu kannst dich jetzt auf ALLEN Geräten anmelden!\n\n💡 Favoriten & "Für dich" werden überall synchronisiert!`);
                 }
                 
                 loadLeaderboard();
@@ -1371,12 +1394,26 @@
         }
 
         // Tracking
-        function trackAppView(trackId, category) {
+        async function trackAppView(trackId, category) {
             let history = JSON.parse(localStorage.getItem('app_history') || '[]');
             const entry = { trackId, category, timestamp: Date.now() };
             history.unshift(entry);
             history = history.slice(0, 50);
             localStorage.setItem('app_history', JSON.stringify(history));
+            
+            // SYNC ZU FIREBASE wenn eingeloggt
+            const currentUser = localStorage.getItem('boris_current_user');
+            if (currentUser) {
+                const userData = JSON.parse(currentUser);
+                if (userData.userId) {
+                    try {
+                        await set(ref(db, 'users/' + userData.userId + '/history'), history);
+                        console.log('✅ Historie synchronisiert');
+                    } catch(e) {
+                        console.log('⚠️ Historie-Sync offline');
+                    }
+                }
+            }
         }
 
         // Empfehlungen
@@ -1518,7 +1555,7 @@
         }
 
         // Favoriten
-        window.toggleFavorit = (trackId, name, icon, cat, event) => {
+        window.toggleFavorit = async (trackId, name, icon, cat, event) => {
             event.stopPropagation();
             
             let favs = JSON.parse(localStorage.getItem('boris_favoriten') || '[]');
@@ -1535,6 +1572,20 @@
             }
             
             localStorage.setItem('boris_favoriten', JSON.stringify(favs));
+            
+            // SYNC ZU FIREBASE wenn eingeloggt
+            const currentUser = localStorage.getItem('boris_current_user');
+            if (currentUser) {
+                const userData = JSON.parse(currentUser);
+                if (userData.userId) {
+                    try {
+                        await set(ref(db, 'users/' + userData.userId + '/favorites'), favs);
+                        console.log('✅ Favoriten synchronisiert');
+                    } catch(e) {
+                        console.log('⚠️ Favoriten-Sync offline');
+                    }
+                }
+            }
             
             const activeCat = document.querySelector('.cat-pill.active');
             if (activeCat && activeCat.innerText.includes('Favoriten')) {
