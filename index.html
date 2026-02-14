@@ -790,7 +790,53 @@
     </div>
 
     <div class="layout-master">
-        <!-- Leaderboard Links -->
+        <!-- Fehler melden Links -->
+        <div class="request-card">
+            <h3 class="card-header">Fehler melden 🛠️</h3>
+            <form action="https://formspree.io/f/mgolonke" method="POST">
+                <input type="email" name="email" placeholder="E-Mail" required>
+                <textarea name="message" rows="4" placeholder="Welche App?" required></textarea>
+                <button type="submit" class="btn-send">Senden</button>
+            </form>
+            <p style="margin-top: 18px; font-size: 11px; color: var(--text-secondary);">
+                Nicht funktionierende Apps findest du hier: 
+                <a href="https://notworkingapps.vercel.app" style="color: var(--primary); text-decoration: underline; font-weight: 600;">notworkingapps.vercel.app</a>
+            </p>
+        </div>
+
+        <!-- Main Card -->
+        <div class="main-card">
+            <h1>Boris Store</h1>
+            <div class="subtitle">Dein Premium App-Vermittler</div>
+            
+            <input type="text" id="suche" placeholder="Apps durchsuchen..." oninput="sucheApps()" onfocus="showFilters()">
+
+            <div class="filter-container" id="filterBar" style="display:none;">
+                <button class="filter-btn active" onclick="filterApps('all')">Alle</button>
+                <button class="filter-btn" onclick="filterApps('free')">Kostenlos</button>
+                <button class="filter-btn" onclick="filterApps('paid')">Bezahlt</button>
+                <button class="filter-btn" onclick="filterApps('rating')">4+ ⭐</button>
+            </div>
+
+            <div class="cat-container" id="catBar">
+                <div class="cat-pill active" onclick="setCategory(this, 'Boris Charts')">Boris Charts</div>
+                <div class="cat-pill" onclick="setCategory(this, 'Für dich')">Für dich 💡</div>
+                <div class="cat-pill" onclick="setCategory(this, 'Favoriten')">Favoriten ⭐</div>
+                <div class="cat-pill" onclick="setCategory(this, 'Games')">Spiele</div>
+                <div class="cat-pill" onclick="setCategory(this, 'Productivity')">Produktivität</div>
+                <div class="cat-pill" onclick="setCategory(this, 'Social Networking')">Social</div>
+                <div class="cat-pill" onclick="setCategory(this, 'Entertainment')">Entertainment</div>
+            </div>
+
+            <div id="liste" style="margin-top:20px; min-height: 200px;"></div>
+
+            <div style="margin-top: 35px; font-size: 12px; opacity: 0.6;">
+                <a onclick="zeigeImpressum()" style="color: var(--text-secondary); text-decoration: none; margin: 0 12px; cursor: pointer; font-weight: 600;">Impressum</a>
+                <a onclick="zeigeDatenschutz()" style="color: var(--text-secondary); text-decoration: none; margin: 0 12px; cursor: pointer; font-weight: 600;">Datenschutz</a>
+            </div>
+        </div>
+
+        <!-- Leaderboard Rechts -->
         <div class="side-card">
             <h3 class="card-header">🏆 Leaderboard</h3>
             <div id="leaderboardList">
@@ -822,52 +868,6 @@
             </div>
             <p style="margin-top: 20px; font-size: 11px; color: var(--text-secondary); text-align: center;">
                 Top Nutzer nach geteilten Apps
-            </p>
-        </div>
-
-        <!-- Main Card -->
-        <div class="main-card">
-            <h1>Boris Store</h1>
-            <div class="subtitle">Dein Premium App-Vermittler</div>
-            
-            <input type="text" id="suche" placeholder="Apps durchsuchen..." oninput="sucheApps()">
-
-            <div class="filter-container" id="filterBar" style="display:none;">
-                <button class="filter-btn active" onclick="filterApps('all')">Alle</button>
-                <button class="filter-btn" onclick="filterApps('free')">Kostenlos</button>
-                <button class="filter-btn" onclick="filterApps('paid')">Bezahlt</button>
-                <button class="filter-btn" onclick="filterApps('rating')">4+ ⭐</button>
-            </div>
-
-            <div class="cat-container" id="catBar">
-                <div class="cat-pill active" onclick="setCategory(this, 'Boris Charts')">Boris Charts</div>
-                <div class="cat-pill" onclick="setCategory(this, 'Für dich')">Für dich 💡</div>
-                <div class="cat-pill" onclick="setCategory(this, 'Favoriten')">Favoriten ⭐</div>
-                <div class="cat-pill" onclick="setCategory(this, 'Games')">Spiele</div>
-                <div class="cat-pill" onclick="setCategory(this, 'Productivity')">Produktivität</div>
-                <div class="cat-pill" onclick="setCategory(this, 'Social Networking')">Social</div>
-                <div class="cat-pill" onclick="setCategory(this, 'Entertainment')">Entertainment</div>
-            </div>
-
-            <div id="liste" style="margin-top:20px; min-height: 200px;"></div>
-
-            <div style="margin-top: 35px; font-size: 12px; opacity: 0.6;">
-                <a onclick="zeigeImpressum()" style="color: var(--text-secondary); text-decoration: none; margin: 0 12px; cursor: pointer; font-weight: 600;">Impressum</a>
-                <a onclick="zeigeDatenschutz()" style="color: var(--text-secondary); text-decoration: none; margin: 0 12px; cursor: pointer; font-weight: 600;">Datenschutz</a>
-            </div>
-        </div>
-
-        <!-- Request Card Rechts -->
-        <div class="request-card">
-            <h3 class="card-header">Fehler melden 🛠️</h3>
-            <form action="https://formspree.io/f/mgolonke" method="POST">
-                <input type="email" name="email" placeholder="E-Mail" required>
-                <textarea name="message" rows="4" placeholder="Welche App?" required></textarea>
-                <button type="submit" class="btn-send">Senden</button>
-            </form>
-            <p style="margin-top: 18px; font-size: 11px; color: var(--text-secondary);">
-                Nicht funktionierende Apps findest du hier: 
-                <a href="https://notworkingapps.vercel.app" style="color: var(--primary); text-decoration: underline; font-weight: 600;">notworkingapps.vercel.app</a>
             </p>
         </div>
     </div>
@@ -907,6 +907,18 @@
         let currentApps = [];
         let currentFilter = 'all';
         let chartsData = null;
+
+        // Filter anzeigen beim Fokus auf Suchfeld
+        window.showFilters = () => {
+            const q = document.getElementById('suche').value;
+            if (q.length > 0) {
+                document.getElementById('filterBar').style.display = 'flex';
+                // Automatisch auf "Alle" setzen
+                currentFilter = 'all';
+                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelector('.filter-btn').classList.add('active');
+            }
+        };
 
         // Anmelden Function
         window.showLogin = () => {
@@ -1321,13 +1333,18 @@
             }
             
             showSkeletons();
+            // Filter anzeigen und automatisch auf "Alle" setzen
             filterBar.style.display = 'flex';
+            currentFilter = 'all';
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.filter-btn').classList.add('active');
             
             fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&country=de&entity=software&limit=20`)
                 .then(r => r.json())
                 .then(data => {
                     currentApps = data.results;
-                    filterApps(currentFilter);
+                    // Zeige alle Ergebnisse ohne Filter
+                    renderHtml(data.results);
                 })
                 .catch(err => {
                     document.getElementById('liste').innerHTML = `<div style='padding:50px 20px; color:var(--text-secondary); text-align: center;'>Fehler bei der Suche. Bitte erneut versuchen.</div>`;
