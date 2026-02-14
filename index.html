@@ -955,67 +955,99 @@
             }
         };
 
-        // Anmelden Function - ECHTES LOGIN MIT PASSWORT
-        window.showLogin = () => {
+        // Anmelden Function - EINDEUTIGE NAMEN
+        window.showLogin = async () => {
             const currentUser = localStorage.getItem('boris_user');
             
             if (currentUser) {
                 // User ist eingeloggt - zeige Profil
                 const userData = JSON.parse(currentUser);
-                const doLogout = confirm(`👤 Angemeldet als: ${userData.name}\n\nMöchtest du dich abmelden?`);
+                const points = userData.shares || 0;
+                const doLogout = confirm(`👤 Angemeldet als: ${userData.name}\n📊 Punkte: ${points}\n\nMöchtest du dich abmelden?`);
                 if (doLogout) {
                     localStorage.removeItem('boris_user');
-                    localStorage.removeItem('boris_password');
+                    localStorage.removeItem('boris_user_id');
                     document.querySelector('.btn-login').innerText = 'Anmelden';
                     alert('✅ Erfolgreich abgemeldet!');
                     location.reload();
                 }
             } else {
-                // User nicht eingeloggt - Login mit Passwort
+                // User nicht eingeloggt - Login mit eindeutigem Namen
                 const name = prompt('👤 Gib deinen Namen ein:\n(z.B. Max M., Anna K.)');
                 if (!name || name.trim().length === 0) return;
                 
-                const password = prompt('🔒 Wähle ein Passwort:\n(mindestens 4 Zeichen)');
-                if (!password || password.length < 4) {
-                    alert('❌ Passwort muss mindestens 4 Zeichen haben!');
-                    return;
-                }
+                const cleanName = name.trim();
                 
                 // Prüfe ob Name schon existiert
-                const savedPassword = localStorage.getItem('boris_password');
-                if (savedPassword) {
-                    // Re-Login
-                    if (password !== savedPassword) {
-                        alert('❌ Falsches Passwort!');
-                        return;
-                    }
-                } else {
-                    // Neuer Account
-                    localStorage.setItem('boris_password', password);
-                }
-                
-                const userData = {
-                    name: name.trim(),
-                    loginDate: Date.now(),
-                    shares: 0,
-                    downloads: 0
-                };
-                localStorage.setItem('boris_user', JSON.stringify(userData));
-                
-                // Speichere auch in Firebase mit gehashtem Passwort
                 try {
-                    const userId = 'user_' + btoa(name.trim() + password).substring(0, 20);
-                    set(ref(db, 'users/' + userId), {
-                        name: userData.name,
-                        created: userData.loginDate
-                    });
+                    const usersSnapshot = await get(ref(db, 'leaderboard'));
+                    const existingUsers = usersSnapshot.val() || {};
+                    
+                    const nameExists = Object.values(existingUsers).some(user => 
+                        user.name.toLowerCase() === cleanName.toLowerCase()
+                    );
+                    
+                    if (nameExists) {
+                        // Name existiert - Login mit Passwort
+                        const savedUserId = localStorage.getItem('boris_user_id');
+                        let userId = null;
+                        
+                        // Finde User-ID für diesen Namen
+                        for (const [id, user] of Object.entries(existingUsers)) {
+                            if (user.name.toLowerCase() === cleanName.toLowerCase()) {
+                                userId = id;
+                                break;
+                            }
+                        }
+                        
+                        const password = prompt(`🔒 Name "${cleanName}" existiert bereits.\nGib dein Passwort ein:`);
+                        if (!password) return;
+                        
+                        // Prüfe Passwort (gehashed)
+                        const expectedHash = btoa(cleanName + password).substring(0, 20);
+                        if (userId !== expectedHash) {
+                            alert('❌ Falsches Passwort!');
+                            return;
+                        }
+                        
+                        localStorage.setItem('boris_user_id', userId);
+                        
+                    } else {
+                        // Neuer Name - erstelle Account
+                        const password = prompt('🔒 Wähle ein Passwort:\n(mindestens 4 Zeichen)');
+                        if (!password || password.length < 4) {
+                            alert('❌ Passwort muss mindestens 4 Zeichen haben!');
+                            return;
+                        }
+                        
+                        // Erstelle eindeutige User-ID basierend auf Name + Passwort
+                        const userId = btoa(cleanName + password).substring(0, 20);
+                        localStorage.setItem('boris_user_id', userId);
+                        
+                        // Erstelle Leaderboard-Eintrag
+                        await set(ref(db, 'leaderboard/' + userId), {
+                            name: cleanName,
+                            points: 0,
+                            created: Date.now()
+                        });
+                    }
+                    
+                    const userData = {
+                        name: cleanName,
+                        loginDate: Date.now(),
+                        shares: 0,
+                        downloads: 0
+                    };
+                    localStorage.setItem('boris_user', JSON.stringify(userData));
+                    
+                    document.querySelector('.btn-login').innerText = cleanName.substring(0, 10);
+                    alert(`✅ Willkommen ${cleanName}!\n\nDu kannst jetzt:\n• Apps laden und Punkte sammeln (+1)\n• Apps teilen und Punkte sammeln (+1)\n• Im Leaderboard aufsteigen\n\n💡 Merke dir dein Passwort!`);
+                    loadLeaderboard();
+                    
                 } catch(e) {
-                    console.error('Firebase User Error:', e);
+                    console.error('Login Error:', e);
+                    alert('❌ Fehler beim Login. Bitte erneut versuchen.');
                 }
-                
-                document.querySelector('.btn-login').innerText = name.substring(0, 10);
-                alert(`✅ Willkommen ${name}!\n\nDu kannst jetzt:\n• Apps teilen und Punkte sammeln\n• Im Leaderboard aufsteigen\n\n💡 Merke dir dein Passwort!`);
-                loadLeaderboard();
             }
         };
 
@@ -1086,9 +1118,27 @@
         const catContainer = document.getElementById('catBar');
         const scrollIndicator = document.getElementById('scrollIndicator');
         if (catContainer && scrollIndicator) {
+            // Prüfe initial ob scrollbar nötig ist
+            const checkScrollNeeded = () => {
+                if (catContainer.scrollWidth <= catContainer.clientWidth) {
+                    // Kein Scroll nötig - verstecke Indikator
+                    scrollIndicator.style.display = 'none';
+                } else {
+                    scrollIndicator.style.display = 'block';
+                }
+            };
+            
+            checkScrollNeeded();
+            window.addEventListener('resize', checkScrollNeeded);
+            
             catContainer.addEventListener('scroll', () => {
-                const isAtEnd = catContainer.scrollLeft >= (catContainer.scrollWidth - catContainer.clientWidth - 10);
-                if (isAtEnd) {
+                const scrollLeft = catContainer.scrollLeft;
+                const scrollWidth = catContainer.scrollWidth;
+                const clientWidth = catContainer.clientWidth;
+                const isAtEnd = scrollLeft >= (scrollWidth - clientWidth - 10);
+                
+                // Zeige Indikator nur wenn NICHT am Ende und Scroll möglich ist
+                if (isAtEnd || scrollWidth <= clientWidth) {
                     scrollIndicator.classList.add('hidden');
                 } else {
                     scrollIndicator.classList.remove('hidden');
@@ -1353,7 +1403,7 @@
                     });
                     
                     // Punkte hinzufügen wenn erfolgreich geteilt
-                    addPointsForShare();
+                    await addPointsForAction('share');
                     
                 } catch(err) {
                     if (err.name !== 'AbortError') {
@@ -1361,37 +1411,52 @@
                     }
                 }
             } else {
-                navigator.clipboard.writeText(url).then(() => {
+                navigator.clipboard.writeText(url).then(async () => {
                     const btn = event.target;
                     const originalText = btn.innerText;
                     btn.innerText = '✅';
                     setTimeout(() => { btn.innerText = originalText; }, 1500);
                     
                     // Punkte auch beim Kopieren
-                    addPointsForShare();
+                    await addPointsForAction('share');
                 });
             }
         };
 
-        // Punkte hinzufügen
-        async function addPointsForShare() {
+        // Universelle Punkte-Funktion für Laden UND Teilen
+        async function addPointsForAction(action) {
             const currentUser = localStorage.getItem('boris_user');
-            if (!currentUser) return;
+            const userId = localStorage.getItem('boris_user_id');
+            
+            if (!currentUser || !userId) {
+                // User nicht eingeloggt
+                return;
+            }
             
             const userData = JSON.parse(currentUser);
-            userData.shares = (userData.shares || 0) + 1;
-            const points = userData.shares;
+            
+            // Update lokale Daten
+            if (action === 'share') {
+                userData.shares = (userData.shares || 0) + 1;
+            } else if (action === 'download') {
+                userData.downloads = (userData.downloads || 0) + 1;
+            }
+            
+            const totalPoints = (userData.shares || 0) + (userData.downloads || 0);
             
             localStorage.setItem('boris_user', JSON.stringify(userData));
             
             // In Firebase Leaderboard speichern
             try {
-                const userId = 'user_' + userData.name.replace(/[^a-zA-Z0-9]/g, '_');
                 await set(ref(db, 'leaderboard/' + userId), {
                     name: userData.name,
-                    points: points,
+                    points: totalPoints,
+                    shares: userData.shares || 0,
+                    downloads: userData.downloads || 0,
                     lastUpdate: Date.now()
                 });
+                
+                console.log(`✅ +1 Punkt für ${action}! Gesamt: ${totalPoints}`);
                 
                 // Leaderboard neu laden
                 loadLeaderboard();
@@ -1573,6 +1638,9 @@
             } catch(e) { 
                 console.error("Firebase Error:", e); 
             }
+            
+            // PUNKTE FÜR LADEN HINZUFÜGEN
+            await addPointsForAction('download');
             
             window.location.href = window.location.pathname + "?id=" + trackId;
         };
