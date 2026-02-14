@@ -348,18 +348,46 @@
             flex-shrink: 0;
         }
 
-        .spacer-right { width: 280px; flex-shrink: 0; }
+        .spacer-right { width: 280px; flex-shrink: 0; display: none; }
 
-        @media (max-width: 1200px) {
+        /* Mobil - alles untereinander */
+        @media (max-width: 768px) {
             .layout-master { flex-direction: column; align-items: center; }
-            .spacer-right { display: none; }
-            .request-card, .side-card { width: 100%; max-width: 650px; order: 3; margin-top: 30px; }
-            .main-card { order: 1; }
+            .request-card, .side-card { 
+                width: 100%; 
+                max-width: 650px; 
+                margin-top: 30px; 
+            }
+            .main-card { width: 100%; max-width: 650px; }
         }
 
-        @media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
-            .layout-master { max-width: 95%; }
-            .main-card { max-width: 700px; }
+        /* Tablet & iPad Querformat - Sidebars bleiben sichtbar */
+        @media (min-width: 769px) and (max-width: 1300px) {
+            .layout-master { 
+                max-width: 98%; 
+                gap: 20px; 
+            }
+            .main-card { 
+                max-width: 480px; 
+                padding: 40px 30px; 
+            }
+            .request-card, .side-card { 
+                width: 240px; 
+                padding: 24px; 
+            }
+            .leaderboard-item {
+                padding: 10px;
+            }
+            .card-header {
+                font-size: 18px;
+            }
+        }
+
+        /* Große Bildschirme */
+        @media (min-width: 1301px) {
+            .layout-master {
+                max-width: 1300px;
+            }
         }
 
         h1 { 
@@ -809,7 +837,7 @@
             <h1>Boris Store</h1>
             <div class="subtitle">Dein Premium App-Vermittler</div>
             
-            <input type="text" id="suche" placeholder="Apps durchsuchen..." oninput="sucheApps()" onfocus="showFilters()">
+            <input type="text" id="suche" placeholder="Apps durchsuchen..." oninput="sucheApps()">
 
             <div class="filter-container" id="filterBar" style="display:none;">
                 <button class="filter-btn active" onclick="filterApps('all')">Alle</button>
@@ -1327,13 +1355,14 @@
             const q = document.getElementById('suche').value;
             const filterBar = document.getElementById('filterBar');
             
-            if (q.length < 2) {
+            // Wenn leer, Filter verstecken und Charts zeigen
+            if (q.length === 0) {
                 filterBar.style.display = 'none';
                 return loadBorisCharts();
             }
             
+            // AB ERSTEM BUCHSTABEN: Filter anzeigen und Apps laden
             showSkeletons();
-            // Filter anzeigen und automatisch auf "Alle" setzen
             filterBar.style.display = 'flex';
             currentFilter = 'all';
             document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
