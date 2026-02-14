@@ -958,7 +958,7 @@
             }
         };
 
-        // KOMPLETT NEUES LOGIN - FUNKTIONIERT RICHTIG
+        // LOGIN MIT FIREBASE - FUNKTIONIERT AUF ALLEN GERÄTEN
         window.showLogin = async () => {
             const currentUser = localStorage.getItem('boris_current_user');
             
@@ -976,7 +976,7 @@
                 return;
             }
             
-            // USER NICHT EINGELOGGT - Login/Register
+            // USER NICHT EINGELOGGT
             const username = prompt('👤 Benutzername:\n(z.B. MaxM, AnnaK)\n\nNur Buchstaben und Zahlen, min. 3 Zeichen');
             if (!username || username.trim().length === 0) return;
             
@@ -993,61 +993,70 @@
                 return;
             }
             
-            // Lade alle existierenden Accounts
-            const allAccounts = JSON.parse(localStorage.getItem('boris_all_accounts') || '{}');
             const usernameLower = cleanUsername.toLowerCase();
+            const userId = btoa(usernameLower).substring(0, 20).replace(/[^a-zA-Z0-9]/g, '');
             
-            if (allAccounts[usernameLower]) {
-                // ACCOUNT EXISTIERT - LOGIN
-                const password = prompt(`🔒 Account "${cleanUsername}" existiert.\nGib dein Passwort ein:`);
-                if (!password) return;
+            try {
+                // PRÜFE IN FIREBASE ob Account existiert
+                const userSnapshot = await get(ref(db, 'users/' + userId));
                 
-                const savedAccount = allAccounts[usernameLower];
-                
-                // Passwort prüfen
-                if (savedAccount.password !== password) {
-                    alert('❌ Falsches Passwort!');
-                    return;
-                }
-                
-                // Login erfolgreich - lade Account
-                localStorage.setItem('boris_current_user', JSON.stringify(savedAccount));
-                document.querySelector('.btn-login').innerText = savedAccount.username.substring(0, 10);
-                alert(`✅ Willkommen zurück ${savedAccount.username}!\n\n📊 Deine Punkte: ${(savedAccount.shares || 0) + (savedAccount.downloads || 0)}`);
-                
-            } else {
-                // NEUER ACCOUNT - REGISTRIERUNG
-                const password = prompt(`🔒 Neuer Account "${cleanUsername}"\nWähle ein Passwort:\n(mindestens 4 Zeichen)`);
-                if (!password || password.length < 4) {
-                    alert('❌ Passwort muss mindestens 4 Zeichen haben!');
-                    return;
-                }
-                
-                const confirmPassword = prompt('🔒 Passwort wiederholen:');
-                if (password !== confirmPassword) {
-                    alert('❌ Passwörter stimmen nicht überein!');
-                    return;
-                }
-                
-                // Erstelle neuen Account
-                const newAccount = {
-                    username: cleanUsername,
-                    password: password,
-                    created: Date.now(),
-                    shares: 0,
-                    downloads: 0
-                };
-                
-                // Speichere in Liste aller Accounts
-                allAccounts[usernameLower] = newAccount;
-                localStorage.setItem('boris_all_accounts', JSON.stringify(allAccounts));
-                
-                // Setze als aktuellen User
-                localStorage.setItem('boris_current_user', JSON.stringify(newAccount));
-                
-                // Speichere auch in Firebase (optional)
-                try {
-                    const userId = btoa(usernameLower).substring(0, 20).replace(/[^a-zA-Z0-9]/g, '');
+                if (userSnapshot.exists()) {
+                    // ACCOUNT EXISTIERT - LOGIN
+                    const savedAccount = userSnapshot.val();
+                    
+                    const password = prompt(`🔒 Account "${cleanUsername}" existiert.\nGib dein Passwort ein:`);
+                    if (!password) return;
+                    
+                    // Passwort hashen und vergleichen
+                    const hashedPassword = btoa(password);
+                    
+                    if (savedAccount.passwordHash !== hashedPassword) {
+                        alert('❌ Falsches Passwort!');
+                        return;
+                    }
+                    
+                    // Login erfolgreich - lade Leaderboard-Daten
+                    const leaderSnapshot = await get(ref(db, 'leaderboard/' + userId));
+                    const leaderData = leaderSnapshot.exists() ? leaderSnapshot.val() : {};
+                    
+                    const userData = {
+                        username: savedAccount.username,
+                        created: savedAccount.created,
+                        shares: leaderData.shares || 0,
+                        downloads: leaderData.downloads || 0
+                    };
+                    
+                    localStorage.setItem('boris_current_user', JSON.stringify(userData));
+                    document.querySelector('.btn-login').innerText = userData.username.substring(0, 10);
+                    
+                    const points = (userData.shares || 0) + (userData.downloads || 0);
+                    alert(`✅ Willkommen zurück ${userData.username}!\n\n📊 Deine Punkte: ${points}`);
+                    
+                } else {
+                    // NEUER ACCOUNT - REGISTRIERUNG
+                    const password = prompt(`🔒 Neuer Account "${cleanUsername}"\nWähle ein Passwort:\n(mindestens 4 Zeichen)`);
+                    if (!password || password.length < 4) {
+                        alert('❌ Passwort muss mindestens 4 Zeichen haben!');
+                        return;
+                    }
+                    
+                    const confirmPassword = prompt('🔒 Passwort wiederholen:');
+                    if (password !== confirmPassword) {
+                        alert('❌ Passwörter stimmen nicht überein!');
+                        return;
+                    }
+                    
+                    // Hash Passwort
+                    const hashedPassword = btoa(password);
+                    
+                    // Erstelle Account in Firebase
+                    await set(ref(db, 'users/' + userId), {
+                        username: cleanUsername,
+                        passwordHash: hashedPassword,
+                        created: Date.now()
+                    });
+                    
+                    // Erstelle Leaderboard-Eintrag
                     await set(ref(db, 'leaderboard/' + userId), {
                         name: cleanUsername,
                         points: 0,
@@ -1055,46 +1064,27 @@
                         downloads: 0,
                         created: Date.now()
                     });
-                } catch(e) {
-                    console.log('Firebase optional:', e.message);
+                    
+                    const userData = {
+                        username: cleanUsername,
+                        created: Date.now(),
+                        shares: 0,
+                        downloads: 0
+                    };
+                    
+                    localStorage.setItem('boris_current_user', JSON.stringify(userData));
+                    document.querySelector('.btn-login').innerText = cleanUsername.substring(0, 10);
+                    
+                    alert(`✅ Account erstellt!\n\nWillkommen ${cleanUsername}!\n\nDu kannst dich jetzt auf ALLEN Geräten mit diesem Account anmelden!\n\n💡 Merke dir dein Passwort!`);
                 }
                 
-                document.querySelector('.btn-login').innerText = cleanUsername.substring(0, 10);
-                alert(`✅ Account erstellt!\n\nWillkommen ${cleanUsername}!\n\nDu kannst jetzt:\n• Apps laden (+1 Punkt)\n• Apps teilen (+1 Punkt)\n• Im Leaderboard aufsteigen\n\n💡 Merke dir dein Passwort!`);
-            }
-            
-            // Leaderboard aktualisieren
-            try {
-                await syncToFirebase();
                 loadLeaderboard();
+                
             } catch(e) {
-                console.log('Leaderboard lädt später');
+                console.error('Login Error:', e);
+                alert('❌ Fehler beim Login. Bitte prüfe deine Internetverbindung.');
             }
         };
-
-        // Sync alle Accounts zu Firebase
-        async function syncToFirebase() {
-            try {
-                const allAccounts = JSON.parse(localStorage.getItem('boris_all_accounts') || '{}');
-                
-                for (const [usernameLower, account] of Object.entries(allAccounts)) {
-                    const userId = btoa(usernameLower).substring(0, 20).replace(/[^a-zA-Z0-9]/g, '');
-                    const points = (account.shares || 0) + (account.downloads || 0);
-                    
-                    await set(ref(db, 'leaderboard/' + userId), {
-                        name: account.username,
-                        points: points,
-                        shares: account.shares || 0,
-                        downloads: account.downloads || 0,
-                        lastUpdate: Date.now()
-                    });
-                }
-                
-                console.log('✅ Alle Accounts zu Firebase synchronisiert');
-            } catch(e) {
-                console.log('⚠️ Firebase Sync offline');
-            }
-        }
 
         // Beim Laden prüfen ob User eingeloggt ist
         const checkLogin = () => {
@@ -1482,7 +1472,7 @@
             }
         };
 
-        // Universelle Punkte-Funktion - NEUES SYSTEM
+        // Universelle Punkte-Funktion - MIT FIREBASE SYNC
         async function addPointsForAction(action) {
             const currentUser = localStorage.getItem('boris_current_user');
             
@@ -1502,22 +1492,16 @@
             
             const totalPoints = (userData.shares || 0) + (userData.downloads || 0);
             
-            // Speichere aktuellen User
+            // Speichere lokal
             localStorage.setItem('boris_current_user', JSON.stringify(userData));
-            
-            // Update auch in der Account-Liste
-            const allAccounts = JSON.parse(localStorage.getItem('boris_all_accounts') || '{}');
-            const usernameLower = userData.username.toLowerCase();
-            if (allAccounts[usernameLower]) {
-                allAccounts[usernameLower] = userData;
-                localStorage.setItem('boris_all_accounts', JSON.stringify(allAccounts));
-            }
             
             console.log(`✅ +1 Punkt für ${action}! Gesamt: ${totalPoints}`);
             
             // Sync zu Firebase
             try {
+                const usernameLower = userData.username.toLowerCase();
                 const userId = btoa(usernameLower).substring(0, 20).replace(/[^a-zA-Z0-9]/g, '');
+                
                 await set(ref(db, 'leaderboard/' + userId), {
                     name: userData.username,
                     points: totalPoints,
