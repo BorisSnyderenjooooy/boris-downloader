@@ -835,7 +835,6 @@
 </head>
 <body>
 
-    <!-- Header mit Anmelde-Button -->
     <div class="header-bar">
         <div class="header-logo">Boris Store</div>
         <div class="header-controls">
@@ -845,7 +844,6 @@
     </div>
 
     <div class="layout-master">
-        <!-- Fehler melden Links -->
         <div class="request-card">
             <h3 class="card-header">Fehler melden 🛠️</h3>
             <form action="https://formspree.io/f/mgolonke" method="POST">
@@ -859,7 +857,6 @@
             </p>
         </div>
 
-        <!-- Main Card -->
         <div class="main-card">
             <h1>Boris Store</h1>
             <div class="subtitle">Dein Premium App-Vermittler</div>
@@ -892,7 +889,6 @@
             </div>
         </div>
 
-        <!-- Leaderboard Rechts -->
         <div class="side-card">
             <h3 class="card-header">🏆 Leaderboard</h3>
             <div id="leaderboardList">
@@ -907,7 +903,6 @@
         </div>
     </div>
 
-    <!-- App Detail Modal -->
     <div class="modal-overlay" id="appModal" onclick="closeModal(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
             <button class="modal-close" onclick="closeModal()">✕</button>
@@ -939,6 +934,23 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
+        // --- BUGFIX: Firebase Checks ---
+        console.log('🔥 Firebase initialisiert:', {
+            app: !!app,
+            db: !!db,
+            ref: typeof ref,
+            get: typeof get,
+            set: typeof set
+        });
+
+        // Test ob Firebase funktioniert
+        get(ref(db, 'leaderboard')).then(snapshot => {
+            console.log('✅ Firebase Connection Test OK - Anzahl User:', Object.keys(snapshot.val() || {}).length);
+        }).catch(err => {
+            console.error('❌ Firebase Connection Test FAILED:', err);
+        });
+        // -------------------------------
+
         let currentApps = [];
         let currentFilter = 'all';
         let chartsData = null;
@@ -955,7 +967,7 @@
             }
         };
 
-        // Anmelden Function - EINDEUTIGE NAMEN
+        // --- BUGFIX: Verbesserter Login-Flow ---
         window.showLogin = async () => {
             const currentUser = localStorage.getItem('boris_user');
             
@@ -971,67 +983,118 @@
                     alert('✅ Erfolgreich abgemeldet!');
                     location.reload();
                 }
-            } else {
-                // User nicht eingeloggt - Login mit eindeutigem Namen
-                const name = prompt('👤 Gib deinen Namen ein:\n(z.B. Max M., Anna K.)');
-                if (!name || name.trim().length === 0) return;
+                return; // WICHTIG: Früher Return
+            }
+            
+            // === NEUER LOGIN-FLOW ===
+            
+            // SCHRITT 1: Name eingeben
+            const name = prompt('👤 Gib deinen Namen ein:\n(z.B. Max M., Anna K.)');
+            if (!name || name.trim().length === 0) {
+                console.log('Login abgebrochen - kein Name');
+                return;
+            }
+            
+            const cleanName = name.trim();
+            console.log('Login-Versuch für:', cleanName);
+            
+            try {
+                // SCHRITT 2: Firebase abfragen
+                console.log('📡 Lade Leaderboard...');
+                const usersSnapshot = await get(ref(db, 'leaderboard'));
+                const existingUsers = usersSnapshot.val() || {};
+                console.log('✅ Leaderboard geladen:', Object.keys(existingUsers).length, 'User');
                 
-                const cleanName = name.trim();
+                // SCHRITT 3: Name-Check (Case-Insensitive)
+                let existingUserId = null;
+                for (const [userId, user] of Object.entries(existingUsers)) {
+                    if (user.name && user.name.toLowerCase() === cleanName.toLowerCase()) {
+                        existingUserId = userId;
+                        console.log('🔍 Name gefunden! User-ID:', userId);
+                        break;
+                    }
+                }
                 
-                // Prüfe ob Name schon existiert
-                try {
-                    const usersSnapshot = await get(ref(db, 'leaderboard'));
-                    const existingUsers = usersSnapshot.val() || {};
+                if (existingUserId) {
+                    // === EXISTIERENDER USER - LOGIN ===
+                    console.log('🔑 Name existiert - fordere Passwort an');
+                    const password = prompt(`🔒 Name "${cleanName}" existiert bereits.\nGib dein Passwort ein:`);
                     
-                    const nameExists = Object.values(existingUsers).some(user => 
-                        user.name.toLowerCase() === cleanName.toLowerCase()
-                    );
-                    
-                    if (nameExists) {
-                        // Name existiert - Login mit Passwort
-                        const savedUserId = localStorage.getItem('boris_user_id');
-                        let userId = null;
-                        
-                        // Finde User-ID für diesen Namen
-                        for (const [id, user] of Object.entries(existingUsers)) {
-                            if (user.name.toLowerCase() === cleanName.toLowerCase()) {
-                                userId = id;
-                                break;
-                            }
-                        }
-                        
-                        const password = prompt(`🔒 Name "${cleanName}" existiert bereits.\nGib dein Passwort ein:`);
-                        if (!password) return;
-                        
-                        // Prüfe Passwort (gehashed)
-                        const expectedHash = btoa(cleanName + password).substring(0, 20);
-                        if (userId !== expectedHash) {
-                            alert('❌ Falsches Passwort!');
-                            return;
-                        }
-                        
-                        localStorage.setItem('boris_user_id', userId);
-                        
-                    } else {
-                        // Neuer Name - erstelle Account
-                        const password = prompt('🔒 Wähle ein Passwort:\n(mindestens 4 Zeichen)');
-                        if (!password || password.length < 4) {
-                            alert('❌ Passwort muss mindestens 4 Zeichen haben!');
-                            return;
-                        }
-                        
-                        // Erstelle eindeutige User-ID basierend auf Name + Passwort
-                        const userId = btoa(cleanName + password).substring(0, 20);
-                        localStorage.setItem('boris_user_id', userId);
-                        
-                        // Erstelle Leaderboard-Eintrag
-                        await set(ref(db, 'leaderboard/' + userId), {
-                            name: cleanName,
-                            points: 0,
-                            created: Date.now()
-                        });
+                    if (!password) {
+                        console.log('Login abgebrochen - kein Passwort');
+                        return;
                     }
                     
+                    // Passwort-Hash erstellen (GLEICHE Methode wie bei Registrierung)
+                    let expectedHash;
+                    try {
+                        expectedHash = btoa(unescape(encodeURIComponent(cleanName + password))).substring(0, 20);
+                    } catch(e) {
+                        console.error('❌ Hash-Fehler:', e);
+                        alert('❌ Fehler bei der Passwort-Verarbeitung!');
+                        return;
+                    }
+                    
+                    console.log('Vergleiche Hashes:', {expected: expectedHash, actual: existingUserId});
+                    
+                    if (existingUserId === expectedHash) {
+                        // ✅ PASSWORT KORREKT
+                        console.log('✅ Login erfolgreich!');
+                        
+                        const userData = {
+                            name: cleanName,
+                            loginDate: Date.now(),
+                            shares: existingUsers[existingUserId].shares || 0,
+                            downloads: existingUsers[existingUserId].downloads || 0
+                        };
+                        
+                        localStorage.setItem('boris_user', JSON.stringify(userData));
+                        localStorage.setItem('boris_user_id', existingUserId);
+                        
+                        document.querySelector('.btn-login').innerText = cleanName.substring(0, 10);
+                        alert(`✅ Willkommen zurück, ${cleanName}!\n\n📊 Deine Punkte: ${userData.shares + userData.downloads}`);
+                        loadLeaderboard();
+                        
+                    } else {
+                        // ❌ FALSCHES PASSWORT
+                        console.log('❌ Passwort falsch!');
+                        alert('❌ Falsches Passwort!');
+                    }
+                    
+                } else {
+                    // === NEUER USER - REGISTRIERUNG ===
+                    console.log('✨ Neuer Name - starte Registrierung');
+                    const password = prompt('🔒 Wähle ein Passwort:\n(mindestens 4 Zeichen)');
+                    
+                    if (!password || password.length < 4) {
+                        alert('❌ Passwort muss mindestens 4 Zeichen haben!');
+                        return;
+                    }
+                    
+                    // User-ID erstellen (Hash aus Name + Passwort)
+                    let userId;
+                    try {
+                        userId = btoa(unescape(encodeURIComponent(cleanName + password))).substring(0, 20);
+                    } catch(e) {
+                        console.error('❌ Hash-Fehler:', e);
+                        alert('❌ Fehler bei der Passwort-Verarbeitung!\nVersuche ein einfacheres Passwort.');
+                        return;
+                    }
+                    
+                    console.log('📝 Erstelle User mit ID:', userId);
+                    
+                    // In Firebase speichern
+                    await set(ref(db, 'leaderboard/' + userId), {
+                        name: cleanName,
+                        points: 0,
+                        shares: 0,
+                        downloads: 0,
+                        created: Date.now()
+                    });
+                    
+                    console.log('✅ Firebase-Eintrag erstellt');
+                    
+                    // Lokal speichern
                     const userData = {
                         name: cleanName,
                         loginDate: Date.now(),
@@ -1039,17 +1102,19 @@
                         downloads: 0
                     };
                     localStorage.setItem('boris_user', JSON.stringify(userData));
+                    localStorage.setItem('boris_user_id', userId);
                     
                     document.querySelector('.btn-login').innerText = cleanName.substring(0, 10);
-                    alert(`✅ Willkommen ${cleanName}!\n\nDu kannst jetzt:\n• Apps laden und Punkte sammeln (+1)\n• Apps teilen und Punkte sammeln (+1)\n• Im Leaderboard aufsteigen\n\n💡 Merke dir dein Passwort!`);
+                    alert(`✅ Account erstellt!\n\nWillkommen ${cleanName}!\n\nDu kannst jetzt:\n• Apps laden (+1 Punkt)\n• Apps teilen (+1 Punkt)\n• Im Leaderboard aufsteigen\n\n💡 Merke dir dein Passwort!`);
                     loadLeaderboard();
-                    
-                } catch(e) {
-                    console.error('Login Error:', e);
-                    alert('❌ Fehler beim Login. Bitte erneut versuchen.');
                 }
+                
+            } catch(error) {
+                console.error('❌ Login-Fehler:', error);
+                alert('❌ Fehler beim Login:\n' + error.message + '\n\nBitte erneut versuchen.');
             }
         };
+        // ---------------------------------------
 
         // Beim Laden prüfen ob User eingeloggt ist
         const checkLogin = () => {
@@ -1114,37 +1179,55 @@
         };
         document.getElementById('themeBtn').innerText = (localStorage.getItem('theme') === 'dark') ? '☀️' : '🌙';
 
-        // Scroll-Indikator für Kategorien
+        // --- BUGFIX: Verbesserte Scroll-Logik ---
         const catContainer = document.getElementById('catBar');
         const scrollIndicator = document.getElementById('scrollIndicator');
+
         if (catContainer && scrollIndicator) {
-            // Prüfe initial ob scrollbar nötig ist
+            // Funktion zum Prüfen ob Scroll nötig ist
             const checkScrollNeeded = () => {
                 if (catContainer.scrollWidth <= catContainer.clientWidth) {
-                    // Kein Scroll nötig - verstecke Indikator
                     scrollIndicator.style.display = 'none';
                 } else {
                     scrollIndicator.style.display = 'block';
+                    // Initial-Check: sind wir schon am Ende?
+                    checkScrollPosition();
                 }
             };
             
-            checkScrollNeeded();
-            window.addEventListener('resize', checkScrollNeeded);
-            
-            catContainer.addEventListener('scroll', () => {
+            // Funktion zum Prüfen der Scroll-Position
+            const checkScrollPosition = () => {
                 const scrollLeft = catContainer.scrollLeft;
                 const scrollWidth = catContainer.scrollWidth;
                 const clientWidth = catContainer.clientWidth;
-                const isAtEnd = scrollLeft >= (scrollWidth - clientWidth - 10);
+                const isAtEnd = scrollLeft >= (scrollWidth - clientWidth - 20); // 20px Toleranz
                 
-                // Zeige Indikator nur wenn NICHT am Ende und Scroll möglich ist
-                if (isAtEnd || scrollWidth <= clientWidth) {
+                console.log('Scroll Check:', {scrollLeft, scrollWidth, clientWidth, isAtEnd}); // DEBUG
+                
+                if (isAtEnd) {
                     scrollIndicator.classList.add('hidden');
+                    console.log('✅ Pfeil versteckt - am Ende!'); // DEBUG
                 } else {
                     scrollIndicator.classList.remove('hidden');
                 }
+            };
+            
+            // Event Listener für Scroll
+            catContainer.addEventListener('scroll', checkScrollPosition);
+            
+            // Initial Check beim Laden
+            checkScrollNeeded();
+            
+            // Re-Check nach Window Resize
+            window.addEventListener('resize', checkScrollNeeded);
+            
+            // RE-CHECK nach App-Laden (wichtig!)
+            const observer = new MutationObserver(() => {
+                checkScrollNeeded();
             });
+            observer.observe(document.getElementById('liste'), { childList: true });
         }
+        // ----------------------------------------
 
         // Skeleton Loader
         window.showSkeletons = () => {
