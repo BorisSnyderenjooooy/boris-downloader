@@ -55,7 +55,7 @@
                 }
             }, 100);
 
-            // PUNKT 1: Banner-Feedback nach 500ms
+            // Banner-Feedback nach 500ms
             setTimeout(() => {
                 const banner = document.querySelector('meta[name="apple-itunes-app"]');
                 if (banner) {
@@ -109,7 +109,7 @@
             };
         }
 
-        // PUNKT 6: Offline Support
+        // Offline Support
         window.addEventListener('offline', () => {
             const existingBanner = document.getElementById('offline-banner');
             if (!existingBanner) {
@@ -194,7 +194,31 @@
         .cat-pill { background: var(--item-bg); padding: 9px 18px; border-radius: 16px; white-space: nowrap; font-size: 14px; font-weight: 600; cursor: pointer; color: var(--text-main); border: 1px solid rgba(255,255,255,0.1); }
         .cat-pill.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-        /* PUNKT 4: Hover-Effekte */
+        /* NEU: Punkt 9 - Suchfilter */
+        .filter-container { 
+            display: flex; 
+            gap: 8px; 
+            margin: 15px 0; 
+            flex-wrap: wrap; 
+            justify-content: center;
+        }
+        .filter-btn {
+            background: var(--item-bg);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 6px 14px;
+            border-radius: 12px;
+            font-size: 13px;
+            cursor: pointer;
+            color: var(--text-main);
+            transition: all 0.2s;
+        }
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* NEU: Punkt 3 - Fade-In Animation */
         .app-item { 
             display: flex; 
             align-items: center; 
@@ -205,7 +229,20 @@
             border: 1px solid rgba(255,255,255,0.1); 
             text-align: left; 
             overflow: hidden;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.3s ease;
+            opacity: 0;
+            animation: fadeInUp 0.4s ease forwards;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         .app-item:hover {
@@ -229,7 +266,6 @@
             transform: scale(1.2);
         }
 
-        /* PUNKT 3: Verbesserter Skeleton Loader */
         .skeleton-item { 
             background: linear-gradient(90deg, var(--skeleton) 25%, #f0f0f0 50%, var(--skeleton) 75%);
             background-size: 200% 100%;
@@ -249,6 +285,98 @@
             100% { background-position: -200% 0; }
         }
 
+        /* NEU: Punkt 1 - App Detail Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal-content {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--card-bg);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border-radius: 30px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translate(-50%, -40%);
+            }
+            to { 
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(120, 120, 128, 0.16);
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-app-icon {
+            width: 100px;
+            height: 100px;
+            border-radius: 22px;
+            margin: 0 auto 20px;
+            display: block;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        
+        .modal-screenshots {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            margin: 20px 0;
+            padding: 10px 0;
+        }
+        
+        .modal-screenshots img {
+            height: 200px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .rating-stars {
+            color: #ffb800;
+            font-size: 18px;
+            margin: 10px 0;
+        }
+
         .emoji-rain { position: fixed; top: -50px; font-size: 26px; z-index: -1; animation: fall linear forwards; pointer-events: none; opacity: 0.6; }
         @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
         .charts-active { background: linear-gradient(160deg, #6a11cb 0%, #2575fc 100%) !important; background-attachment: fixed !important; }
@@ -263,7 +391,6 @@
             to { transform: translateY(-100%); }
         }
 
-        /* Lazy Loading Placeholder */
         .app-icon {
             width: 58px;
             height: 58px;
@@ -275,6 +402,21 @@
         
         .app-icon.loaded {
             background: none;
+        }
+
+        /* NEU: Punkt 7 - Trend Emojis */
+        .trend-emoji {
+            margin-left: 6px;
+            font-size: 16px;
+        }
+
+        /* NEU: Section Titel */
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 30px 0 15px 0;
+            text-align: left;
         }
 
         footer { margin-top: 80px; font-size: 13px; color: var(--text-main); font-weight: 600; text-align: center; width: 100%; opacity: 0.8; }
@@ -301,8 +443,17 @@
             
             <input type="text" id="suche" placeholder="Apps suchen..." oninput="sucheApps()">
 
+            <!-- NEU: Punkt 9 - Suchfilter -->
+            <div class="filter-container" id="filterBar" style="display:none;">
+                <button class="filter-btn active" onclick="filterApps('all')">Alle</button>
+                <button class="filter-btn" onclick="filterApps('free')">Kostenlos</button>
+                <button class="filter-btn" onclick="filterApps('paid')">Bezahlt</button>
+                <button class="filter-btn" onclick="filterApps('rating')">4+ ⭐</button>
+            </div>
+
             <div class="cat-container" id="catBar">
                 <div class="cat-pill active" onclick="setCategory(this, 'Boris Charts')">Boris Charts</div>
+                <div class="cat-pill" onclick="setCategory(this, 'Für dich')">Für dich 💡</div>
                 <div class="cat-pill" onclick="setCategory(this, 'Favoriten')">Favoriten ⭐</div>
                 <div class="cat-pill" onclick="setCategory(this, 'Games')">Spiele</div>
                 <div class="cat-pill" onclick="setCategory(this, 'Productivity')">Produktivität</div>
@@ -318,6 +469,14 @@
             </div>
         </div>
         <div class="spacer-right"></div>
+    </div>
+
+    <!-- NEU: Punkt 1 - App Detail Modal -->
+    <div class="modal-overlay" id="appModal" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeModal()">✕</button>
+            <div id="modalBody"></div>
+        </div>
     </div>
 
     <footer>&copy; 2026 Boris Store &bull; Boris</footer>
@@ -339,6 +498,11 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
+        // Globale Variablen für Filter und Cache
+        let currentApps = [];
+        let currentFilter = 'all';
+        let chartsData = null;
+
         // --- THEME & EMOJI FIX ---
         window.toggleTheme = () => {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -347,7 +511,6 @@
             document.getElementById('themeBtn').innerText = newTheme === 'dark' ? '☀️' : '🌙';
             localStorage.setItem('theme', newTheme);
         };
-        // Emoji beim Laden wiederherstellen
         document.getElementById('themeBtn').innerText = (localStorage.getItem('theme') === 'dark') ? '☀️' : '🌙';
 
         // --- SKELETON LOADER ---
@@ -395,7 +558,172 @@
             }
         };
 
-        // PUNKT 7: Share-Funktion
+        // NEU: Punkt 1 - App Detail Modal
+        window.showAppDetails = async (trackId) => {
+            try {
+                const response = await fetch(`https://itunes.apple.com/lookup?id=${trackId}&country=de&entity=software`);
+                const data = await response.json();
+                
+                if (data.resultCount === 0) return;
+                
+                const app = data.results[0];
+                
+                // Klick tracken für Empfehlungen
+                trackAppView(trackId, app.primaryGenreName);
+                
+                const stars = '⭐'.repeat(Math.round(app.averageUserRating || 0));
+                const price = app.price === 0 ? 'Kostenlos' : `${app.formattedPrice}`;
+                
+                let screenshotsHtml = '';
+                if (app.screenshotUrls && app.screenshotUrls.length > 0) {
+                    screenshotsHtml = `
+                        <div class="modal-screenshots">
+                            ${app.screenshotUrls.slice(0, 3).map(url => `<img src="${url}" loading="lazy">`).join('')}
+                        </div>
+                    `;
+                }
+                
+                document.getElementById('modalBody').innerHTML = `
+                    <img src="${app.artworkUrl512 || app.artworkUrl100}" class="modal-app-icon">
+                    <h2 style="color: var(--text-main); margin: 0 0 10px 0; font-size: 24px;">${app.trackName}</h2>
+                    <div style="color: var(--text-secondary); margin-bottom: 15px;">${app.artistName}</div>
+                    <div class="rating-stars">${stars} ${app.averageUserRating ? app.averageUserRating.toFixed(1) : 'Keine Bewertung'}</div>
+                    <div style="color: var(--text-main); font-weight: 600; margin-bottom: 20px; font-size: 18px;">${price}</div>
+                    ${screenshotsHtml}
+                    <div style="color: var(--text-main); margin: 20px 0; text-align: left; line-height: 1.6;">
+                        ${app.description ? app.description.substring(0, 300) + '...' : 'Keine Beschreibung verfügbar.'}
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 25px;">
+                        <button onclick="handleAppClick(this, '${app.trackId}', '${app.trackName.replace(/'/g, "&#39;")}', '${app.artworkUrl100}', '${app.primaryGenreName}')" 
+                                style="flex: 1; padding: 14px; border-radius: 14px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; font-size: 16px;">
+                            Laden
+                        </button>
+                        <button onclick="toggleFavorit('${app.trackId}', '${app.trackName.replace(/'/g, "&#39;")}', '${app.artworkUrl100}', '${app.primaryGenreName}', event)" 
+                                style="padding: 14px 20px; border-radius: 14px; border: none; background: var(--item-bg); font-size: 20px; cursor: pointer;">
+                            ${istFavorit(app.trackId) ? '⭐' : '⭐'}
+                        </button>
+                        <button onclick="teileApp('${app.trackName.replace(/'/g, "&#39;")}', '${app.trackId}', event)" 
+                                style="padding: 14px 20px; border-radius: 14px; border: none; background: var(--item-bg); font-size: 20px; cursor: pointer;">
+                            📤
+                        </button>
+                    </div>
+                `;
+                
+                document.getElementById('appModal').style.display = 'block';
+                
+                // NEU: Punkt 11 - Ähnliche Apps laden
+                loadSimilarApps(app.primaryGenreName, trackId);
+                
+            } catch(err) {
+                console.error('Modal Error:', err);
+            }
+        };
+
+        window.closeModal = (event) => {
+            if (!event || event.target.id === 'appModal') {
+                document.getElementById('appModal').style.display = 'none';
+            }
+        };
+
+        // NEU: Punkt 11 - Ähnliche Apps
+        async function loadSimilarApps(genre, excludeId) {
+            try {
+                const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(genre)}&country=de&entity=software&limit=6`);
+                const data = await response.json();
+                
+                const similar = data.results.filter(app => app.trackId != excludeId).slice(0, 3);
+                
+                if (similar.length > 0) {
+                    let similarHtml = '<div class="section-title">Ähnliche Apps</div><div style="display: flex; gap: 15px; overflow-x: auto; padding: 10px 0;">';
+                    
+                    similar.forEach(app => {
+                        similarHtml += `
+                            <div onclick="showAppDetails('${app.trackId}')" style="min-width: 100px; text-align: center; cursor: pointer;">
+                                <img src="${app.artworkUrl100}" style="width: 80px; height: 80px; border-radius: 18px; margin-bottom: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                                <div style="font-size: 12px; color: var(--text-main); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${app.trackName}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    similarHtml += '</div>';
+                    document.getElementById('modalBody').insertAdjacentHTML('beforeend', similarHtml);
+                }
+            } catch(err) {
+                console.error('Similar Apps Error:', err);
+            }
+        }
+
+        // NEU: Punkt 2 - Tracking für Empfehlungen
+        function trackAppView(trackId, category) {
+            let history = JSON.parse(localStorage.getItem('app_history') || '[]');
+            const entry = { trackId, category, timestamp: Date.now() };
+            history.unshift(entry);
+            history = history.slice(0, 50); // Letzte 50 behalten
+            localStorage.setItem('app_history', JSON.stringify(history));
+        }
+
+        // NEU: Punkt 2 - "Für dich empfohlen"
+        window.ladeEmpfehlungen = async () => {
+            updateAura('#ff6b6b');
+            showSkeletons();
+            
+            const history = JSON.parse(localStorage.getItem('app_history') || '[]');
+            const favoriten = JSON.parse(localStorage.getItem('boris_favoriten') || '[]');
+            
+            if (history.length === 0 && favoriten.length === 0) {
+                document.getElementById('liste').innerHTML = `
+                    <div style='padding:50px 20px; color:var(--text-secondary); text-align: center;'>
+                        Noch keine Empfehlungen verfügbar. 💡<br><br>
+                        Schaue dir ein paar Apps an, dann bekommst du personalisierte Vorschläge!
+                    </div>
+                `;
+                return;
+            }
+            
+            // Kategorien aus Historie extrahieren
+            const categories = [...new Set(history.map(h => h.category).filter(c => c))];
+            const topCategory = categories[0] || 'Games';
+            
+            try {
+                const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(topCategory)}&country=de&entity=software&limit=12`);
+                const data = await response.json();
+                
+                // Bereits gesehene Apps ausfiltern
+                const seenIds = new Set(history.map(h => h.trackId));
+                const favIds = new Set(favoriten.map(f => f.trackId));
+                const recommendations = data.results.filter(app => 
+                    !seenIds.has(app.trackId) && !favIds.has(app.trackId)
+                ).slice(0, 10);
+                
+                renderHtml(recommendations, false, true);
+            } catch(err) {
+                document.getElementById('liste').innerHTML = `<div style='padding:50px 20px; color:var(--text-secondary);'>Fehler beim Laden. Bitte erneut versuchen.</div>`;
+            }
+        };
+
+        // NEU: Punkt 9 - Suchfilter
+        window.filterApps = (filterType) => {
+            currentFilter = filterType;
+            
+            // UI Update
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Filter anwenden
+            let filtered = [...currentApps];
+            
+            if (filterType === 'free') {
+                filtered = filtered.filter(app => app.price === 0 || app.price === undefined);
+            } else if (filterType === 'paid') {
+                filtered = filtered.filter(app => app.price > 0);
+            } else if (filterType === 'rating') {
+                filtered = filtered.filter(app => app.averageUserRating >= 4);
+            }
+            
+            renderHtml(filtered);
+        };
+
+        // Share-Funktion
         window.teileApp = (name, trackId, event) => {
             event.stopPropagation();
             
@@ -421,7 +749,7 @@
             }
         };
 
-        // PUNKT 8: Favoriten-System
+        // Favoriten-System
         window.toggleFavorit = (trackId, name, icon, cat, event) => {
             event.stopPropagation();
             
@@ -462,45 +790,59 @@
             return favs.some(f => f.trackId === trackId);
         };
 
-        // --- LOGIK: RANKING & PFEILE ---
-        window.renderHtml = (results, isChart = false) => {
+        // NEU: Punkt 5 & 7 - Erweiterte Charts mit optimierten Trend-Indikatoren
+        window.renderHtml = (results, isChart = false, isRecommendation = false) => {
             const liste = document.getElementById('liste');
             liste.innerHTML = "";
+            
             if (results.length === 0) {
                 liste.innerHTML = `<div style='padding:50px 20px; color:var(--text-secondary);'>Keine Apps gefunden. 🕵️‍♂️</div>`;
                 return;
             }
 
+            // Stagger animation delay
             results.forEach((app, index) => {
                 const id = app.trackId;
                 const name = (app.trackName || app.name).replace(/'/g, "&#39;");
                 const icon = app.artworkUrl100 || app.icon;
                 const cat = app.primaryGenreName || app.cat;
                 
-                // Pfeil-Logik nur für die Top 10 in den Charts
+                // NEU: Punkt 7 - Optimierte Trend-Indikatoren
                 let trendTag = "";
                 if (isChart) {
-                    if (index < 3) {
-                        trendTag = `<span style="color:#34c759; margin-left:4px; font-weight:bold;">↑</span>`;
+                    const count = app.count || 0;
+                    
+                    if (index === 0) {
+                        trendTag = `<span class="trend-emoji">🏆</span>`; // Champion
+                    } else if (index === 1) {
+                        trendTag = `<span class="trend-emoji">🥈</span>`; // Silber
+                    } else if (index === 2) {
+                        trendTag = `<span class="trend-emoji">🥉</span>`; // Bronze
+                    } else if (count > 50) {
+                        trendTag = `<span class="trend-emoji">🔥</span>`; // Mega-Trending
+                    } else if (index < 5) {
+                        trendTag = `<span style="color:#34c759; margin-left:4px; font-weight:bold;">📈</span>`; // Steigend
                     } else if (index >= 7) {
-                        trendTag = `<span style="color:#ff3b30; margin-left:4px; font-weight:bold;">↓</span>`;
+                        trendTag = `<span style="color:#ff3b30; margin-left:4px; font-weight:bold;">📉</span>`; // Fallend
                     }
                 }
 
                 const countBadge = isChart ? `<span style="font-size:10px; background:#34c759; color:white; padding:2px 8px; border-radius:10px; margin-left:6px; flex-shrink:0;">${app.count}x</span>` : "";
+                const recoBadge = isRecommendation ? `<span style="font-size:10px; background:#ff6b6b; color:white; padding:2px 8px; border-radius:10px; margin-left:6px; flex-shrink:0;">Für dich</span>` : "";
                 
                 const favIcon = istFavorit(id) ? '⭐' : '⭐';
                 
                 const item = document.createElement('div');
                 item.className = 'app-item';
+                item.style.animationDelay = `${index * 0.05}s`;
                 
-                // PUNKT 10: Lazy Loading für Icons
                 item.innerHTML = `
-                    <img src="${icon}" class="app-icon loaded" loading="lazy" onclick="window.handleAppClick(null, '${id}', '${name}', '${icon}', '${cat}')">
+                    <img src="${icon}" class="app-icon loaded" loading="lazy" onclick="showAppDetails('${id}')">
                     <div style="flex-grow:1; min-width:0; display:flex; flex-direction:column; justify-content:center;">
                         <div style="display:flex; align-items:center; width:100%;">
                             <span style="font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:16px; flex-shrink:1;">${name}</span>
                             ${countBadge}
+                            ${recoBadge}
                         </div>
                         <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">${cat} ${trendTag}</div>
                     </div>
@@ -517,6 +859,7 @@
             updateAura('reset');
             onValue(ref(db, 'charts'), (snapshot) => {
                 const data = snapshot.val();
+                chartsData = data;
                 if (!data) return;
                 const sorted = Object.values(data).sort((a,b) => b.count - a.count).slice(0, 10);
                 renderHtml(sorted, true);
@@ -525,17 +868,28 @@
 
         window.sucheApps = () => {
             const q = document.getElementById('suche').value;
-            if (q.length < 2) return loadBorisCharts();
+            const filterBar = document.getElementById('filterBar');
+            
+            if (q.length < 2) {
+                filterBar.style.display = 'none';
+                return loadBorisCharts();
+            }
+            
             showSkeletons();
-            fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&country=de&entity=software&limit=15`)
+            filterBar.style.display = 'flex';
+            
+            fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&country=de&entity=software&limit=20`)
                 .then(r => r.json())
-                .then(data => renderHtml(data.results))
+                .then(data => {
+                    currentApps = data.results;
+                    filterApps(currentFilter);
+                })
                 .catch(err => {
                     document.getElementById('liste').innerHTML = `<div style='padding:50px 20px; color:var(--text-secondary);'>Fehler bei der Suche. Bitte erneut versuchen.</div>`;
                 });
         };
 
-        // PUNKT 2: Error-Handling für Apps
+        // Error-Handling für Apps
         window.handleAppClick = async (btn, trackId, name, icon, cat) => {
             if(btn) btn.innerText = "...";
             
@@ -569,16 +923,22 @@
             document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
             el.classList.add('active');
             showSkeletons();
+            document.getElementById('filterBar').style.display = 'none';
             
             if (cat === 'Boris Charts') {
                 loadBorisCharts();
             } else if (cat === 'Favoriten') {
                 zeigeFavoriten();
+            } else if (cat === 'Für dich') {
+                ladeEmpfehlungen();
             } else {
                 updateAura('#007aff');
                 fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(cat)}&country=de&entity=software&limit=15`)
                     .then(r => r.json())
-                    .then(d => renderHtml(d.results))
+                    .then(d => {
+                        currentApps = d.results;
+                        renderHtml(d.results);
+                    })
                     .catch(err => {
                         document.getElementById('liste').innerHTML = `<div style='padding:50px 20px; color:var(--text-secondary);'>Fehler beim Laden. Bitte erneut versuchen.</div>`;
                     });
