@@ -18,12 +18,10 @@
         const appId = params.get('id');
 
         if (appId && /^\d+$/.test(appId)) {
-            // Meta-Tag SOFORT erstellen (noch vor allem anderen)
             const meta = document.createElement('meta');
             meta.name = "apple-itunes-app";
             meta.content = `app-id=${appId}`;
             
-            // Füge es als ALLERERSTES Element im Head ein
             const firstElement = document.head.firstElementChild;
             if (firstElement) {
                 document.head.insertBefore(meta, firstElement);
@@ -31,19 +29,16 @@
                 document.head.appendChild(meta);
             }
 
-            // Prüfen ob wir einen Cache-Buster brauchen
             const currentCb = params.get('cb');
             const lastReload = sessionStorage.getItem('last_reload_' + appId);
             const now = Date.now();
 
-            // Nur neu laden, wenn es noch nicht gemacht wurde ODER mehr als 2 Sekunden her ist
             if (!currentCb && (!lastReload || (now - parseInt(lastReload)) > 2000)) {
                 sessionStorage.setItem('last_reload_' + appId, now.toString());
                 const cleanPath = window.location.pathname;
                 window.location.replace(`${cleanPath}?id=${appId}&cb=${now}`);
             }
 
-            // Zusätzlich: Meta-Tag nochmal nach kurzer Verzögerung prüfen/neu setzen
             setTimeout(() => {
                 const existingMeta = document.querySelector('meta[name="apple-itunes-app"]');
                 if (!existingMeta || existingMeta.content !== `app-id=${appId}`) {
@@ -55,7 +50,6 @@
                 }
             }, 100);
 
-            // Banner-Feedback nach 500ms
             setTimeout(() => {
                 const banner = document.querySelector('meta[name="apple-itunes-app"]');
                 if (banner) {
@@ -78,7 +72,7 @@
             document.documentElement.setAttribute('data-theme', 'dark');
         }
 
-        // 4. Download-Screen (Wird nur angezeigt, wenn eine ID in der URL ist)
+        // 4. Download-Screen
         if (appId) {
             document.documentElement.style.visibility = 'hidden'; 
             window.onload = () => {
@@ -132,104 +126,373 @@
     </script>
 
     <style>
+        /* PREMIUM DESIGN - Komplett überarbeitet */
         :root { 
-            --primary: #007aff; 
-            --aura-color1: #e0f7f4;
-            --aura-color2: #f7e8f3;
-            --card-bg: rgba(255, 255, 255, 0.75);
-            --text-main: #1d1d1f;
-            --text-secondary: #333333;
+            --primary: #007aff;
+            --primary-hover: #0051d5;
+            --gradient-1: #667eea;
+            --gradient-2: #764ba2;
+            --gradient-3: #f093fb;
+            --gradient-4: #f5576c;
+            --aura-color1: #e8f4ff;
+            --aura-color2: #ffeef8;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --card-border: rgba(255, 255, 255, 0.4);
+            --text-main: #1a1a2e;
+            --text-secondary: #4a4a68;
             --input-bg: #ffffff;
-            --item-bg: rgba(255, 255, 255, 0.5);
-            --skeleton: #e1e1e1;
+            --item-bg: rgba(255, 255, 255, 0.6);
+            --skeleton: #e8e8f0;
+            --shadow-sm: 0 4px 15px rgba(0, 0, 0, 0.08);
+            --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.12);
+            --shadow-lg: 0 15px 40px rgba(0, 0, 0, 0.15);
+            --shadow-xl: 0 25px 60px rgba(0, 0, 0, 0.2);
         }
 
         [data-theme="dark"] {
-            --aura-color1: #1c1c1e;
-            --aura-color2: #000000;
-            --card-bg: rgba(28, 28, 30, 0.85);
-            --text-main: #f5f5f7;
-            --text-secondary: #cccccc; 
-            --input-bg: #2c2c2e;
-            --item-bg: rgba(44, 44, 46, 0.6);
-            --skeleton: #3a3a3c;
+            --aura-color1: #0f0f1e;
+            --aura-color2: #1a1a2e;
+            --card-bg: rgba(20, 20, 35, 0.9);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f0f0f5;
+            --text-secondary: #a8a8c0; 
+            --input-bg: #1e1e2e;
+            --item-bg: rgba(30, 30, 50, 0.7);
+            --skeleton: #2a2a3e;
+            --shadow-sm: 0 4px 15px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 15px 40px rgba(0, 0, 0, 0.5);
+            --shadow-xl: 0 25px 60px rgba(0, 0, 0, 0.6);
         }
 
-        * { transition: background 0.4s ease, color 0.4s ease; -webkit-user-select: none; user-select: none; box-sizing: border-box; }
+        * { 
+            transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease; 
+            -webkit-user-select: none; 
+            user-select: none; 
+            box-sizing: border-box; 
+        }
         
         body {
             margin: 0; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
             background: linear-gradient(135deg, var(--aura-color1) 0%, var(--aura-color2) 100%);
-            background-attachment: fixed; background-size: cover; min-height: 100vh; 
-            display: flex; flex-direction: column; align-items: center; padding: 40px 20px; color: var(--text-main); overflow-x: hidden;
+            background-attachment: fixed;
+            min-height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 30px 20px 60px 20px; 
+            color: var(--text-main);
+            overflow-x: hidden;
         }
 
-        .layout-master { display: flex; flex-direction: row; align-items: flex-start; justify-content: center; width: 100%; max-width: 1200px; gap: 25px; margin-top: 20px; }
-        .request-card { background: var(--card-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); width: 250px; border-radius: 30px; padding: 25px; box-shadow: 0 12px 35px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.25); text-align: left; flex-shrink: 0; }
-        .main-card { background: var(--card-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); width: 100%; max-width: 580px; border-radius: 40px; padding: 45px 35px; box-shadow: 0 25px 60px rgba(0,0,0,0.15); text-align: center; position: relative; border: 1px solid rgba(255,255,255,0.25); flex-shrink: 0; }
-        .spacer-right { width: 250px; flex-shrink: 0; }
+        /* Header mit Anmelde-Button */
+        .header-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--card-border);
+            box-shadow: var(--shadow-sm);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+        }
 
-        @media (max-width: 1100px) {
+        .header-logo {
+            font-size: 24px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--gradient-3) 0%, var(--gradient-4) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-login {
+            padding: 10px 24px;
+            border-radius: 20px;
+            border: 2px solid var(--primary);
+            background: transparent;
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-login:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 122, 255, 0.3);
+        }
+
+        .theme-toggle { 
+            background: rgba(120, 120, 128, 0.16); 
+            border: none; 
+            width: 40px; 
+            height: 40px; 
+            border-radius: 50%; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1) rotate(15deg);
+            background: rgba(120, 120, 128, 0.25);
+        }
+
+        .layout-master { 
+            display: flex; 
+            flex-direction: row; 
+            align-items: flex-start; 
+            justify-content: center; 
+            width: 100%; 
+            max-width: 1300px; 
+            gap: 30px; 
+            margin-top: 90px;
+        }
+
+        /* Leaderboard & Request Card Design */
+        .side-card { 
+            background: var(--card-bg); 
+            backdrop-filter: blur(30px); 
+            -webkit-backdrop-filter: blur(30px); 
+            width: 280px; 
+            border-radius: 25px; 
+            padding: 28px; 
+            box-shadow: var(--shadow-lg); 
+            border: 1px solid var(--card-border);
+            text-align: left; 
+            flex-shrink: 0;
+        }
+
+        .request-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            width: 280px;
+            border-radius: 25px;
+            padding: 28px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--card-border);
+            text-align: left;
+            flex-shrink: 0;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: var(--item-bg);
+            border-radius: 14px;
+            margin-bottom: 10px;
+            border: 1px solid var(--card-border);
+            transition: all 0.3s ease;
+        }
+
+        .leaderboard-item:hover {
+            transform: translateX(5px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .leaderboard-rank {
+            font-size: 20px;
+            font-weight: 800;
+            width: 35px;
+            text-align: center;
+        }
+
+        .leaderboard-name {
+            flex: 1;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .leaderboard-score {
+            font-size: 12px;
+            background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2));
+            color: white;
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-weight: 700;
+        }
+
+        .main-card { 
+            background: var(--card-bg); 
+            backdrop-filter: blur(30px); 
+            -webkit-backdrop-filter: blur(30px); 
+            width: 100%; 
+            max-width: 650px; 
+            border-radius: 30px; 
+            padding: 50px 40px; 
+            box-shadow: var(--shadow-xl); 
+            text-align: center; 
+            position: relative; 
+            border: 1px solid var(--card-border);
+            flex-shrink: 0;
+        }
+
+        .spacer-right { width: 280px; flex-shrink: 0; }
+
+        @media (max-width: 1200px) {
             .layout-master { flex-direction: column; align-items: center; }
             .spacer-right { display: none; }
-            .request-card { width: 100%; max-width: 580px; order: 2; margin-top: 35px; }
+            .request-card, .side-card { width: 100%; max-width: 650px; order: 3; margin-top: 30px; }
             .main-card { order: 1; }
         }
 
-        /* iPad Querformat Optimierung */
         @media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
             .layout-master { max-width: 95%; }
-            .main-card { max-width: 650px; }
-            .app-item { padding: 18px; }
+            .main-card { max-width: 700px; }
         }
 
-        .theme-toggle { position: absolute; top: 25px; right: 25px; background: rgba(120, 120, 128, 0.16); border: none; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; z-index: 10; }
-        h1 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 42px; font-weight: 800; margin: 0; }
-        input, textarea { width: 100%; padding: 14px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.05); background: var(--input-bg); color: var(--text-main); font-size: 15px; outline: none; margin-bottom: 10px; font-family: inherit; }
-        .btn-send { width: 100%; padding: 14px; border-radius: 14px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; font-size: 15px; }
+        h1 { 
+            background: linear-gradient(135deg, var(--gradient-3) 0%, var(--gradient-4) 100%); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            font-size: 48px; 
+            font-weight: 900; 
+            margin: 0 0 8px 0;
+            letter-spacing: -1px;
+        }
 
-        .cat-container { display: flex; overflow-x: auto; gap: 12px; margin: 25px -10px 15px -10px; padding: 5px 10px; scrollbar-width: none; }
+        .subtitle {
+            font-size: 16px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-bottom: 35px;
+        }
+
+        input, textarea { 
+            width: 100%; 
+            padding: 16px 20px; 
+            border-radius: 16px; 
+            border: 2px solid var(--card-border);
+            background: var(--input-bg); 
+            color: var(--text-main); 
+            font-size: 15px; 
+            outline: none; 
+            margin-bottom: 12px; 
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+        }
+
+        .btn-send { 
+            width: 100%; 
+            padding: 16px; 
+            border-radius: 16px; 
+            border: none; 
+            background: linear-gradient(135deg, var(--gradient-1) 0%, var(--gradient-2) 100%);
+            color: white; 
+            font-weight: 700; 
+            cursor: pointer; 
+            font-size: 15px;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-send:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .cat-container { 
+            display: flex; 
+            overflow-x: auto; 
+            gap: 10px; 
+            margin: 25px -5px 20px -5px; 
+            padding: 8px 5px; 
+            scrollbar-width: none; 
+        }
         .cat-container::-webkit-scrollbar { display: none; }
-        .cat-pill { background: var(--item-bg); padding: 9px 18px; border-radius: 16px; white-space: nowrap; font-size: 14px; font-weight: 600; cursor: pointer; color: var(--text-main); border: 1px solid rgba(255,255,255,0.1); }
-        .cat-pill.active { background: var(--primary); color: white; border-color: var(--primary); }
+        
+        .cat-pill { 
+            background: var(--item-bg); 
+            padding: 12px 22px; 
+            border-radius: 20px; 
+            white-space: nowrap; 
+            font-size: 14px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            color: var(--text-main); 
+            border: 2px solid var(--card-border);
+            transition: all 0.3s ease;
+        }
+        
+        .cat-pill:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
 
-        /* NEU: Punkt 9 - Suchfilter */
+        .cat-pill.active { 
+            background: linear-gradient(135deg, var(--gradient-1) 0%, var(--gradient-2) 100%);
+            color: white; 
+            border-color: transparent;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+        }
+
         .filter-container { 
             display: flex; 
-            gap: 8px; 
+            gap: 10px; 
             margin: 15px 0; 
             flex-wrap: wrap; 
             justify-content: center;
         }
+        
         .filter-btn {
             background: var(--item-bg);
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 6px 14px;
-            border-radius: 12px;
+            border: 2px solid var(--card-border);
+            padding: 8px 18px;
+            border-radius: 14px;
             font-size: 13px;
+            font-weight: 600;
             cursor: pointer;
             color: var(--text-main);
-            transition: all 0.2s;
+            transition: all 0.3s ease;
         }
+
+        .filter-btn:hover {
+            transform: translateY(-2px);
+        }
+
         .filter-btn.active {
             background: var(--primary);
             color: white;
             border-color: var(--primary);
+            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
         }
 
-        /* NEU: Punkt 3 - Fade-In Animation */
         .app-item { 
             display: flex; 
             align-items: center; 
-            padding: 15px; 
+            padding: 18px; 
             background: var(--item-bg); 
-            margin-bottom: 14px; 
-            border-radius: 22px; 
-            border: 1px solid rgba(255,255,255,0.1); 
+            margin-bottom: 12px; 
+            border-radius: 20px; 
+            border: 2px solid var(--card-border);
             text-align: left; 
             overflow: hidden;
-            transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.3s ease;
+            transition: all 0.3s ease;
             opacity: 0;
             animation: fadeInUp 0.4s ease forwards;
         }
@@ -237,7 +500,7 @@
         @keyframes fadeInUp {
             from {
                 opacity: 0;
-                transform: translateY(10px);
+                transform: translateY(15px);
             }
             to {
                 opacity: 1;
@@ -246,37 +509,56 @@
         }
         
         .app-item:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 25px rgba(0,0,0,0.2);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary);
         }
 
-        .btn-laden { background: #f1f3f6; color: var(--primary); border: none; padding: 9px 20px; border-radius: 20px; font-weight: 700; cursor: pointer; font-size: 14px; flex-shrink: 0; margin-left: 10px; transition: all 0.2s;}
-        .btn-laden:hover { transform: scale(1.05); }
-        [data-theme="dark"] .btn-laden { background: var(--primary); color: white; }
+        .btn-laden { 
+            background: var(--primary);
+            color: white; 
+            border: none; 
+            padding: 10px 24px; 
+            border-radius: 18px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            font-size: 14px; 
+            flex-shrink: 0; 
+            margin-left: 10px; 
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+        }
+        
+        .btn-laden:hover { 
+            transform: scale(1.05); 
+            background: var(--primary-hover);
+            box-shadow: 0 6px 18px rgba(0, 122, 255, 0.4);
+        }
 
         .btn-share, .btn-favorite {
             background: transparent;
             border: none;
-            font-size: 20px;
+            font-size: 22px;
             cursor: pointer;
-            padding: 5px 8px;
-            transition: transform 0.2s;
+            padding: 6px 10px;
+            transition: all 0.3s ease;
         }
+        
         .btn-share:hover, .btn-favorite:hover {
-            transform: scale(1.2);
+            transform: scale(1.25) rotate(10deg);
         }
 
         .skeleton-item { 
-            background: linear-gradient(90deg, var(--skeleton) 25%, #f0f0f0 50%, var(--skeleton) 75%);
+            background: linear-gradient(90deg, var(--skeleton) 25%, #f8f8fc 50%, var(--skeleton) 75%);
             background-size: 200% 100%;
-            height: 88px; 
-            border-radius: 22px; 
-            margin-bottom: 14px; 
+            height: 92px; 
+            border-radius: 20px; 
+            margin-bottom: 12px; 
             animation: loading 1.5s infinite;
         }
         
         [data-theme="dark"] .skeleton-item {
-            background: linear-gradient(90deg, var(--skeleton) 25%, #505050 50%, var(--skeleton) 75%);
+            background: linear-gradient(90deg, var(--skeleton) 25%, #3a3a50 50%, var(--skeleton) 75%);
             background-size: 200% 100%;
         }
         
@@ -285,7 +567,7 @@
             100% { background-position: -200% 0; }
         }
 
-        /* NEU: Punkt 1 - App Detail Modal */
+        /* Modal Design Premium */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -293,7 +575,8 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
             z-index: 10000;
             animation: fadeIn 0.3s ease;
         }
@@ -304,16 +587,17 @@
             left: 50%;
             transform: translate(-50%, -50%);
             background: var(--card-bg);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
             border-radius: 30px;
-            padding: 30px;
-            max-width: 500px;
+            padding: 35px;
+            max-width: 550px;
             width: 90%;
-            max-height: 80vh;
+            max-height: 85vh;
             overflow-y: auto;
-            box-shadow: 0 25px 60px rgba(0,0,0,0.3);
-            animation: slideUp 0.3s ease;
+            box-shadow: var(--shadow-xl);
+            border: 2px solid var(--card-border);
+            animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         
         @keyframes fadeIn {
@@ -324,62 +608,111 @@
         @keyframes slideUp {
             from { 
                 opacity: 0;
-                transform: translate(-50%, -40%);
+                transform: translate(-50%, -35%) scale(0.9);
             }
             to { 
                 opacity: 1;
-                transform: translate(-50%, -50%);
+                transform: translate(-50%, -50%) scale(1);
             }
         }
         
         .modal-close {
             position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(120, 120, 128, 0.16);
+            top: 20px;
+            right: 20px;
+            background: rgba(120, 120, 128, 0.2);
             border: none;
-            width: 32px;
-            height: 32px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             cursor: pointer;
             font-size: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 59, 48, 0.2);
+            transform: scale(1.1) rotate(90deg);
         }
         
+        /* Modal Loading Spinner */
+        .modal-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--card-border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         .modal-app-icon {
-            width: 100px;
-            height: 100px;
-            border-radius: 22px;
+            width: 110px;
+            height: 110px;
+            border-radius: 25px;
             margin: 0 auto 20px;
             display: block;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            box-shadow: var(--shadow-lg);
         }
         
         .modal-screenshots {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             overflow-x: auto;
-            margin: 20px 0;
+            margin: 25px 0;
             padding: 10px 0;
+            scrollbar-width: thin;
         }
         
         .modal-screenshots img {
-            height: 200px;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            height: 220px;
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-screenshots img:hover {
+            transform: scale(1.05);
         }
         
         .rating-stars {
             color: #ffb800;
-            font-size: 18px;
-            margin: 10px 0;
+            font-size: 20px;
+            margin: 12px 0;
         }
 
-        .emoji-rain { position: fixed; top: -50px; font-size: 26px; z-index: -1; animation: fall linear forwards; pointer-events: none; opacity: 0.6; }
-        @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
-        .charts-active { background: linear-gradient(160deg, #6a11cb 0%, #2575fc 100%) !important; background-attachment: fixed !important; }
+        .emoji-rain { 
+            position: fixed; 
+            top: -50px; 
+            font-size: 28px; 
+            z-index: -1; 
+            animation: fall linear forwards; 
+            pointer-events: none; 
+            opacity: 0.7; 
+        }
+        
+        @keyframes fall { 
+            to { transform: translateY(110vh) rotate(360deg); } 
+        }
+        
+        .charts-active { 
+            background: linear-gradient(160deg, #667eea 0%, #764ba2 100%) !important; 
+            background-attachment: fixed !important; 
+        }
         
         @keyframes slideDown {
             from { transform: translateY(-100%); }
@@ -392,58 +725,113 @@
         }
 
         .app-icon {
-            width: 58px;
-            height: 58px;
-            border-radius: 14px;
-            margin-right: 16px;
+            width: 62px;
+            height: 62px;
+            border-radius: 16px;
+            margin-right: 18px;
             cursor: pointer;
             background: var(--skeleton);
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s ease;
+        }
+
+        .app-icon:hover {
+            transform: scale(1.08);
+            box-shadow: var(--shadow-md);
         }
         
         .app-icon.loaded {
             background: none;
         }
 
-        /* NEU: Punkt 7 - Trend Emojis */
         .trend-emoji {
             margin-left: 6px;
-            font-size: 16px;
-        }
-
-        /* NEU: Section Titel */
-        .section-title {
             font-size: 18px;
-            font-weight: 700;
-            color: var(--text-main);
-            margin: 30px 0 15px 0;
-            text-align: left;
         }
 
-        footer { margin-top: 80px; font-size: 13px; color: var(--text-main); font-weight: 600; text-align: center; width: 100%; opacity: 0.8; }
+        .section-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text-main);
+            margin: 35px 0 18px 0;
+            text-align: left;
+            letter-spacing: -0.5px;
+        }
+
+        footer { 
+            margin-top: 100px; 
+            font-size: 13px; 
+            color: var(--text-secondary); 
+            font-weight: 600; 
+            text-align: center; 
+            width: 100%; 
+            opacity: 0.7; 
+        }
+
+        /* Card Headers */
+        .card-header {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text-main);
+            margin: 0 0 20px 0;
+            letter-spacing: -0.5px;
+        }
     </style>
 </head>
 <body>
 
+    <!-- Header mit Anmelde-Button -->
+    <div class="header-bar">
+        <div class="header-logo">Boris Store</div>
+        <div class="header-controls">
+            <button class="btn-login" onclick="showLogin()">Anmelden</button>
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+        </div>
+    </div>
+
     <div class="layout-master">
-        <div class="request-card">
-            <h3 style="margin-top:0; font-size: 20px; margin-bottom: 10px;">Fehler melden 🛠️</h3>
-            <form action="https://formspree.io/f/mgolonke" method="POST">
-                <input type="email" name="email" placeholder="E-Mail" required>
-                <textarea name="message" rows="4" placeholder="Welche App?" required></textarea>
-                <button type="submit" class="btn-send">Senden</button>
-            </form>
-            <p style="margin-top: 15px; font-size: 12px; color: var(--text-secondary);">hier sind eure apps zu finden die nicht im boris store funktionieren <a href="https://notworkingapps.vercel.app" style="color: var(--primary); text-decoration: underline;">https://notworkingapps.vercel.app</a></p>
+        <!-- Leaderboard Links -->
+        <div class="side-card">
+            <h3 class="card-header">🏆 Leaderboard</h3>
+            <div id="leaderboardList">
+                <div class="leaderboard-item">
+                    <div class="leaderboard-rank">🥇</div>
+                    <div class="leaderboard-name">Max M.</div>
+                    <div class="leaderboard-score">127</div>
+                </div>
+                <div class="leaderboard-item">
+                    <div class="leaderboard-rank">🥈</div>
+                    <div class="leaderboard-name">Anna K.</div>
+                    <div class="leaderboard-score">98</div>
+                </div>
+                <div class="leaderboard-item">
+                    <div class="leaderboard-rank">🥉</div>
+                    <div class="leaderboard-name">Tom B.</div>
+                    <div class="leaderboard-score">76</div>
+                </div>
+                <div class="leaderboard-item">
+                    <div class="leaderboard-rank">4</div>
+                    <div class="leaderboard-name">Lisa S.</div>
+                    <div class="leaderboard-score">54</div>
+                </div>
+                <div class="leaderboard-item">
+                    <div class="leaderboard-rank">5</div>
+                    <div class="leaderboard-name">Paul W.</div>
+                    <div class="leaderboard-score">42</div>
+                </div>
+            </div>
+            <p style="margin-top: 20px; font-size: 11px; color: var(--text-secondary); text-align: center;">
+                Top Nutzer nach geteilten Apps
+            </p>
         </div>
 
+        <!-- Main Card -->
         <div class="main-card">
-            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
-            
             <h1>Boris Store</h1>
-            <div style="font-size: 15px; color: var(--text-secondary); margin-top: 5px; margin-bottom: 25px;">Offizieller App-Vermittler</div>
+            <div class="subtitle">Dein Premium App-Vermittler</div>
             
-            <input type="text" id="suche" placeholder="Apps suchen..." oninput="sucheApps()">
+            <input type="text" id="suche" placeholder="Apps durchsuchen..." oninput="sucheApps()">
 
-            <!-- NEU: Punkt 9 - Suchfilter -->
             <div class="filter-container" id="filterBar" style="display:none;">
                 <button class="filter-btn active" onclick="filterApps('all')">Alle</button>
                 <button class="filter-btn" onclick="filterApps('free')">Kostenlos</button>
@@ -461,25 +849,43 @@
                 <div class="cat-pill" onclick="setCategory(this, 'Entertainment')">Entertainment</div>
             </div>
 
-            <div id="liste" style="margin-top:15px; min-height: 200px;"></div>
+            <div id="liste" style="margin-top:20px; min-height: 200px;"></div>
 
-            <div style="margin-top: 30px; font-size: 12px; opacity: 0.7;">
-                <a onclick="zeigeImpressum()" style="color: var(--text-secondary); text-decoration: none; margin: 0 12px; cursor: pointer;">Impressum</a>
-                <a onclick="zeigeDatenschutz()" style="color: var(--text-secondary); text-decoration: none; margin: 0 12px; cursor: pointer;">Datenschutz</a>
+            <div style="margin-top: 35px; font-size: 12px; opacity: 0.6;">
+                <a onclick="zeigeImpressum()" style="color: var(--text-secondary); text-decoration: none; margin: 0 12px; cursor: pointer; font-weight: 600;">Impressum</a>
+                <a onclick="zeigeDatenschutz()" style="color: var(--text-secondary); text-decoration: none; margin: 0 12px; cursor: pointer; font-weight: 600;">Datenschutz</a>
             </div>
         </div>
-        <div class="spacer-right"></div>
+
+        <!-- Request Card Rechts -->
+        <div class="request-card">
+            <h3 class="card-header">Fehler melden 🛠️</h3>
+            <form action="https://formspree.io/f/mgolonke" method="POST">
+                <input type="email" name="email" placeholder="E-Mail" required>
+                <textarea name="message" rows="4" placeholder="Welche App?" required></textarea>
+                <button type="submit" class="btn-send">Senden</button>
+            </form>
+            <p style="margin-top: 18px; font-size: 11px; color: var(--text-secondary);">
+                Nicht funktionierende Apps findest du hier: 
+                <a href="https://notworkingapps.vercel.app" style="color: var(--primary); text-decoration: underline; font-weight: 600;">notworkingapps.vercel.app</a>
+            </p>
+        </div>
     </div>
 
-    <!-- NEU: Punkt 1 - App Detail Modal -->
+    <!-- App Detail Modal -->
     <div class="modal-overlay" id="appModal" onclick="closeModal(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
             <button class="modal-close" onclick="closeModal()">✕</button>
-            <div id="modalBody"></div>
+            <div id="modalBody">
+                <div class="modal-loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 20px; color: var(--text-secondary);">Lade App-Details...</p>
+                </div>
+            </div>
         </div>
     </div>
 
-    <footer>&copy; 2026 Boris Store &bull; Boris</footer>
+    <footer>&copy; 2026 Boris Store &bull; Premium Edition</footer>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -498,12 +904,16 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Globale Variablen für Filter und Cache
         let currentApps = [];
         let currentFilter = 'all';
         let chartsData = null;
 
-        // --- THEME & EMOJI FIX ---
+        // Anmelden Function
+        window.showLogin = () => {
+            alert("🔐 Login-Feature kommt bald!\n\nDamit kannst du dann:\n• Deine Apps synchronisieren\n• Bewertungen abgeben\n• Im Leaderboard aufsteigen");
+        };
+
+        // Theme Toggle
         window.toggleTheme = () => {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
             const newTheme = isDark ? 'light' : 'dark';
@@ -513,7 +923,7 @@
         };
         document.getElementById('themeBtn').innerText = (localStorage.getItem('theme') === 'dark') ? '☀️' : '🌙';
 
-        // --- SKELETON LOADER ---
+        // Skeleton Loader
         window.showSkeletons = () => {
             const liste = document.getElementById('liste');
             liste.innerHTML = "";
@@ -524,7 +934,7 @@
             }
         };
 
-        // --- EMOJI REGEN ---
+        // Emoji Regen
         let rainInterval;
         function startEmojiRain() {
             stopEmojiRain();
@@ -551,24 +961,51 @@
                 body.classList.add('charts-active');
                 startEmojiRain();
             } else {
-                document.documentElement.style.setProperty('--aura-color1', color + '44');
+                document.documentElement.style.setProperty('--aura-color1', color + '33');
                 sessionStorage.setItem('lastColor', color);
                 body.style.background = `linear-gradient(135deg, var(--aura-color1) 0%, var(--aura-color2) 100%)`;
                 body.style.backgroundAttachment = 'fixed';
             }
         };
 
-        // NEU: Punkt 1 - App Detail Modal
+        // VERBESSERTES App Detail Modal mit Error Handling
         window.showAppDetails = async (trackId) => {
+            const modal = document.getElementById('appModal');
+            const modalBody = document.getElementById('modalBody');
+            
+            // Zeige Modal mit Loading
+            modal.style.display = 'block';
+            modalBody.innerHTML = `
+                <div class="modal-loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 20px; color: var(--text-secondary); font-weight: 600;">Lade App-Details...</p>
+                </div>
+            `;
+            
             try {
                 const response = await fetch(`https://itunes.apple.com/lookup?id=${trackId}&country=de&entity=software`);
+                
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                
                 const data = await response.json();
                 
-                if (data.resultCount === 0) return;
+                if (data.resultCount === 0) {
+                    modalBody.innerHTML = `
+                        <div style="text-align: center; padding: 40px 20px;">
+                            <div style="font-size: 60px; margin-bottom: 20px;">😕</div>
+                            <h3 style="color: var(--text-main); margin-bottom: 10px;">App nicht gefunden</h3>
+                            <p style="color: var(--text-secondary);">Diese App ist leider nicht verfügbar.</p>
+                            <button onclick="closeModal()" style="margin-top: 25px; padding: 12px 30px; border-radius: 14px; border: none; background: var(--primary); color: white; font-weight: 700; cursor: pointer;">
+                                Schließen
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
                 
                 const app = data.results[0];
-                
-                // Klick tracken für Empfehlungen
                 trackAppView(trackId, app.primaryGenreName);
                 
                 const stars = '⭐'.repeat(Math.round(app.averageUserRating || 0));
@@ -578,44 +1015,52 @@
                 if (app.screenshotUrls && app.screenshotUrls.length > 0) {
                     screenshotsHtml = `
                         <div class="modal-screenshots">
-                            ${app.screenshotUrls.slice(0, 3).map(url => `<img src="${url}" loading="lazy">`).join('')}
+                            ${app.screenshotUrls.slice(0, 4).map(url => `<img src="${url}" loading="lazy">`).join('')}
                         </div>
                     `;
                 }
                 
-                document.getElementById('modalBody').innerHTML = `
-                    <img src="${app.artworkUrl512 || app.artworkUrl100}" class="modal-app-icon">
-                    <h2 style="color: var(--text-main); margin: 0 0 10px 0; font-size: 24px;">${app.trackName}</h2>
-                    <div style="color: var(--text-secondary); margin-bottom: 15px;">${app.artistName}</div>
+                modalBody.innerHTML = `
+                    <img src="${app.artworkUrl512 || app.artworkUrl100}" class="modal-app-icon" onerror="this.src='${app.artworkUrl100}'">
+                    <h2 style="color: var(--text-main); margin: 0 0 10px 0; font-size: 26px; font-weight: 800;">${app.trackName}</h2>
+                    <div style="color: var(--text-secondary); margin-bottom: 15px; font-weight: 600;">${app.artistName}</div>
                     <div class="rating-stars">${stars} ${app.averageUserRating ? app.averageUserRating.toFixed(1) : 'Keine Bewertung'}</div>
-                    <div style="color: var(--text-main); font-weight: 600; margin-bottom: 20px; font-size: 18px;">${price}</div>
+                    <div style="color: var(--text-main); font-weight: 700; margin-bottom: 20px; font-size: 22px;">${price}</div>
                     ${screenshotsHtml}
-                    <div style="color: var(--text-main); margin: 20px 0; text-align: left; line-height: 1.6;">
-                        ${app.description ? app.description.substring(0, 300) + '...' : 'Keine Beschreibung verfügbar.'}
+                    <div style="color: var(--text-main); margin: 25px 0; text-align: left; line-height: 1.7; font-size: 15px;">
+                        ${app.description ? app.description.substring(0, 350) + '...' : 'Keine Beschreibung verfügbar.'}
                     </div>
-                    <div style="display: flex; gap: 10px; margin-top: 25px;">
+                    <div style="display: flex; gap: 12px; margin-top: 30px;">
                         <button onclick="handleAppClick(this, '${app.trackId}', '${app.trackName.replace(/'/g, "&#39;")}', '${app.artworkUrl100}', '${app.primaryGenreName}')" 
-                                style="flex: 1; padding: 14px; border-radius: 14px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; font-size: 16px;">
+                                style="flex: 1; padding: 16px; border-radius: 16px; border: none; background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2)); color: white; font-weight: 700; cursor: pointer; font-size: 16px; box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);">
                             Laden
                         </button>
                         <button onclick="toggleFavorit('${app.trackId}', '${app.trackName.replace(/'/g, "&#39;")}', '${app.artworkUrl100}', '${app.primaryGenreName}', event)" 
-                                style="padding: 14px 20px; border-radius: 14px; border: none; background: var(--item-bg); font-size: 20px; cursor: pointer;">
+                                style="padding: 16px 22px; border-radius: 16px; border: none; background: var(--item-bg); font-size: 24px; cursor: pointer;">
                             ${istFavorit(app.trackId) ? '⭐' : '⭐'}
                         </button>
                         <button onclick="teileApp('${app.trackName.replace(/'/g, "&#39;")}', '${app.trackId}', event)" 
-                                style="padding: 14px 20px; border-radius: 14px; border: none; background: var(--item-bg); font-size: 20px; cursor: pointer;">
+                                style="padding: 16px 22px; border-radius: 16px; border: none; background: var(--item-bg); font-size: 24px; cursor: pointer;">
                             📤
                         </button>
                     </div>
                 `;
                 
-                document.getElementById('appModal').style.display = 'block';
-                
-                // NEU: Punkt 11 - Ähnliche Apps laden
-                loadSimilarApps(app.primaryGenreName, trackId);
+                // Ähnliche Apps laden
+                setTimeout(() => loadSimilarApps(app.primaryGenreName, trackId), 500);
                 
             } catch(err) {
                 console.error('Modal Error:', err);
+                modalBody.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px;">
+                        <div style="font-size: 60px; margin-bottom: 20px;">⚠️</div>
+                        <h3 style="color: var(--text-main); margin-bottom: 10px;">Fehler beim Laden</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 25px;">Die App-Details konnten nicht geladen werden.<br>Bitte versuche es erneut.</p>
+                        <button onclick="closeModal()" style="padding: 12px 30px; border-radius: 14px; border: none; background: var(--primary); color: white; font-weight: 700; cursor: pointer;">
+                            Schließen
+                        </button>
+                    </div>
+                `;
             }
         };
 
@@ -625,22 +1070,22 @@
             }
         };
 
-        // NEU: Punkt 11 - Ähnliche Apps
+        // Ähnliche Apps
         async function loadSimilarApps(genre, excludeId) {
             try {
-                const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(genre)}&country=de&entity=software&limit=6`);
+                const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(genre)}&country=de&entity=software&limit=8`);
                 const data = await response.json();
                 
-                const similar = data.results.filter(app => app.trackId != excludeId).slice(0, 3);
+                const similar = data.results.filter(app => app.trackId != excludeId).slice(0, 4);
                 
                 if (similar.length > 0) {
-                    let similarHtml = '<div class="section-title">Ähnliche Apps</div><div style="display: flex; gap: 15px; overflow-x: auto; padding: 10px 0;">';
+                    let similarHtml = '<div class="section-title">Ähnliche Apps</div><div style="display: flex; gap: 18px; overflow-x: auto; padding: 12px 0;">';
                     
                     similar.forEach(app => {
                         similarHtml += `
-                            <div onclick="showAppDetails('${app.trackId}')" style="min-width: 100px; text-align: center; cursor: pointer;">
-                                <img src="${app.artworkUrl100}" style="width: 80px; height: 80px; border-radius: 18px; margin-bottom: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-                                <div style="font-size: 12px; color: var(--text-main); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${app.trackName}</div>
+                            <div onclick="showAppDetails('${app.trackId}')" style="min-width: 110px; text-align: center; cursor: pointer; transition: transform 0.3s ease;">
+                                <img src="${app.artworkUrl100}" style="width: 90px; height: 90px; border-radius: 20px; margin-bottom: 10px; box-shadow: var(--shadow-md); transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                <div style="font-size: 12px; color: var(--text-main); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${app.trackName}</div>
                             </div>
                         `;
                     });
@@ -653,16 +1098,16 @@
             }
         }
 
-        // NEU: Punkt 2 - Tracking für Empfehlungen
+        // Tracking
         function trackAppView(trackId, category) {
             let history = JSON.parse(localStorage.getItem('app_history') || '[]');
             const entry = { trackId, category, timestamp: Date.now() };
             history.unshift(entry);
-            history = history.slice(0, 50); // Letzte 50 behalten
+            history = history.slice(0, 50);
             localStorage.setItem('app_history', JSON.stringify(history));
         }
 
-        // NEU: Punkt 2 - "Für dich empfohlen"
+        // Empfehlungen
         window.ladeEmpfehlungen = async () => {
             updateAura('#ff6b6b');
             showSkeletons();
@@ -672,44 +1117,41 @@
             
             if (history.length === 0 && favoriten.length === 0) {
                 document.getElementById('liste').innerHTML = `
-                    <div style='padding:50px 20px; color:var(--text-secondary); text-align: center;'>
-                        Noch keine Empfehlungen verfügbar. 💡<br><br>
-                        Schaue dir ein paar Apps an, dann bekommst du personalisierte Vorschläge!
+                    <div style='padding:60px 20px; color:var(--text-secondary); text-align: center;'>
+                        <div style="font-size: 50px; margin-bottom: 20px;">💡</div>
+                        <h3 style="color: var(--text-main); margin-bottom: 10px; font-weight: 800;">Noch keine Empfehlungen</h3>
+                        <p>Schaue dir ein paar Apps an, dann bekommst du personalisierte Vorschläge!</p>
                     </div>
                 `;
                 return;
             }
             
-            // Kategorien aus Historie extrahieren
             const categories = [...new Set(history.map(h => h.category).filter(c => c))];
             const topCategory = categories[0] || 'Games';
             
             try {
-                const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(topCategory)}&country=de&entity=software&limit=12`);
+                const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(topCategory)}&country=de&entity=software&limit=15`);
                 const data = await response.json();
                 
-                // Bereits gesehene Apps ausfiltern
                 const seenIds = new Set(history.map(h => h.trackId));
                 const favIds = new Set(favoriten.map(f => f.trackId));
                 const recommendations = data.results.filter(app => 
                     !seenIds.has(app.trackId) && !favIds.has(app.trackId)
-                ).slice(0, 10);
+                ).slice(0, 12);
                 
                 renderHtml(recommendations, false, true);
             } catch(err) {
-                document.getElementById('liste').innerHTML = `<div style='padding:50px 20px; color:var(--text-secondary);'>Fehler beim Laden. Bitte erneut versuchen.</div>`;
+                document.getElementById('liste').innerHTML = `<div style='padding:50px 20px; color:var(--text-secondary); text-align: center;'>Fehler beim Laden. Bitte erneut versuchen.</div>`;
             }
         };
 
-        // NEU: Punkt 9 - Suchfilter
+        // Filter
         window.filterApps = (filterType) => {
             currentFilter = filterType;
             
-            // UI Update
             document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
             
-            // Filter anwenden
             let filtered = [...currentApps];
             
             if (filterType === 'free') {
@@ -723,7 +1165,7 @@
             renderHtml(filtered);
         };
 
-        // Share-Funktion
+        // Share
         window.teileApp = (name, trackId, event) => {
             event.stopPropagation();
             
@@ -749,7 +1191,7 @@
             }
         };
 
-        // Favoriten-System
+        // Favoriten
         window.toggleFavorit = (trackId, name, icon, cat, event) => {
             event.stopPropagation();
             
@@ -768,7 +1210,6 @@
             
             localStorage.setItem('boris_favoriten', JSON.stringify(favs));
             
-            // Wenn Favoriten-Kategorie aktiv ist, neu laden
             const activeCat = document.querySelector('.cat-pill.active');
             if (activeCat && activeCat.innerText.includes('Favoriten')) {
                 setTimeout(() => zeigeFavoriten(), 100);
@@ -779,7 +1220,13 @@
             const favs = JSON.parse(localStorage.getItem('boris_favoriten') || '[]');
             updateAura('#ff9500');
             if (favs.length === 0) {
-                document.getElementById('liste').innerHTML = `<div style='padding:50px 20px; color:var(--text-secondary);'>Noch keine Favoriten. ⭐<br>Tippe auf ⭐ bei Apps um sie hier zu speichern!</div>`;
+                document.getElementById('liste').innerHTML = `
+                    <div style='padding:60px 20px; color:var(--text-secondary); text-align: center;'>
+                        <div style="font-size: 50px; margin-bottom: 20px;">⭐</div>
+                        <h3 style="color: var(--text-main); margin-bottom: 10px; font-weight: 800;">Noch keine Favoriten</h3>
+                        <p>Tippe auf ⭐ bei Apps um sie hier zu speichern!</p>
+                    </div>
+                `;
             } else {
                 renderHtml(favs);
             }
@@ -790,45 +1237,43 @@
             return favs.some(f => f.trackId === trackId);
         };
 
-        // NEU: Punkt 5 & 7 - Erweiterte Charts mit optimierten Trend-Indikatoren
+        // Render HTML
         window.renderHtml = (results, isChart = false, isRecommendation = false) => {
             const liste = document.getElementById('liste');
             liste.innerHTML = "";
             
             if (results.length === 0) {
-                liste.innerHTML = `<div style='padding:50px 20px; color:var(--text-secondary);'>Keine Apps gefunden. 🕵️‍♂️</div>`;
+                liste.innerHTML = `<div style='padding:60px 20px; color:var(--text-secondary); text-align: center;'>Keine Apps gefunden. 🕵️‍♂️</div>`;
                 return;
             }
 
-            // Stagger animation delay
             results.forEach((app, index) => {
                 const id = app.trackId;
                 const name = (app.trackName || app.name).replace(/'/g, "&#39;");
                 const icon = app.artworkUrl100 || app.icon;
                 const cat = app.primaryGenreName || app.cat;
                 
-                // NEU: Punkt 7 - Optimierte Trend-Indikatoren
                 let trendTag = "";
                 if (isChart) {
                     const count = app.count || 0;
                     
                     if (index === 0) {
-                        trendTag = `<span class="trend-emoji">🏆</span>`; // Champion
+                        trendTag = `<span class="trend-emoji">🏆</span>`;
                     } else if (index === 1) {
-                        trendTag = `<span class="trend-emoji">🥈</span>`; // Silber
+                        trendTag = `<span class="trend-emoji">🥈</span>`;
                     } else if (index === 2) {
-                        trendTag = `<span class="trend-emoji">🥉</span>`; // Bronze
+                        trendTag = `<span class="trend-emoji">🥉</span>`;
                     } else if (count > 50) {
-                        trendTag = `<span class="trend-emoji">🔥</span>`; // Mega-Trending
+                        trendTag = `<span class="trend-emoji">🔥</span>`;
                     } else if (index < 5) {
-                        trendTag = `<span style="color:#34c759; margin-left:4px; font-weight:bold;">📈</span>`; // Steigend
+                        trendTag = `<span style="color:#34c759; margin-left:4px; font-weight:bold;">📈</span>`;
                     } else if (index >= 7) {
-                        trendTag = `<span style="color:#ff3b30; margin-left:4px; font-weight:bold;">📉</span>`; // Fallend
+                        trendTag = `<span style="color:#ff3b30; margin-left:4px; font-weight:bold;">📉</span>`;
                     }
                 }
 
-                const countBadge = isChart ? `<span style="font-size:10px; background:#34c759; color:white; padding:2px 8px; border-radius:10px; margin-left:6px; flex-shrink:0;">${app.count}x</span>` : "";
-                const recoBadge = isRecommendation ? `<span style="font-size:10px; background:#ff6b6b; color:white; padding:2px 8px; border-radius:10px; margin-left:6px; flex-shrink:0;">Für dich</span>` : "";
+                const countBadge = isChart ? `<span style="font-size:11px; background:linear-gradient(135deg, #34c759, #30d158); color:white; padding:4px 10px; border-radius:12px; margin-left:6px; flex-shrink:0; font-weight: 700; box-shadow: 0 2px 8px rgba(52, 199, 89, 0.3);">${app.count}x</span>` : "";
+                const recoBadge = isRecommendation ? `<span style="font-size:11px; background:linear-gradient(135deg, #ff6b6b, #ff8e53); color:white; padding:4px 10px; border-radius:12px; margin-left:6px; flex-shrink:0; font-weight: 700;">Für dich</span>` : "";
                 
                 const favIcon = istFavorit(id) ? '⭐' : '⭐';
                 
@@ -840,11 +1285,11 @@
                     <img src="${icon}" class="app-icon loaded" loading="lazy" onclick="showAppDetails('${id}')">
                     <div style="flex-grow:1; min-width:0; display:flex; flex-direction:column; justify-content:center;">
                         <div style="display:flex; align-items:center; width:100%;">
-                            <span style="font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:16px; flex-shrink:1;">${name}</span>
+                            <span style="font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:17px; flex-shrink:1; letter-spacing: -0.3px;">${name}</span>
                             ${countBadge}
                             ${recoBadge}
                         </div>
-                        <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">${cat} ${trendTag}</div>
+                        <div style="font-size:13px; color:var(--text-secondary); margin-top:4px; font-weight: 600;">${cat} ${trendTag}</div>
                     </div>
                     <button class="btn-favorite" onclick="toggleFavorit('${id}', '${name}', '${icon}', '${cat}', event)">${favIcon}</button>
                     <button class="btn-share" onclick="teileApp('${name}', '${id}', event)">📤</button>
@@ -885,15 +1330,13 @@
                     filterApps(currentFilter);
                 })
                 .catch(err => {
-                    document.getElementById('liste').innerHTML = `<div style='padding:50px 20px; color:var(--text-secondary);'>Fehler bei der Suche. Bitte erneut versuchen.</div>`;
+                    document.getElementById('liste').innerHTML = `<div style='padding:50px 20px; color:var(--text-secondary); text-align: center;'>Fehler bei der Suche. Bitte erneut versuchen.</div>`;
                 });
         };
 
-        // Error-Handling für Apps
         window.handleAppClick = async (btn, trackId, name, icon, cat) => {
             if(btn) btn.innerText = "...";
             
-            // Prüfe ob App in DE verfügbar ist
             try {
                 const checkResponse = await fetch(`https://itunes.apple.com/lookup?id=${trackId}&country=de`);
                 const checkData = await checkResponse.json();
@@ -940,7 +1383,7 @@
                         renderHtml(d.results);
                     })
                     .catch(err => {
-                        document.getElementById('liste').innerHTML = `<div style='padding:50px 20px; color:var(--text-secondary);'>Fehler beim Laden. Bitte erneut versuchen.</div>`;
+                        document.getElementById('liste').innerHTML = `<div style='padding:50px 20px; color:var(--text-secondary); text-align: center;'>Fehler beim Laden. Bitte erneut versuchen.</div>`;
                     });
             }
         };
