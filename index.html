@@ -450,9 +450,36 @@
             gap: 10px; 
             margin: 25px -5px 20px -5px; 
             padding: 8px 5px; 
-            scrollbar-width: none; 
+            scrollbar-width: none;
+            position: relative;
         }
         .cat-container::-webkit-scrollbar { display: none; }
+        
+        /* Scroll-Indikator rechts */
+        .cat-container::after {
+            content: '→';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background: linear-gradient(to right, transparent, var(--card-bg) 30%);
+            padding: 10px 15px 10px 30px;
+            font-size: 20px;
+            font-weight: 900;
+            color: var(--primary);
+            pointer-events: none;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; transform: translateY(-50%) translateX(0); }
+            50% { opacity: 1; transform: translateY(-50%) translateX(5px); }
+        }
+        
+        /* Indikator verschwindet wenn ganz nach rechts gescrollt */
+        .cat-container.scrolled-end::after {
+            display: none;
+        }
         
         .cat-pill { 
             background: var(--item-bg); 
@@ -948,10 +975,93 @@
             }
         };
 
-        // Anmelden Function
+        // Anmelden Function - ECHTES LOGIN
         window.showLogin = () => {
-            alert("🔐 Login-Feature kommt bald!\n\nDamit kannst du dann:\n• Deine Apps synchronisieren\n• Bewertungen abgeben\n• Im Leaderboard aufsteigen");
+            const currentUser = localStorage.getItem('boris_user');
+            
+            if (currentUser) {
+                // User ist eingeloggt - zeige Profil
+                const userData = JSON.parse(currentUser);
+                const doLogout = confirm(`👤 Angemeldet als: ${userData.name}\n\nMöchtest du dich abmelden?`);
+                if (doLogout) {
+                    localStorage.removeItem('boris_user');
+                    document.querySelector('.btn-login').innerText = 'Anmelden';
+                    alert('✅ Erfolgreich abgemeldet!');
+                    location.reload();
+                }
+            } else {
+                // User nicht eingeloggt - Login-Modal zeigen
+                const name = prompt('👤 Gib deinen Namen ein:\n(z.B. Max M., Anna K.)');
+                if (name && name.trim().length > 0) {
+                    const userData = {
+                        name: name.trim(),
+                        loginDate: Date.now(),
+                        shares: 0,
+                        downloads: 0
+                    };
+                    localStorage.setItem('boris_user', JSON.stringify(userData));
+                    
+                    // Speichere auch in Firebase
+                    try {
+                        const userId = 'user_' + Date.now();
+                        set(ref(db, 'users/' + userId), userData);
+                    } catch(e) {
+                        console.error('Firebase User Error:', e);
+                    }
+                    
+                    document.querySelector('.btn-login').innerText = name.substring(0, 10);
+                    alert(`✅ Willkommen ${name}!\n\nDu kannst jetzt:\n• Apps teilen und Punkte sammeln\n• Im Leaderboard aufsteigen`);
+                    loadLeaderboard();
+                }
+            }
         };
+
+        // Beim Laden prüfen ob User eingeloggt ist
+        const checkLogin = () => {
+            const currentUser = localStorage.getItem('boris_user');
+            if (currentUser) {
+                const userData = JSON.parse(currentUser);
+                document.querySelector('.btn-login').innerText = userData.name.substring(0, 10);
+            }
+        };
+        checkLogin();
+
+        // ECHTES Leaderboard aus Firebase
+        window.loadLeaderboard = () => {
+            onValue(ref(db, 'leaderboard'), (snapshot) => {
+                const data = snapshot.val();
+                const leaderboardDiv = document.getElementById('leaderboardList');
+                
+                if (!data) {
+                    // Behalte Platzhalter wenn keine Daten
+                    return;
+                }
+                
+                // Sortiere nach Punkten
+                const sorted = Object.values(data).sort((a,b) => b.points - a.points).slice(0, 5);
+                
+                let html = '';
+                sorted.forEach((user, index) => {
+                    let rankEmoji = index + 1;
+                    if (index === 0) rankEmoji = '🥇';
+                    else if (index === 1) rankEmoji = '🥈';
+                    else if (index === 2) rankEmoji = '🥉';
+                    
+                    html += `
+                        <div class="leaderboard-item">
+                            <div class="leaderboard-rank">${rankEmoji}</div>
+                            <div class="leaderboard-name">${user.name}</div>
+                            <div class="leaderboard-score">${user.points}</div>
+                        </div>
+                    `;
+                });
+                
+                leaderboardDiv.innerHTML = html;
+            });
+        };
+
+        // Lade Leaderboard beim Start
+        loadLeaderboard();
 
         // Theme Toggle
         window.toggleTheme = () => {
@@ -962,6 +1072,19 @@
             localStorage.setItem('theme', newTheme);
         };
         document.getElementById('themeBtn').innerText = (localStorage.getItem('theme') === 'dark') ? '☀️' : '🌙';
+
+        // Scroll-Indikator für Kategorien
+        const catContainer = document.getElementById('catBar');
+        if (catContainer) {
+            catContainer.addEventListener('scroll', () => {
+                const isAtEnd = catContainer.scrollLeft >= (catContainer.scrollWidth - catContainer.clientWidth - 10);
+                if (isAtEnd) {
+                    catContainer.classList.add('scrolled-end');
+                } else {
+                    catContainer.classList.remove('scrolled-end');
+                }
+            });
+        }
 
         // Skeleton Loader
         window.showSkeletons = () => {
@@ -1205,31 +1328,67 @@
             renderHtml(filtered);
         };
 
-        // Share
-        window.teileApp = (name, trackId, event) => {
+        // Share mit Punkte-Tracking
+        window.teileApp = async (name, trackId, event) => {
             event.stopPropagation();
             
             const url = `${window.location.origin}${window.location.pathname}?id=${trackId}`;
             
             if (navigator.share) {
-                navigator.share({
-                    title: `${name} - Boris Store`,
-                    text: `Schau dir ${name} im Boris Store an!`,
-                    url: url
-                }).catch(err => {
+                try {
+                    await navigator.share({
+                        title: `${name} - Boris Store`,
+                        text: `Schau dir ${name} im Boris Store an!`,
+                        url: url
+                    });
+                    
+                    // Punkte hinzufügen wenn erfolgreich geteilt
+                    addPointsForShare();
+                    
+                } catch(err) {
                     if (err.name !== 'AbortError') {
                         console.log('Share Error:', err);
                     }
-                });
+                }
             } else {
                 navigator.clipboard.writeText(url).then(() => {
                     const btn = event.target;
                     const originalText = btn.innerText;
                     btn.innerText = '✅';
                     setTimeout(() => { btn.innerText = originalText; }, 1500);
+                    
+                    // Punkte auch beim Kopieren
+                    addPointsForShare();
                 });
             }
         };
+
+        // Punkte hinzufügen
+        async function addPointsForShare() {
+            const currentUser = localStorage.getItem('boris_user');
+            if (!currentUser) return;
+            
+            const userData = JSON.parse(currentUser);
+            userData.shares = (userData.shares || 0) + 1;
+            const points = userData.shares;
+            
+            localStorage.setItem('boris_user', JSON.stringify(userData));
+            
+            // In Firebase Leaderboard speichern
+            try {
+                const userId = 'user_' + userData.name.replace(/[^a-zA-Z0-9]/g, '_');
+                await set(ref(db, 'leaderboard/' + userId), {
+                    name: userData.name,
+                    points: points,
+                    lastUpdate: Date.now()
+                });
+                
+                // Leaderboard neu laden
+                loadLeaderboard();
+            } catch(e) {
+                console.error('Leaderboard Error:', e);
+            }
+        }
 
         // Favoriten
         window.toggleFavorit = (trackId, name, icon, cat, event) => {
